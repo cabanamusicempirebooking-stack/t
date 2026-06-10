@@ -1,0 +1,207 @@
+{% comment %}
+  SECTION: tm-music-videos.liquid
+  YouTube Music Videos grid.
+  Add each video as a block — paste the YouTube video ID.
+  e.g. for https://youtube.com/watch?v=dQw4w9WgXcQ → ID is dQw4w9WgXcQ
+{% endcomment %}
+
+<style>
+.tm-videos { padding: 112px 64px; background: #0d0d0d; position: relative; overflow: hidden; }
+.tm-videos::before { content: 'CME'; position: absolute; right: -20px; top: 50%; transform: translateY(-50%); font-family: 'Bebas Neue', sans-serif; font-size: 340px; letter-spacing: -12px; line-height: 1; color: rgba(255,255,255,0.025); user-select: none; pointer-events: none; }
+
+.tm-videos-header { margin-bottom: 56px; display: flex; align-items: flex-end; justify-content: space-between; }
+.tm-videos-eye { display: flex; align-items: center; gap: 12px; font-family: 'DM Sans', sans-serif; font-size: 9px; font-weight: 500; letter-spacing: 4px; text-transform: uppercase; color: #ff2a2a; margin-bottom: 14px; }
+.tm-videos-eye::before { content: ''; display: block; width: 24px; height: 1px; background: #ff2a2a; }
+.tm-videos-title { font-family: 'Bebas Neue', sans-serif; font-size: clamp(52px, 6.5vw, 88px); letter-spacing: 1px; line-height: 0.95; color: #f0ede8; }
+.tm-videos-title .gh { color: transparent; -webkit-text-stroke: 1.5px rgba(240,237,232,0.18); }
+.tm-videos-va { font-family: 'DM Sans', sans-serif; font-size: 10px; font-weight: 500; letter-spacing: 2.5px; text-transform: uppercase; color: rgba(240,237,232,0.5); text-decoration: none; border-bottom: 1px solid rgba(240,237,232,0.2); padding-bottom: 2px; margin-bottom: 6px; display: inline-block; transition: color 0.2s, border-color 0.2s; }
+.tm-videos-va:hover { color: #f0ede8; border-color: rgba(240,237,232,0.5); }
+
+/* Grid */
+.tm-videos-grid { display: grid; gap: 3px; margin-bottom: 48px; }
+.tm-videos-grid.cols-1 { grid-template-columns: 1fr; }
+.tm-videos-grid.cols-2 { grid-template-columns: repeat(2, 1fr); }
+.tm-videos-grid.cols-3 { grid-template-columns: repeat(3, 1fr); }
+.tm-videos-grid.cols-4 { grid-template-columns: repeat(2, 1fr); }
+
+/* Featured first video larger in 3-col */
+.tm-videos-grid.cols-3 .tm-vid-card:first-child { grid-column: span 2; }
+
+/* Video card */
+.tm-vid-card { position: relative; background: #111; overflow: hidden; cursor: pointer; }
+.tm-vid-card .tm-vid-thumb { position: relative; aspect-ratio: 16/9; overflow: hidden; }
+.tm-vid-card img { width: 100%; height: 100%; object-fit: cover; display: block; transition: transform 0.6s cubic-bezier(0.22,1,0.36,1), opacity 0.3s; }
+.tm-vid-card:hover img { transform: scale(1.04); opacity: 0.7; }
+
+/* Play overlay */
+.tm-vid-overlay { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; background: rgba(0,0,0,0.3); opacity: 0; transition: opacity 0.3s; }
+.tm-vid-card:hover .tm-vid-overlay { opacity: 1; }
+.tm-vid-playbtn { width: 64px; height: 64px; background: #ff2a2a; border-radius: 50%; display: flex; align-items: center; justify-content: center; transition: transform 0.2s, background 0.2s; }
+.tm-vid-card:hover .tm-vid-playbtn { transform: scale(1.1); }
+.tm-vid-playbtn svg { margin-left: 4px; }
+
+/* Duration badge */
+.tm-vid-duration { position: absolute; bottom: 10px; right: 10px; background: rgba(0,0,0,0.8); color: white; font-family: 'DM Sans', sans-serif; font-size: 11px; font-weight: 500; padding: 2px 7px; letter-spacing: 0.5px; }
+
+/* Info bar */
+.tm-vid-info { padding: 16px 18px 20px; border-top: 1px solid rgba(255,255,255,0.06); }
+.tm-vid-label { font-family: 'DM Sans', sans-serif; font-size: 8px; font-weight: 500; letter-spacing: 3px; text-transform: uppercase; color: #ff2a2a; margin-bottom: 6px; }
+.tm-vid-name { font-family: 'DM Sans', sans-serif; font-size: 14px; font-weight: 500; color: #f0ede8; line-height: 1.4; margin-bottom: 4px; }
+.tm-vid-meta { font-family: 'DM Sans', sans-serif; font-size: 11px; color: rgba(240,237,232,0.38); }
+
+/* Lightbox */
+.tm-vid-lightbox { position: fixed; inset: 0; background: rgba(0,0,0,0.92); z-index: 9999; display: flex; align-items: center; justify-content: center; opacity: 0; pointer-events: none; transition: opacity 0.3s; }
+.tm-vid-lightbox.open { opacity: 1; pointer-events: all; }
+.tm-vid-lightbox-inner { position: relative; width: 90vw; max-width: 1100px; aspect-ratio: 16/9; }
+.tm-vid-lightbox iframe { width: 100%; height: 100%; border: none; }
+.tm-vid-lightbox-close { position: absolute; top: -44px; right: 0; background: none; border: none; color: rgba(240,237,232,0.6); font-size: 28px; cursor: pointer; transition: color 0.2s; font-family: sans-serif; line-height: 1; padding: 8px; }
+.tm-vid-lightbox-close:hover { color: white; }
+
+/* Footer */
+.tm-videos-footer { display: flex; gap: 14px; }
+.tm-btn-solid-dark { font-family: 'DM Sans', sans-serif; font-size: 10px; font-weight: 500; letter-spacing: 2.5px; text-transform: uppercase; color: white; background: #ff2a2a; padding: 15px 34px; border: 1px solid #ff2a2a; text-decoration: none; display: inline-block; transition: background 0.25s, transform 0.25s; }
+.tm-btn-solid-dark:hover { background: rgba(255,42,42,0.8); transform: translateY(-2px); }
+.tm-btn-ghost-light { font-family: 'DM Sans', sans-serif; font-size: 10px; font-weight: 500; letter-spacing: 2.5px; text-transform: uppercase; color: rgba(240,237,232,0.6); border: 1px solid rgba(240,237,232,0.2); padding: 15px 34px; text-decoration: none; display: inline-flex; align-items: center; gap: 8px; transition: border-color 0.25s, color 0.25s, transform 0.25s; }
+.tm-btn-ghost-light:hover { border-color: rgba(240,237,232,0.5); color: #f0ede8; transform: translateY(-2px); }
+
+.tm-videos-empty { padding: 60px 24px; text-align: center; border: 1px dashed rgba(255,255,255,0.1); font-family: 'DM Sans', sans-serif; font-size: 13px; color: rgba(240,237,232,0.35); }
+</style>
+
+<section class="tm-videos" id="videos">
+  <div class="tm-videos-header">
+    <div>
+      <div class="tm-videos-eye">{{ section.settings.eyebrow }}</div>
+      <h2 class="tm-videos-title">{{ section.settings.title }} <span class="gh">{{ section.settings.title_ghost }}</span></h2>
+    </div>
+    {% if section.settings.channel_url != blank %}
+      <a href="{{ section.settings.channel_url }}" target="_blank" rel="noopener" class="tm-videos-va">YouTube Channel →</a>
+    {% endif %}
+  </div>
+
+  {% if section.blocks.size > 0 %}
+    {% assign col_count = section.settings.columns | default: 3 %}
+    <div class="tm-videos-grid cols-{{ col_count }}">
+      {% for block in section.blocks %}
+        {% assign vid_id = block.settings.video_id %}
+        {% if vid_id != blank %}
+          <div class="tm-vid-card" data-vid="{{ vid_id }}" {{ block.shopify_attributes }}>
+            <div class="tm-vid-thumb">
+              <img src="https://img.youtube.com/vi/{{ vid_id }}/maxresdefault.jpg"
+                   onerror="this.src='https://img.youtube.com/vi/{{ vid_id }}/hqdefault.jpg'"
+                   alt="{{ block.settings.video_title }}" loading="lazy">
+              <div class="tm-vid-overlay">
+                <div class="tm-vid-playbtn">
+                  <svg width="22" height="22" viewBox="0 0 24 24" fill="white"><path d="M8 5v14l11-7z"/></svg>
+                </div>
+              </div>
+              {% if block.settings.duration != blank %}
+                <div class="tm-vid-duration">{{ block.settings.duration }}</div>
+              {% endif %}
+            </div>
+            <div class="tm-vid-info">
+              {% if block.settings.label != blank %}
+                <div class="tm-vid-label">{{ block.settings.label }}</div>
+              {% endif %}
+              <div class="tm-vid-name">{{ block.settings.video_title | default: 'Untitled Video' }}</div>
+              {% if block.settings.meta != blank %}
+                <div class="tm-vid-meta">{{ block.settings.meta }}</div>
+              {% endif %}
+            </div>
+          </div>
+        {% endif %}
+      {% endfor %}
+    </div>
+  {% else %}
+    <div class="tm-videos-empty">No videos added yet — click "Add block → Video" in the Theme Editor.</div>
+  {% endif %}
+
+  <div class="tm-videos-footer">
+    {% if section.settings.cta1_text != blank %}
+      <a href="{{ section.settings.cta1_link }}" target="_blank" rel="noopener" class="tm-btn-solid-dark">{{ section.settings.cta1_text }}</a>
+    {% endif %}
+    {% if section.settings.cta2_text != blank %}
+      <a href="{{ section.settings.cta2_link }}" target="_blank" rel="noopener" class="tm-btn-ghost-light">{{ section.settings.cta2_text }} →</a>
+    {% endif %}
+  </div>
+</section>
+
+<!-- Lightbox -->
+<div class="tm-vid-lightbox" id="tmVidLightbox">
+  <div class="tm-vid-lightbox-inner">
+    <button class="tm-vid-lightbox-close" id="tmVidClose">✕</button>
+    <iframe id="tmVidFrame" src="" allow="autoplay; encrypted-media" allowfullscreen></iframe>
+  </div>
+</div>
+
+<script>
+(function(){
+  const lb    = document.getElementById('tmVidLightbox');
+  const frame = document.getElementById('tmVidFrame');
+  const close = document.getElementById('tmVidClose');
+
+  document.querySelectorAll('.tm-vid-card').forEach(card => {
+    card.addEventListener('click', () => {
+      const id = card.dataset.vid;
+      if (!id) return;
+      frame.src = 'https://www.youtube.com/embed/' + id + '?autoplay=1&rel=0';
+      lb.classList.add('open');
+      document.body.style.overflow = 'hidden';
+    });
+  });
+
+  function closeLb() {
+    lb.classList.remove('open');
+    frame.src = '';
+    document.body.style.overflow = '';
+  }
+
+  close.addEventListener('click', closeLb);
+  lb.addEventListener('click', e => { if (e.target === lb) closeLb(); });
+  document.addEventListener('keydown', e => { if (e.key === 'Escape') closeLb(); });
+})();
+</script>
+
+{% schema %}
+{
+  "name": "TM Music Videos",
+  "settings": [
+    { "type": "paragraph",   "content": "Paste the YouTube Video ID for each video (the part after ?v= in the URL). e.g. youtube.com/watch?v=ABC123 → ID is ABC123" },
+    { "type": "text",        "id": "eyebrow",      "label": "Eyebrow",         "default": "Visual"            },
+    { "type": "text",        "id": "title",        "label": "Title",           "default": "Music"             },
+    { "type": "text",        "id": "title_ghost",  "label": "Ghost Word",      "default": "Videos"            },
+    { "type": "select",      "id": "columns",      "label": "Columns",         "default": "3",
+      "options": [
+        { "value": "2", "label": "2 columns" },
+        { "value": "3", "label": "3 columns (featured first)" },
+        { "value": "4", "label": "4 columns" }
+      ]
+    },
+    { "type": "url",         "id": "channel_url",  "label": "YouTube Channel URL"                            },
+    { "type": "text",        "id": "cta1_text",    "label": "Button 1 Text",   "default": "Watch on YouTube" },
+    { "type": "url",         "id": "cta1_link",    "label": "Button 1 Link"                                  },
+    { "type": "text",        "id": "cta2_text",    "label": "Button 2 Text",   "default": "Subscribe"        },
+    { "type": "url",         "id": "cta2_link",    "label": "Button 2 Link"                                  }
+  ],
+  "blocks": [
+    {
+      "type": "video",
+      "name": "Video",
+      "settings": [
+        { "type": "text", "id": "video_id",    "label": "YouTube Video ID",  "info": "e.g. dQw4w9WgXcQ — the part after ?v= in the YouTube URL" },
+        { "type": "text", "id": "video_title", "label": "Video Title",       "default": "Music Video"      },
+        { "type": "text", "id": "label",       "label": "Label / Tag",       "default": "Official Video",  "info": "e.g. 'Official Video', 'Visualizer', 'Live'" },
+        { "type": "text", "id": "meta",        "label": "Meta Info",         "default": "2024",            "info": "e.g. year, views, album name"                },
+        { "type": "text", "id": "duration",    "label": "Duration",          "default": "3:45",            "info": "e.g. '3:45' — shown as badge on thumbnail"   }
+      ]
+    }
+  ],
+  "presets": [{
+    "name": "TM Music Videos",
+    "blocks": [
+      { "type": "video", "settings": { "video_title": "Japan — Official Video",   "label": "Official Video", "meta": "2024", "duration": "3:30" } },
+      { "type": "video", "settings": { "video_title": "Awake 3 — Visualizer",     "label": "Visualizer",     "meta": "2024", "duration": "4:10" } },
+      { "type": "video", "settings": { "video_title": "Awake 2 — Official Video", "label": "Official Video", "meta": "2023", "duration": "3:55" } }
+    ]
+  }]
+}
+{% endschema %}

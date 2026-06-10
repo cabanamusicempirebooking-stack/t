@@ -1,0 +1,660 @@
+{% comment %}
+  T Mafianie — Beat Store Section
+  File: sections/beat-store.liquid
+  CSS:  assets/beat-store.css
+  
+  HOW TO ADD BEATS:
+  Each beat is added via "Beat" blocks in the section schema.
+  For each beat block you can set:
+    - Beat Title
+    - Genre / Mood tag
+    - BPM
+    - Audio file URL (upload MP3 to Shopify Files, paste URL)
+    - Beat artwork image
+    - Key (optional)
+  
+  The request form captures: Name, Email, Phone/SMS, Beat title (auto), License tier
+  Form submits via Shopify's native contact form → emails you at your store contact email
+{% endcomment %}
+
+{{ 'beat-store.css' | asset_url | stylesheet_tag }}
+
+<section class="bs-section" id="beat-store-{{ section.id }}">
+
+  {%- comment -%} PAGE HEADER {%- endcomment -%}
+  <div class="bs-header">
+    <div class="bs-header__inner">
+      <div class="bs-header__label">THE VAULT</div>
+      <h1 class="bs-header__title">Beat Store</h1>
+      <p class="bs-header__sub">Stream previews below. Request a license and I'll hit you back personally before anything gets sent.</p>
+      <div class="bs-header__pricing">
+        <div class="bs-price-pill">
+          <span class="bs-price-pill__tier">Standard</span>
+          <span class="bs-price-pill__amount">$30</span>
+          <span class="bs-price-pill__desc">MP3 · 100K streams · 1 video</span>
+        </div>
+        <div class="bs-price-pill bs-price-pill--premium">
+          <span class="bs-price-pill__tier">Premium</span>
+          <span class="bs-price-pill__amount">$300</span>
+          <span class="bs-price-pill__desc">WAV + Stems · 500K streams · Radio</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  {%- comment -%} LICENSE TIERS {%- endcomment -%}
+  <div class="bs-license-section">
+    <div class="bs-license-inner">
+      <div class="bs-license-header">
+        <div class="bs-license-header__label">LICENSE TIERS</div>
+        <h2 class="bs-license-header__title">What You Get</h2>
+        <p class="bs-license-header__sub">All licenses are non-exclusive. Your beat request includes a signed PDF agreement sent with your files.</p>
+      </div>
+      <div class="bs-license-grid">
+
+        <div class="bs-lic-card">
+          <div class="bs-lic-card__header">
+            <div class="bs-lic-card__tier">Standard</div>
+            <div class="bs-lic-card__price">$30</div>
+            <div class="bs-lic-card__format">MP3 320kbps</div>
+          </div>
+          <div class="bs-lic-card__body">
+            <ul class="bs-lic-list">
+              <li class="bs-lic-item bs-lic-item--yes">1 commercially released song</li>
+              <li class="bs-lic-item bs-lic-item--yes">Up to 100,000 audio streams</li>
+              <li class="bs-lic-item bs-lic-item--yes">1 music video (up to 500K views)</li>
+              <li class="bs-lic-item bs-lic-item--yes">2,500 free digital downloads</li>
+              <li class="bs-lic-item bs-lic-item--yes">Non-exclusive &mdash; beat stays in store</li>
+              <li class="bs-lic-item bs-lic-item--no">No radio broadcast rights</li>
+              <li class="bs-lic-item bs-lic-item--no">No WAV or stem files</li>
+              <li class="bs-lic-item bs-lic-item--no">No sync / film / TV rights</li>
+            </ul>
+            <div class="bs-lic-card__credit">
+              <div class="bs-lic-credit-label">Required Credit</div>
+              <div class="bs-lic-credit-value">&ldquo;Prod. by T Mafianie&rdquo;</div>
+            </div>
+            <div class="bs-lic-card__publishing">
+              <div class="bs-lic-pub-label">Publishing Split</div>
+              <div class="bs-lic-pub-value">50% Producer  /  50% Licensee</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="bs-lic-card bs-lic-card--premium">
+          <div class="bs-lic-card__badge">MOST POPULAR</div>
+          <div class="bs-lic-card__header">
+            <div class="bs-lic-card__tier">Premium</div>
+            <div class="bs-lic-card__price">$300</div>
+            <div class="bs-lic-card__format">WAV + Full Trackout Stems</div>
+          </div>
+          <div class="bs-lic-card__body">
+            <ul class="bs-lic-list">
+              <li class="bs-lic-item bs-lic-item--yes">1 commercially released song</li>
+              <li class="bs-lic-item bs-lic-item--yes">Up to 500,000 audio streams</li>
+              <li class="bs-lic-item bs-lic-item--yes">1 music video (unlimited views)</li>
+              <li class="bs-lic-item bs-lic-item--yes">5,000 free digital downloads</li>
+              <li class="bs-lic-item bs-lic-item--yes">Radio &mdash; up to 2 non-major stations</li>
+              <li class="bs-lic-item bs-lic-item--yes">WAV file + full trackout stems (ZIP)</li>
+              <li class="bs-lic-item bs-lic-item--yes">Non-exclusive &mdash; beat stays in store</li>
+              <li class="bs-lic-item bs-lic-item--no">No sync / film / TV rights</li>
+            </ul>
+            <div class="bs-lic-card__credit">
+              <div class="bs-lic-credit-label">Required Credit</div>
+              <div class="bs-lic-credit-value">&ldquo;Prod. by T Mafianie&rdquo;</div>
+            </div>
+            <div class="bs-lic-card__publishing">
+              <div class="bs-lic-pub-label">Publishing Split</div>
+              <div class="bs-lic-pub-value">50% Producer  /  50% Licensee</div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+      <div class="bs-license-footnote">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4z"/></svg>
+        All purchases include a signed Beat License Agreement PDF. Credit &ldquo;Prod. by T Mafianie&rdquo; is required on all releases, streaming platforms, video descriptions, and metadata. If you register with a PRO (ASCAP, BMI, SESAC), list T Mafianie as co-writer and publisher.
+      </div>
+    </div>
+  </div>
+
+  {%- comment -%} BEAT LIST {%- endcomment -%}
+  <div class="bs-container">
+    <div class="bs-list-header">
+      <div class="bs-list-col bs-list-col--num">#</div>
+      <div class="bs-list-col bs-list-col--title">Title</div>
+      <div class="bs-list-col bs-list-col--tags">Tags</div>
+      <div class="bs-list-col bs-list-col--bpm">BPM</div>
+      <div class="bs-list-col bs-list-col--key">Key</div>
+      <div class="bs-list-col bs-list-col--action"></div>
+    </div>
+
+    {%- if section.blocks.size > 0 -%}
+      <div class="bs-list">
+        {%- for block in section.blocks -%}
+          {%- if block.type == 'beat' -%}
+            <div class="bs-row" data-beat-id="{{ forloop.index }}" {{ block.shopify_attributes }}>
+
+              {%- comment -%} NUMBER / PLAY {%- endcomment -%}
+              <div class="bs-row__num">
+                <span class="bs-row__index">{{ forloop.index }}</span>
+                {%- if block.settings.audio_url != blank -%}
+                  <button
+                    class="bs-play-btn"
+                    data-audio="{{ block.settings.audio_url }}"
+                    data-beat="{{ block.settings.title | escape }}"
+                    data-artwork="{%- if block.settings.artwork != blank -%}{{ block.settings.artwork | img_url: '80x80', crop: 'center' }}{%- endif -%}"
+                    data-index="{{ forloop.index }}"
+                    aria-label="Play {{ block.settings.title | escape }}"
+                  >
+                    <span class="bs-play-btn__play">
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>
+                    </span>
+                    <span class="bs-play-btn__pause" style="display:none;">
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/></svg>
+                    </span>
+                  </button>
+                {%- else -%}
+                  <button class="bs-play-btn bs-play-btn--disabled" disabled>
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>
+                  </button>
+                {%- endif -%}
+              </div>
+
+              {%- comment -%} ARTWORK + TITLE + WAVEFORM {%- endcomment -%}
+              <div class="bs-row__title">
+                <div class="bs-row__thumb">
+                  {%- if block.settings.artwork != blank -%}
+                    <img src="{{ block.settings.artwork | img_url: '80x80', crop: 'center' }}" alt="{{ block.settings.title | escape }}" loading="lazy">
+                  {%- else -%}
+                    <div class="bs-row__thumb-placeholder">
+                      <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M12 3v10.55c-.59-.34-1.27-.55-2-.55-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z"/></svg>
+                    </div>
+                  {%- endif -%}
+                </div>
+                <div class="bs-row__title-info">
+                  <div class="bs-row__name">{{ block.settings.title | default: 'Untitled Beat' }}</div>
+                  {%- if block.settings.audio_url != blank -%}
+                    <div class="bs-row__wave" data-index="{{ forloop.index }}">
+                      <div class="bs-row__wave-bars">
+                        {%- for i in (1..40) -%}<div class="bs-wbar"></div>{%- endfor -%}
+                      </div>
+                      <div class="bs-row__wave-progress">
+                        <span class="bs-row__time-cur" data-index="{{ forloop.index }}">0:00</span>
+                        <div class="bs-row__prog-track" data-index="{{ forloop.index }}">
+                          <div class="bs-row__prog-fill"></div>
+                        </div>
+                        <span class="bs-row__time-tot" data-index="{{ forloop.index }}">--:--</span>
+                      </div>
+                    </div>
+                  {%- else -%}
+                    <div class="bs-row__no-preview">No preview</div>
+                  {%- endif -%}
+                </div>
+              </div>
+
+              {%- comment -%} TAGS {%- endcomment -%}
+              <div class="bs-row__tags">
+                {%- if block.settings.tag != blank -%}
+                  {%- assign tag_list = block.settings.tag | split: '·' -%}
+                  {%- for t in tag_list -%}
+                    <span class="bs-tag">{{ t | strip }}</span>
+                  {%- endfor -%}
+                {%- endif -%}
+              </div>
+
+              {%- comment -%} BPM {%- endcomment -%}
+              <div class="bs-row__bpm">
+                {%- if block.settings.bpm != blank -%}{{ block.settings.bpm }}{%- endif -%}
+              </div>
+
+              {%- comment -%} KEY {%- endcomment -%}
+              <div class="bs-row__key">
+                {%- if block.settings.key != blank -%}{{ block.settings.key }}{%- endif -%}
+              </div>
+
+              {%- comment -%} ACTION {%- endcomment -%}
+              <div class="bs-row__action">
+                <button
+                  class="bs-request-btn"
+                  onclick="bsOpenModal('{{ block.settings.title | escape | replace: "'", "\'" }}')"
+                >
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"/></svg>
+                  <span class="bs-request-btn__text">License</span>
+                </button>
+              </div>
+
+            </div>
+          {%- endif -%}
+        {%- endfor -%}
+      </div>
+
+    {%- else -%}
+      <div class="bs-empty">
+        <svg width="48" height="48" viewBox="0 0 24 24" fill="currentColor" opacity="0.2"><path d="M12 3v10.55c-.59-.34-1.27-.55-2-.55-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z"/></svg>
+        <p>Beats coming soon. Check back shortly.</p>
+      </div>
+    {%- endif -%}
+
+  </div>
+
+  {%- comment -%} STICKY PLAYER BAR {%- endcomment -%}
+  <div class="bs-player-bar" id="bs-player-bar" style="display:none;" role="region" aria-label="Audio player">
+    <div class="bs-player-bar__inner">
+
+      {%- comment -%} LEFT: artwork + title {%- endcomment -%}
+      <div class="bs-player-bar__track">
+        <div class="bs-player-bar__art" id="bs-bar-art">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M12 3v10.55c-.59-.34-1.27-.55-2-.55-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z"/></svg>
+        </div>
+        <div class="bs-player-bar__meta">
+          <span class="bs-player-bar__name" id="bs-bar-name">—</span>
+          <span class="bs-player-bar__label">T Mafianie</span>
+        </div>
+      </div>
+
+      {%- comment -%} CENTER: controls + scrubber {%- endcomment -%}
+      <div class="bs-player-bar__center">
+        <div class="bs-player-bar__btns">
+          <button class="bs-bar-prev" id="bs-bar-prev" aria-label="Previous">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M6 6h2v12H6zm3.5 6l8.5 6V6z"/></svg>
+          </button>
+          <button class="bs-bar-playpause" id="bs-bar-playpause" aria-label="Play/Pause">
+            <svg class="icon-play" width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>
+            <svg class="icon-pause" width="20" height="20" viewBox="0 0 24 24" fill="currentColor" style="display:none;"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/></svg>
+          </button>
+          <button class="bs-bar-next" id="bs-bar-next" aria-label="Next">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M6 18l8.5-6L6 6v12zM16 6v12h2V6h-2z"/></svg>
+          </button>
+        </div>
+        <div class="bs-player-bar__scrubber">
+          <span class="bs-bar-time-cur" id="bs-bar-time">0:00</span>
+          <div class="bs-bar-track" id="bs-bar-track">
+            <div class="bs-bar-fill" id="bs-bar-fill"></div>
+            <div class="bs-bar-thumb" id="bs-bar-thumb"></div>
+          </div>
+          <span class="bs-bar-time-tot" id="bs-bar-dur">0:00</span>
+        </div>
+      </div>
+
+      {%- comment -%} RIGHT: volume + close {%- endcomment -%}
+      <div class="bs-player-bar__right">
+        <div class="bs-bar-vol">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02z"/></svg>
+          <input type="range" class="bs-vol-slider" id="bs-vol-slider" min="0" max="100" value="80" aria-label="Volume">
+        </div>
+        <button class="bs-bar-close" id="bs-bar-close" aria-label="Close player">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 6L6 18M6 6l12 12"/></svg>
+        </button>
+      </div>
+
+    </div>
+  </div>
+
+  {%- comment -%} REQUEST MODAL {%- endcomment -%}
+  <div class="bs-modal-overlay" id="bs-modal-overlay" onclick="bsCloseModal(event)">
+    <div class="bs-modal" id="bs-modal" role="dialog" aria-modal="true" aria-labelledby="bs-modal-title">
+      <button class="bs-modal-close" onclick="bsCloseModal()" aria-label="Close">&times;</button>
+
+      <div class="bs-modal-header">
+        <div class="bs-modal-label">License Request</div>
+        <h2 class="bs-modal-title" id="bs-modal-title">Request This Beat</h2>
+        <p class="bs-modal-sub">Fill this out and I'll personally reach back out before anything gets sent. No bots.</p>
+      </div>
+
+      <div class="bs-modal-beat-name" id="bs-modal-beat-display">—</div>
+
+      {%- form 'contact', id: 'bs-request-form', class: 'bs-form' -%}
+
+        <input type="hidden" name="contact[subject]" id="bs-form-subject" value="Beat License Request">
+        <input type="hidden" name="contact[beat_requested]" id="bs-form-beat" value="">
+
+        <div class="bs-form-row">
+          <div class="bs-form-group">
+            <label class="bs-label" for="bs-name">Full Name *</label>
+            <input type="text" id="bs-name" name="contact[name]" class="bs-input" placeholder="Your name" required>
+          </div>
+        </div>
+
+        <div class="bs-form-row bs-form-row--2">
+          <div class="bs-form-group">
+            <label class="bs-label" for="bs-email">Email *</label>
+            <input type="email" id="bs-email" name="contact[email]" class="bs-input" placeholder="your@email.com" required>
+          </div>
+          <div class="bs-form-group">
+            <label class="bs-label" for="bs-phone">Phone / SMS <span class="bs-label-opt">(optional)</span></label>
+            <input type="tel" id="bs-phone" name="contact[phone]" class="bs-input" placeholder="+1 (555) 000-0000">
+          </div>
+        </div>
+
+        <div class="bs-form-row">
+          <div class="bs-form-group">
+            <label class="bs-label">License Tier *</label>
+            <div class="bs-tier-select">
+              <label class="bs-tier-option" id="bs-tier-standard">
+                <input type="radio" name="contact[license_tier]" value="Standard — $30 (MP3, 100K streams, 1 video)" checked>
+                <div class="bs-tier-card">
+                  <div class="bs-tier-name">Standard</div>
+                  <div class="bs-tier-price">$30</div>
+                  <div class="bs-tier-features">MP3 · 100K streams · 1 video</div>
+                </div>
+              </label>
+              <label class="bs-tier-option" id="bs-tier-premium">
+                <input type="radio" name="contact[license_tier]" value="Premium — $300 (WAV + Stems, 500K streams, Radio)">
+                <div class="bs-tier-card">
+                  <div class="bs-tier-badge">POPULAR</div>
+                  <div class="bs-tier-name">Premium</div>
+                  <div class="bs-tier-price">$300</div>
+                  <div class="bs-tier-features">WAV + Stems · 500K streams · Radio</div>
+                </div>
+              </label>
+            </div>
+          </div>
+        </div>
+
+        <div class="bs-form-row">
+          <div class="bs-form-group">
+            <label class="bs-label" for="bs-artist">Artist / Project Name <span class="bs-label-opt">(optional)</span></label>
+            <input type="text" id="bs-artist" name="contact[artist_name]" class="bs-input" placeholder="What name are you releasing under?">
+          </div>
+        </div>
+
+        <div class="bs-form-row">
+          <div class="bs-form-group">
+            <label class="bs-label" for="bs-message">Anything else? <span class="bs-label-opt">(optional)</span></label>
+            <textarea id="bs-message" name="contact[message]" class="bs-input bs-textarea" rows="3" placeholder="Tell me about the project, vision, or any questions..."></textarea>
+          </div>
+        </div>
+
+        <button type="submit" class="bs-submit">
+          Send Request
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z"/></svg>
+        </button>
+
+        <p class="bs-form-note">I'll hit you back within 24 hours via email (or text if you left your number). No spam, ever.</p>
+
+      {%- endform -%}
+
+    </div>
+  </div>
+
+</section>
+
+{%- if form.posted_successfully? -%}
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+      var confirm = document.createElement('div');
+      confirm.className = 'bs-confirm-toast';
+      confirm.innerHTML = '<svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41L9 16.17z"/></svg> Request sent — I\'ll hit you back shortly.';
+      document.body.appendChild(confirm);
+      setTimeout(function(){ confirm.classList.add('show'); }, 100);
+      setTimeout(function(){ confirm.classList.remove('show'); }, 5000);
+    });
+  </script>
+{%- endif -%}
+
+<script>
+(function() {
+  var audio = null;
+  var curIdx = null;
+  var curBtn = null;
+  var allRows = [];
+  var allBtns = [];
+
+  var playerBar = document.getElementById('bs-player-bar');
+  var barName   = document.getElementById('bs-bar-name');
+  var barArt    = document.getElementById('bs-bar-art');
+  var barFill   = document.getElementById('bs-bar-fill');
+  var barThumb  = document.getElementById('bs-bar-thumb');
+  var barTime   = document.getElementById('bs-bar-time');
+  var barDur    = document.getElementById('bs-bar-dur');
+  var barTrack  = document.getElementById('bs-bar-track');
+  var barPP     = document.getElementById('bs-bar-playpause');
+  var barPrev   = document.getElementById('bs-bar-prev');
+  var barNext   = document.getElementById('bs-bar-next');
+  var barClose  = document.getElementById('bs-bar-close');
+  var volSlider = document.getElementById('bs-vol-slider');
+
+  function fmt(s) {
+    var m = Math.floor(s/60), sec = Math.floor(s%60);
+    return m+':'+(sec<10?'0':'')+sec;
+  }
+
+  function setBarPlaying(playing) {
+    barPP.querySelector('.icon-play').style.display  = playing ? 'none' : '';
+    barPP.querySelector('.icon-pause').style.display = playing ? '' : 'none';
+  }
+
+  function setRowPlaying(btn, playing) {
+    if (!btn) return;
+    btn.querySelector('.bs-play-btn__play').style.display  = playing ? 'none' : '';
+    btn.querySelector('.bs-play-btn__pause').style.display = playing ? '' : 'none';
+    var row = btn.closest('.bs-row');
+    if (row) row.classList.toggle('bs-row--playing', playing);
+  }
+
+  function updateProgress() {
+    if (!audio || !audio.duration) return;
+    var pct = (audio.currentTime / audio.duration) * 100;
+    barFill.style.width = pct + '%';
+    if (barThumb) barThumb.style.left = pct + '%';
+    barTime.textContent = fmt(audio.currentTime);
+    // update inline row waveform
+    var fill = document.querySelector('.bs-row__prog-fill[data-playing]');
+    if (!fill) {
+      var track = document.querySelector('.bs-row__prog-track[data-index="'+curIdx+'"]');
+      if (track) track.querySelector('.bs-row__prog-fill').style.width = pct+'%';
+    }
+    var cur = document.querySelector('.bs-row__time-cur[data-index="'+curIdx+'"]');
+    if (cur) cur.textContent = fmt(audio.currentTime);
+  }
+
+  function playBeat(btn) {
+    var url   = btn.dataset.audio;
+    var name  = btn.dataset.beat;
+    var art   = btn.dataset.artwork;
+    var idx   = btn.dataset.index;
+
+    if (curIdx === idx && audio) {
+      if (audio.paused) { audio.play(); setRowPlaying(btn,true); setBarPlaying(true); }
+      else              { audio.pause(); setRowPlaying(btn,false); setBarPlaying(false); }
+      return;
+    }
+
+    if (audio) { audio.pause(); setRowPlaying(curBtn,false); resetRow(curIdx); }
+
+    audio  = new Audio(url);
+    curIdx = idx;
+    curBtn = btn;
+    if (volSlider) audio.volume = volSlider.value / 100;
+
+    barName.textContent = name;
+    if (art) {
+      barArt.innerHTML = '<img src="'+art+'" alt="'+name+'" style="width:100%;height:100%;object-fit:cover;border-radius:3px;">';
+    } else {
+      barArt.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M12 3v10.55c-.59-.34-1.27-.55-2-.55-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z"/></svg>';
+    }
+
+    playerBar.style.display = '';
+    setRowPlaying(btn,true);
+    setBarPlaying(true);
+
+    audio.addEventListener('loadedmetadata', function(){
+      barDur.textContent = fmt(audio.duration);
+      var tot = document.querySelector('.bs-row__time-tot[data-index="'+idx+'"]');
+      if (tot) tot.textContent = fmt(audio.duration);
+    });
+    audio.addEventListener('timeupdate', updateProgress);
+    audio.addEventListener('ended', function(){
+      setRowPlaying(curBtn,false);
+      setBarPlaying(false);
+      barFill.style.width = '0%';
+      if (barThumb) barThumb.style.left = '0%';
+      barTime.textContent = '0:00';
+      resetRow(idx);
+    });
+    audio.play();
+  }
+
+  function resetRow(idx) {
+    var fill = document.querySelector('.bs-row__prog-track[data-index="'+idx+'"] .bs-row__prog-fill');
+    if (fill) fill.style.width = '0%';
+    var cur = document.querySelector('.bs-row__time-cur[data-index="'+idx+'"]');
+    if (cur) cur.textContent = '0:00';
+  }
+
+  function getAdjacentBtn(dir) {
+    var btns = Array.from(document.querySelectorAll('.bs-play-btn:not(.bs-play-btn--disabled)'));
+    if (!btns.length) return null;
+    var ci = btns.findIndex(function(b){ return b.dataset.index === curIdx; });
+    if (ci === -1) return null;
+    var ni = ci + dir;
+    if (ni < 0 || ni >= btns.length) return null;
+    return btns[ni];
+  }
+
+  // Attach play button listeners
+  document.querySelectorAll('.bs-play-btn:not(.bs-play-btn--disabled)').forEach(function(btn){
+    btn.addEventListener('click', function(){ playBeat(this); });
+  });
+
+  // Bar play/pause
+  barPP && barPP.addEventListener('click', function(){
+    if (!audio) return;
+    if (audio.paused){ audio.play(); setRowPlaying(curBtn,true); setBarPlaying(true); }
+    else             { audio.pause(); setRowPlaying(curBtn,false); setBarPlaying(false); }
+  });
+
+  // Prev / Next
+  barPrev && barPrev.addEventListener('click', function(){
+    var b = getAdjacentBtn(-1); if(b) playBeat(b);
+  });
+  barNext && barNext.addEventListener('click', function(){
+    var b = getAdjacentBtn(1); if(b) playBeat(b);
+  });
+
+  // Scrubber click
+  barTrack && barTrack.addEventListener('click', function(e){
+    if (!audio || !audio.duration) return;
+    var rect = this.getBoundingClientRect();
+    var pct  = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width));
+    audio.currentTime = pct * audio.duration;
+    updateProgress();
+  });
+
+  // Volume
+  volSlider && volSlider.addEventListener('input', function(){
+    if (audio) audio.volume = this.value / 100;
+  });
+
+  // Close
+  barClose && barClose.addEventListener('click', function(){
+    if (audio){ audio.pause(); audio = null; }
+    setRowPlaying(curBtn,false);
+    if (curIdx) resetRow(curIdx);
+    curBtn = null; curIdx = null;
+    playerBar.style.display = 'none';
+    setBarPlaying(false);
+    barFill.style.width = '0%';
+    if (barThumb) barThumb.style.left = '0%';
+    barTime.textContent = '0:00';
+    barDur.textContent  = '0:00';
+    barName.textContent = '—';
+  });
+
+})();
+
+function bsOpenModal(beatTitle) {
+  document.getElementById('bs-modal-overlay').classList.add('active');
+  document.getElementById('bs-modal-beat-display').textContent = beatTitle;
+  document.getElementById('bs-form-beat').value = beatTitle;
+  document.getElementById('bs-form-subject').value = 'Beat License Request — ' + beatTitle;
+  document.body.style.overflow = 'hidden';
+}
+
+function bsCloseModal(e) {
+  if (e && e.target !== document.getElementById('bs-modal-overlay') && !e.target.closest('.bs-modal-close')) return;
+  document.getElementById('bs-modal-overlay').classList.remove('active');
+  document.body.style.overflow = '';
+}
+
+document.addEventListener('keydown', function(e){
+  if (e.key === 'Escape') bsCloseModal();
+});
+</script>
+
+{% schema %}
+{
+  "name": "Beat Store",
+  "tag": "section",
+  "class": "beat-store-section",
+  "max_blocks": 50,
+  "settings": [
+    {
+      "type": "text",
+      "id": "store_title",
+      "label": "Store Title",
+      "default": "Beat Store"
+    },
+    {
+      "type": "text",
+      "id": "store_tagline",
+      "label": "Tagline",
+      "default": "Stream previews below. Request a license and I'll hit you back personally before anything gets sent."
+    }
+  ],
+  "blocks": [
+    {
+      "type": "beat",
+      "name": "Beat",
+      "settings": [
+        {
+          "type": "text",
+          "id": "title",
+          "label": "Beat Title",
+          "default": "Untitled Beat"
+        },
+        {
+          "type": "image_picker",
+          "id": "artwork",
+          "label": "Beat Artwork"
+        },
+        {
+          "type": "url",
+          "id": "audio_url",
+          "label": "Audio Preview URL",
+          "info": "Upload MP3 to Settings → Files, paste URL here"
+        },
+        {
+          "type": "text",
+          "id": "bpm",
+          "label": "BPM",
+          "placeholder": "140"
+        },
+        {
+          "type": "text",
+          "id": "key",
+          "label": "Key",
+          "placeholder": "F Minor"
+        },
+        {
+          "type": "text",
+          "id": "tag",
+          "label": "Genre / Mood Tag",
+          "placeholder": "Trap · Dark"
+        }
+      ]
+    }
+  ],
+  "presets": [
+    {
+      "name": "Beat Store",
+      "category": "Music",
+      "blocks": [
+        { "type": "beat", "settings": { "title": "Sample Beat 1", "bpm": "140", "tag": "Trap · Dark" } },
+        { "type": "beat", "settings": { "title": "Sample Beat 2", "bpm": "90", "tag": "R&B · Chill" } },
+        { "type": "beat", "settings": { "title": "Sample Beat 3", "bpm": "160", "tag": "Drill · Hard" } }
+      ]
+    }
+  ]
+}
+{% endschema %}

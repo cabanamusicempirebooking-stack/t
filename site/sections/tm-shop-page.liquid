@@ -1,0 +1,118 @@
+{% comment %} SECTION: tm-shop-page.liquid — CME Shop Landing Page {% endcomment %}
+<style>
+.tm-shop-page { background: #f7f5f2; padding: 80px 64px 96px; }
+.tm-sp-eyebrow { display: flex; align-items: center; gap: 12px; font-family: 'DM Sans', sans-serif; font-size: 9px; font-weight: 500; letter-spacing: 4px; text-transform: uppercase; color: #ff2a2a; margin-bottom: 14px; }
+.tm-sp-eyebrow::before { content: ''; display: block; width: 24px; height: 1px; background: #ff2a2a; }
+.tm-sp-title { font-family: 'Bebas Neue', sans-serif; font-size: clamp(64px, 10vw, 128px); line-height: 0.9; letter-spacing: 1px; color: #0d0d0d; }
+.tm-sp-title .ghost { color: transparent; -webkit-text-stroke: 1.5px rgba(13,13,13,0.18); }
+.tm-sp-subtitle { font-family: 'Cormorant Garamond', serif; font-style: italic; font-size: 20px; font-weight: 300; color: rgba(13,13,13,0.5); margin-top: 20px; max-width: 520px; line-height: 1.7; }
+
+.tm-sp-divider { height: 1px; background: rgba(13,13,13,0.08); margin: 56px 0; }
+
+.tm-sp-section-label { font-family: 'DM Sans', sans-serif; font-size: 9px; font-weight: 600; letter-spacing: 4px; text-transform: uppercase; color: rgba(13,13,13,0.35); margin-bottom: 28px; display: flex; align-items: center; gap: 14px; }
+.tm-sp-section-label::after { content: ''; flex: 1; height: 1px; background: rgba(13,13,13,0.08); }
+
+/* Category grid */
+.tm-sp-cats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-bottom: 48px; }
+
+.tm-sp-cat {
+  background: #fff;
+  border: 1px solid rgba(13,13,13,0.08);
+  padding: 32px 28px;
+  text-decoration: none;
+  color: inherit;
+  transition: border-color 0.2s, transform 0.2s, box-shadow 0.2s;
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.tm-sp-cat:hover { border-color: #ff2a2a; transform: translateY(-4px); box-shadow: 0 14px 48px rgba(0,0,0,0.08); }
+.tm-sp-cat::after { content: ''; position: absolute; bottom: 0; left: 0; right: 0; height: 2px; background: #ff2a2a; transform: scaleX(0); transform-origin: left; transition: transform 0.3s ease; }
+.tm-sp-cat:hover::after { transform: scaleX(1); }
+.tm-sp-cat--featured { border-color: rgba(255,42,42,0.3); }
+
+.tm-sp-cat-icon { font-size: 28px; line-height: 1; }
+.tm-sp-cat-name { font-family: 'Bebas Neue', sans-serif; font-size: 26px; letter-spacing: 2px; color: #0d0d0d; line-height: 1; margin-top: 4px; }
+.tm-sp-cat-desc { font-family: 'DM Sans', sans-serif; font-size: 12px; color: rgba(13,13,13,0.5); line-height: 1.6; flex: 1; }
+.tm-sp-cat-cta { font-family: 'DM Sans', sans-serif; font-size: 9px; font-weight: 600; letter-spacing: 2.5px; text-transform: uppercase; color: #ff2a2a; padding-top: 14px; border-top: 1px solid rgba(13,13,13,0.06); }
+
+/* Bottom CTA */
+.tm-sp-footer { display: flex; gap: 14px; align-items: center; flex-wrap: wrap; }
+.tm-sp-all-btn { display: inline-flex; align-items: center; gap: 10px; font-family: 'DM Sans', sans-serif; font-size: 10px; font-weight: 500; letter-spacing: 2.5px; text-transform: uppercase; color: #fff; background: #0d0d0d; padding: 15px 34px; text-decoration: none; transition: background 0.25s, transform 0.2s; }
+.tm-sp-all-btn:hover { background: #ff2a2a; transform: translateY(-2px); }
+.tm-sp-all-btn--outline { background: transparent; color: #0d0d0d; border: 1px solid rgba(13,13,13,0.25); }
+.tm-sp-all-btn--outline:hover { border-color: #0d0d0d; background: transparent; }
+
+@media (max-width: 767px) {
+  .tm-shop-page { padding: 60px 20px 72px; }
+  .tm-sp-cats { grid-template-columns: 1fr 1fr; gap: 10px; }
+  .tm-sp-cat { padding: 20px 16px; gap: 8px; }
+  .tm-sp-cat-icon { font-size: 22px; }
+  .tm-sp-cat-name { font-size: 20px; }
+  .tm-sp-cat-desc { font-size: 11px; }
+  .tm-sp-footer { flex-direction: column; align-items: stretch; }
+  .tm-sp-all-btn { text-align: center; justify-content: center; }
+}
+</style>
+
+<section class="tm-shop-page">
+  <div class="tm-sp-eyebrow">{{ section.settings.eyebrow | default: 'Cabana Music Empire' }}</div>
+  <h1 class="tm-sp-title">
+    {{ section.settings.title_line1 | default: 'CME' }}<br>
+    <span class="ghost">{{ section.settings.title_line2 | default: 'Store' }}</span>
+  </h1>
+  <p class="tm-sp-subtitle">{{ section.settings.subtitle | default: 'Music. Merch. Audio Tools. All CME — in one place.' }}</p>
+
+  <div class="tm-sp-divider"></div>
+  <div class="tm-sp-section-label">Shop By Category</div>
+
+  <div class="tm-sp-cats">
+    {% for block in section.blocks %}{% if block.type == 'category' %}
+      <a href="{{ block.settings.link }}" class="tm-sp-cat {% if block.settings.featured %}tm-sp-cat--featured{% endif %}" {{ block.shopify_attributes }}>
+        <div class="tm-sp-cat-icon">{{ block.settings.icon }}</div>
+        <div class="tm-sp-cat-name">{{ block.settings.title }}</div>
+        <div class="tm-sp-cat-desc">{{ block.settings.desc }}</div>
+        <div class="tm-sp-cat-cta">Shop Now →</div>
+      </a>
+    {% endif %}{% endfor %}
+  </div>
+
+  <div class="tm-sp-footer">
+    <a href="{{ section.settings.all_link | default: '/collections/all-merch' }}" class="tm-sp-all-btn">
+      {{ section.settings.all_text | default: 'Browse All Products' }} →
+    </a>
+    <a href="/pages/beats" class="tm-sp-all-btn tm-sp-all-btn--outline">
+      Beat Store →
+    </a>
+  </div>
+</section>
+
+{% schema %}
+{
+  "name": "TM Shop Page",
+  "settings": [
+    { "type": "text",     "id": "eyebrow",     "label": "Eyebrow",       "default": "Cabana Music Empire" },
+    { "type": "text",     "id": "title_line1", "label": "Title Line 1",  "default": "CME" },
+    { "type": "text",     "id": "title_line2", "label": "Title Line 2",  "default": "Store" },
+    { "type": "textarea", "id": "subtitle",     "label": "Subtitle",      "default": "Music. Merch. Audio Tools. All CME — in one place." },
+    { "type": "text",     "id": "all_text",    "label": "Browse All Button Text", "default": "Browse All Products" },
+    { "type": "url",      "id": "all_link",    "label": "Browse All Link" }
+  ],
+  "blocks": [
+    {
+      "type": "category",
+      "name": "Category Card",
+      "settings": [
+        { "type": "text",     "id": "icon",     "label": "Emoji Icon",             "default": "🧢" },
+        { "type": "text",     "id": "title",    "label": "Category Title",         "default": "Headwear" },
+        { "type": "textarea", "id": "desc",     "label": "Description",            "default": "Hats, caps, and accessories" },
+        { "type": "url",      "id": "link",     "label": "Link" },
+        { "type": "checkbox", "id": "featured", "label": "Featured (red border)", "default": false }
+      ]
+    }
+  ],
+  "presets": [{ "name": "TM Shop Page" }]
+}
+{% endschema %}

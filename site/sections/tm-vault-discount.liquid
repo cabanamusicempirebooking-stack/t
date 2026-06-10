@@ -1,0 +1,269 @@
+{% comment %}
+  SECTION: tm-vault-discount.liquid
+  Music Vault — APP10 exclusive discount code display.
+{% endcomment %}
+
+<style>
+.tm-vault-discount {
+  background: #0d0d0d;
+  padding: 100px 64px;
+  position: relative;
+  overflow: hidden;
+}
+
+/* Radial glow in the center */
+.tm-vault-discount-glow {
+  position: absolute;
+  top: 50%; left: 50%;
+  transform: translate(-50%, -50%);
+  width: 600px; height: 600px;
+  background: radial-gradient(ellipse, rgba(255,42,42,0.07) 0%, transparent 70%);
+  pointer-events: none;
+}
+.tm-vault-discount-grid {
+  position: absolute; inset: 0;
+  background-image: linear-gradient(rgba(255,42,42,0.025) 1px,transparent 1px),
+                    linear-gradient(90deg,rgba(255,42,42,0.025) 1px,transparent 1px);
+  background-size: 72px 72px;
+  pointer-events: none;
+}
+
+.tm-vault-discount-inner {
+  max-width: 760px; margin: 0 auto;
+  text-align: center;
+  position: relative; z-index: 1;
+}
+
+.tm-vault-discount-eyebrow {
+  font-family: 'DM Sans', sans-serif;
+  font-size: 9px; font-weight: 500;
+  letter-spacing: 4px; text-transform: uppercase;
+  color: #ff2a2a; margin-bottom: 20px;
+  display: flex; align-items: center; justify-content: center; gap: 12px;
+}
+.tm-vault-discount-eyebrow::before,
+.tm-vault-discount-eyebrow::after {
+  content: ''; display: block; width: 28px; height: 1px; background: #ff2a2a;
+}
+
+.tm-vault-discount-heading {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: clamp(44px, 7vw, 84px);
+  line-height: 0.92; letter-spacing: -0.5px;
+  color: #fff; margin-bottom: 20px;
+}
+.tm-vault-discount-heading em {
+  color: #ff2a2a; font-style: normal;
+}
+
+.tm-vault-discount-sub {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 18px; font-weight: 300; font-style: italic;
+  color: rgba(255,255,255,0.45); line-height: 1.6;
+  margin-bottom: 52px;
+  max-width: 520px; margin-left: auto; margin-right: auto;
+}
+
+/* Code display */
+.tm-vault-code-wrap {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+  margin-bottom: 48px;
+}
+.tm-vault-code-label {
+  font-family: 'DM Sans', sans-serif;
+  font-size: 8px; font-weight: 500;
+  letter-spacing: 3px; text-transform: uppercase;
+  color: rgba(255,255,255,0.25);
+}
+.tm-vault-code-box {
+  display: flex; align-items: center; gap: 0;
+  border: 1px solid rgba(255,42,42,0.35);
+  position: relative;
+}
+.tm-vault-code-value {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: clamp(32px, 6vw, 56px);
+  letter-spacing: 8px;
+  color: #fff;
+  padding: 20px 36px;
+  line-height: 1;
+  user-select: all;
+}
+.tm-vault-code-copy {
+  font-family: 'DM Sans', sans-serif;
+  font-size: 8px; font-weight: 500;
+  letter-spacing: 2.5px; text-transform: uppercase;
+  color: #ff2a2a;
+  background: rgba(255,42,42,0.08);
+  border: none; border-left: 1px solid rgba(255,42,42,0.35);
+  padding: 0 20px;
+  cursor: pointer;
+  height: 100%;
+  position: absolute; right: 0; top: 0; bottom: 0;
+  display: flex; align-items: center;
+  transition: background 0.2s, color 0.2s;
+}
+.tm-vault-code-copy:hover { background: rgba(255,42,42,0.18); }
+.tm-vault-code-copy.copied { color: #4caf50; }
+
+.tm-vault-discount-savings {
+  display: flex; align-items: center; justify-content: center; gap: 28px;
+  margin-bottom: 48px;
+  flex-wrap: wrap;
+}
+.tm-vault-discount-stat {
+  display: flex; flex-direction: column; align-items: center; gap: 4px;
+}
+.tm-vault-discount-stat-num {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 36px; color: #fff; letter-spacing: 0; line-height: 1;
+}
+.tm-vault-discount-stat-num em { color: #ff2a2a; font-style: normal; }
+.tm-vault-discount-stat-label {
+  font-family: 'DM Sans', sans-serif;
+  font-size: 8px; letter-spacing: 2.5px;
+  text-transform: uppercase; color: rgba(255,255,255,0.3);
+}
+.tm-vault-discount-stat-divider {
+  width: 1px; height: 40px;
+  background: linear-gradient(to bottom, transparent, rgba(255,255,255,0.1), transparent);
+}
+
+.tm-vault-discount-cta {
+  font-family: 'DM Sans', sans-serif;
+  font-size: 10px; font-weight: 500;
+  letter-spacing: 2.5px; text-transform: uppercase;
+  color: white; background: #ff2a2a;
+  padding: 16px 40px;
+  border: 1px solid #ff2a2a;
+  text-decoration: none;
+  display: inline-block;
+  transition: background 0.25s, transform 0.25s;
+  margin-bottom: 24px;
+}
+.tm-vault-discount-cta:hover { background: #e01f1f; transform: translateY(-2px); }
+
+.tm-vault-discount-terms {
+  font-family: 'DM Sans', sans-serif;
+  font-size: 9px; letter-spacing: 1px;
+  color: rgba(255,255,255,0.2); line-height: 1.7;
+  max-width: 480px; margin: 0 auto;
+}
+
+@media (max-width: 767px) {
+  .tm-vault-discount { padding: 64px 24px; }
+  .tm-vault-discount-glow { width: 320px; height: 320px; }
+  .tm-vault-discount-sub { margin-bottom: 36px; }
+  .tm-vault-code-value { font-size: 32px; letter-spacing: 6px; padding: 16px 20px; }
+  .tm-vault-code-copy { position: static; border-left: none; border-top: 1px solid rgba(255,42,42,0.35); padding: 14px 20px; width: 100%; justify-content: center; }
+  .tm-vault-code-box { flex-direction: column; width: 100%; max-width: 320px; }
+  .tm-vault-discount-savings { gap: 16px; }
+}
+</style>
+
+<section class="tm-vault-discount" id="vault-discount">
+  <div class="tm-vault-discount-grid"></div>
+  <div class="tm-vault-discount-glow"></div>
+
+  <div class="tm-vault-discount-inner">
+
+    <div class="tm-vault-discount-eyebrow">{{ section.settings.eyebrow | default: 'App-Only Offer' }}</div>
+
+    <div class="tm-vault-discount-heading">
+      {{ section.settings.heading | default: 'Save <em>10%</em> on every order' }}
+    </div>
+
+    <p class="tm-vault-discount-sub">{{ section.settings.subheading | default: 'Your loyalty deserves a reward. Vault members save on every purchase — beats, albums, and merch.' }}</p>
+
+    <div class="tm-vault-code-wrap">
+      <div class="tm-vault-code-label">Your exclusive discount code</div>
+      <div class="tm-vault-code-box">
+        <div class="tm-vault-code-value" id="vaultCode">{{ section.settings.code | default: 'APP10' }}</div>
+        <button class="tm-vault-code-copy" id="vaultCopyBtn" onclick="tmCopyCode()" aria-label="Copy code">
+          Copy
+        </button>
+      </div>
+    </div>
+
+    <div class="tm-vault-discount-savings">
+      <div class="tm-vault-discount-stat">
+        <div class="tm-vault-discount-stat-num"><em>{{ section.settings.stat1_value | default: '10' }}</em>%</div>
+        <div class="tm-vault-discount-stat-label">{{ section.settings.stat1_label | default: 'Off everything' }}</div>
+      </div>
+      <div class="tm-vault-discount-stat-divider"></div>
+      <div class="tm-vault-discount-stat">
+        <div class="tm-vault-discount-stat-num">{{ section.settings.stat2_value | default: '11' }}</div>
+        <div class="tm-vault-discount-stat-label">{{ section.settings.stat2_label | default: 'Albums available' }}</div>
+      </div>
+      <div class="tm-vault-discount-stat-divider"></div>
+      <div class="tm-vault-discount-stat">
+        <div class="tm-vault-discount-stat-num"><em>{{ section.settings.stat3_value | default: '1' }}</em></div>
+        <div class="tm-vault-discount-stat-label">{{ section.settings.stat3_label | default: 'Code. Unlimited uses' }}</div>
+      </div>
+    </div>
+
+    {% if section.settings.cta_link != blank %}
+      <div>
+        <a href="{{ section.settings.cta_link }}" class="tm-vault-discount-cta">
+          {{ section.settings.cta_text | default: 'Shop Now' }}
+        </a>
+      </div>
+    {% endif %}
+
+    {% if section.settings.terms != blank %}
+      <p class="tm-vault-discount-terms">{{ section.settings.terms }}</p>
+    {% endif %}
+
+  </div>
+</section>
+
+<script>
+function tmCopyCode() {
+  var code = document.getElementById('vaultCode');
+  var btn  = document.getElementById('vaultCopyBtn');
+  if (!code || !btn) return;
+  navigator.clipboard.writeText(code.textContent.trim()).then(function() {
+    btn.textContent = 'Copied!';
+    btn.classList.add('copied');
+    setTimeout(function() {
+      btn.textContent = 'Copy';
+      btn.classList.remove('copied');
+    }, 2200);
+  }).catch(function() {
+    // Fallback: select text so user can copy manually
+    var range = document.createRange();
+    range.selectNode(code);
+    window.getSelection().removeAllRanges();
+    window.getSelection().addRange(range);
+  });
+}
+</script>
+
+{% schema %}
+{
+  "name": "Vault Discount",
+  "settings": [
+    { "type": "text", "id": "eyebrow", "label": "Eyebrow", "default": "App-Only Offer" },
+    { "type": "text", "id": "heading", "label": "Heading", "default": "Save 10% on every order" },
+    { "type": "textarea", "id": "subheading", "label": "Subheading", "default": "Your loyalty deserves a reward. Vault members save on every purchase — beats, albums, and merch." },
+    { "type": "header", "content": "Discount Code" },
+    { "type": "text", "id": "code", "label": "Discount Code", "default": "APP10" },
+    { "type": "header", "content": "Stats" },
+    { "type": "text", "id": "stat1_value", "label": "Stat 1 Number", "default": "10" },
+    { "type": "text", "id": "stat1_label", "label": "Stat 1 Label", "default": "Off everything" },
+    { "type": "text", "id": "stat2_value", "label": "Stat 2 Number", "default": "11" },
+    { "type": "text", "id": "stat2_label", "label": "Stat 2 Label", "default": "Albums available" },
+    { "type": "text", "id": "stat3_value", "label": "Stat 3 Number", "default": "1" },
+    { "type": "text", "id": "stat3_label", "label": "Stat 3 Label", "default": "Code. Unlimited uses" },
+    { "type": "header", "content": "CTA" },
+    { "type": "text", "id": "cta_text", "label": "Button Text", "default": "Shop Now" },
+    { "type": "url", "id": "cta_link", "label": "Button Link" },
+    { "type": "header", "content": "Terms" },
+    { "type": "textarea", "id": "terms", "label": "Terms Text", "default": "Code applies to all products. Cannot be combined with other offers. No expiry — yours as long as you're in the Vault." }
+  ],
+  "presets": [{ "name": "Vault Discount" }]
+}
+{% endschema %}

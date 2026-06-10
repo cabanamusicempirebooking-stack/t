@@ -1,0 +1,538 @@
+{% comment %}
+  SECTION: tm-vault-player.liquid
+  Tiered music player for the Vault.
+  vault-member  → plays free-tier tracks, sees locked state on premium tracks
+  vault-premium → plays all tracks
+  Tracks are configured via section blocks (title, artist, audio_url, tier, cover).
+{% endcomment %}
+
+{% assign tm_is_premium = false %}
+{% if customer %}
+  {% if customer.tags contains 'vault-premium' %}
+    {% assign tm_is_premium = true %}
+  {% endif %}
+{% endif %}
+
+<style>
+.tm-vp {
+  background: #0d0d0d;
+  padding: 100px 64px;
+  position: relative; overflow: hidden;
+}
+.tm-vp-bg {
+  position: absolute; inset: 0;
+  background-image:
+    linear-gradient(rgba(255,42,42,0.025) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255,42,42,0.025) 1px, transparent 1px);
+  background-size: 72px 72px;
+  pointer-events: none;
+}
+.tm-vp-inner { max-width: 1100px; margin: 0 auto; position: relative; z-index: 1; }
+
+/* Header */
+.tm-vp-header {
+  display: flex; align-items: flex-end; justify-content: space-between;
+  gap: 32px; margin-bottom: 52px;
+}
+.tm-vp-eyebrow {
+  font-family: 'DM Sans', sans-serif;
+  font-size: 9px; font-weight: 500; letter-spacing: 4px; text-transform: uppercase;
+  color: #ff2a2a; margin-bottom: 14px;
+  display: flex; align-items: center; gap: 12px;
+}
+.tm-vp-eyebrow::before { content: ''; width: 28px; height: 1px; background: #ff2a2a; }
+.tm-vp-title {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: clamp(40px, 5vw, 64px); line-height: 0.92; color: #fff;
+}
+.tm-vp-title .outline { color: transparent; -webkit-text-stroke: 1.5px rgba(255,255,255,0.18); display: block; }
+
+/* Tier badge */
+.tm-vp-tier-badge {
+  font-family: 'DM Sans', sans-serif;
+  font-size: 8px; font-weight: 500; letter-spacing: 2.5px; text-transform: uppercase;
+  padding: 6px 14px; border: 1px solid; white-space: nowrap; flex-shrink: 0;
+}
+.tm-vp-tier-badge.free    { color: rgba(255,255,255,0.4); border-color: rgba(255,255,255,0.12); }
+.tm-vp-tier-badge.premium { color: #ff2a2a; border-color: rgba(255,42,42,0.35); }
+
+/* Now playing bar */
+.tm-vp-now-playing {
+  background: rgba(255,42,42,0.06);
+  border: 1px solid rgba(255,42,42,0.18);
+  padding: 20px 28px;
+  display: flex; align-items: center; gap: 20px;
+  margin-bottom: 32px;
+}
+.tm-vp-np-art {
+  width: 52px; height: 52px; flex-shrink: 0;
+  background: rgba(255,255,255,0.05);
+  overflow: hidden;
+}
+.tm-vp-np-art img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.tm-vp-np-info { flex: 1; min-width: 0; }
+.tm-vp-np-title {
+  font-family: 'DM Sans', sans-serif; font-size: 14px; font-weight: 500;
+  color: #fff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  margin-bottom: 3px;
+}
+.tm-vp-np-sub {
+  font-family: 'DM Sans', sans-serif; font-size: 9px; letter-spacing: 2px;
+  text-transform: uppercase; color: rgba(255,255,255,0.3);
+}
+
+/* Controls */
+.tm-vp-controls { display: flex; align-items: center; gap: 16px; }
+.tm-vp-btn {
+  background: none; border: none; cursor: pointer; padding: 0;
+  color: rgba(255,255,255,0.7); transition: color 0.2s;
+  display: flex; align-items: center; justify-content: center;
+}
+.tm-vp-btn:hover { color: #ff2a2a; }
+.tm-vp-btn svg { width: 18px; height: 18px; fill: currentColor; }
+.tm-vp-btn.play-btn { width: 40px; height: 40px; background: #ff2a2a; border-radius: 50%; color: #fff; }
+.tm-vp-btn.play-btn:hover { background: #e01f1f; color: #fff; }
+.tm-vp-btn.play-btn svg { width: 16px; height: 16px; }
+
+/* Progress */
+.tm-vp-progress-wrap {
+  flex: 1; display: flex; align-items: center; gap: 12px;
+  min-width: 0;
+}
+.tm-vp-progress {
+  flex: 1; height: 3px; background: rgba(255,255,255,0.1);
+  cursor: pointer; position: relative;
+}
+.tm-vp-progress-fill {
+  height: 100%; background: #ff2a2a; width: 0%;
+  transition: width 0.1s linear; pointer-events: none;
+}
+.tm-vp-time {
+  font-family: 'DM Sans', sans-serif; font-size: 9px;
+  letter-spacing: 1px; color: rgba(255,255,255,0.3);
+  white-space: nowrap; flex-shrink: 0;
+}
+
+/* Volume */
+.tm-vp-volume-wrap { display: flex; align-items: center; gap: 8px; }
+.tm-vp-volume {
+  width: 60px; height: 3px; background: rgba(255,255,255,0.1);
+  cursor: pointer; position: relative;
+}
+.tm-vp-volume-fill { height: 100%; background: rgba(255,255,255,0.35); width: 70%; pointer-events: none; }
+
+/* Track list */
+.tm-vp-list { display: flex; flex-direction: column; gap: 0; }
+
+.tm-vp-track {
+  display: flex; align-items: center; gap: 18px;
+  padding: 16px 20px;
+  border-bottom: 1px solid rgba(255,255,255,0.04);
+  cursor: pointer; position: relative;
+  transition: background 0.15s;
+}
+.tm-vp-track:first-child { border-top: 1px solid rgba(255,255,255,0.04); }
+.tm-vp-track:hover { background: rgba(255,255,255,0.03); }
+.tm-vp-track.active { background: rgba(255,42,42,0.06); }
+.tm-vp-track.locked { cursor: default; }
+.tm-vp-track.locked:hover { background: transparent; }
+
+.tm-vp-track-num {
+  font-family: 'Bebas Neue', sans-serif; font-size: 18px;
+  color: rgba(255,255,255,0.18); min-width: 28px; text-align: center;
+  flex-shrink: 0;
+}
+.tm-vp-track.active .tm-vp-track-num { color: #ff2a2a; }
+
+.tm-vp-track-art {
+  width: 44px; height: 44px; flex-shrink: 0;
+  background: rgba(255,255,255,0.05); overflow: hidden; position: relative;
+}
+.tm-vp-track-art img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.tm-vp-track-art-placeholder {
+  width: 100%; height: 100%;
+  background: linear-gradient(135deg, rgba(255,42,42,0.15), rgba(13,13,13,0.8));
+}
+
+.tm-vp-track-info { flex: 1; min-width: 0; }
+.tm-vp-track-name {
+  font-family: 'DM Sans', sans-serif; font-size: 13px; font-weight: 500;
+  color: rgba(255,255,255,0.85); margin-bottom: 3px;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.tm-vp-track.active .tm-vp-track-name { color: #fff; }
+.tm-vp-track-meta {
+  font-family: 'DM Sans', sans-serif; font-size: 9px; letter-spacing: 1.5px;
+  text-transform: uppercase; color: rgba(255,255,255,0.28);
+}
+
+.tm-vp-track-right {
+  display: flex; align-items: center; gap: 10px; flex-shrink: 0;
+}
+.tm-vp-track-dur {
+  font-family: 'DM Sans', sans-serif; font-size: 10px;
+  color: rgba(255,255,255,0.25); letter-spacing: 1px;
+}
+
+/* Lock icon for premium tracks */
+.tm-vp-lock {
+  display: flex; align-items: center; gap: 6px;
+  font-family: 'DM Sans', sans-serif; font-size: 8px; font-weight: 500;
+  letter-spacing: 2px; text-transform: uppercase;
+  color: rgba(255,255,255,0.25);
+  border: 1px solid rgba(255,255,255,0.08); padding: 5px 10px;
+}
+.tm-vp-lock svg { width: 10px; height: 10px; fill: currentColor; }
+
+/* Playing animation bars */
+.tm-vp-playing-bars {
+  display: none; align-items: flex-end; gap: 2px; height: 16px;
+}
+.tm-vp-track.active .tm-vp-playing-bars { display: flex; }
+.tm-vp-track.active.paused .tm-vp-playing-bars { display: none; }
+.tm-vp-track.active.paused .tm-vp-track-num { display: block; }
+.tm-vp-bar {
+  width: 3px; background: #ff2a2a; border-radius: 1px;
+  animation: tmVPBar 0.8s ease-in-out infinite alternate;
+}
+.tm-vp-bar:nth-child(1) { height: 8px;  animation-delay: 0s; }
+.tm-vp-bar:nth-child(2) { height: 14px; animation-delay: 0.15s; }
+.tm-vp-bar:nth-child(3) { height: 10px; animation-delay: 0.3s; }
+@keyframes tmVPBar { from { transform: scaleY(0.4); } to { transform: scaleY(1); } }
+
+/* Upgrade CTA (shown below locked count) */
+.tm-vp-upgrade-strip {
+  margin-top: 28px; padding: 24px 28px;
+  background: rgba(255,255,255,0.02);
+  border: 1px solid rgba(255,255,255,0.06);
+  display: flex; align-items: center; justify-content: space-between; gap: 24px;
+}
+.tm-vp-upgrade-text {
+  font-family: 'DM Sans', sans-serif; font-size: 12px;
+  color: rgba(255,255,255,0.4); line-height: 1.5;
+}
+.tm-vp-upgrade-text strong { color: rgba(255,255,255,0.7); }
+.tm-vp-upgrade-btn {
+  font-family: 'DM Sans', sans-serif; font-size: 9px; font-weight: 500;
+  letter-spacing: 2.5px; text-transform: uppercase;
+  color: #fff; background: #ff2a2a; border: 1px solid #ff2a2a;
+  padding: 12px 24px; text-decoration: none; white-space: nowrap; flex-shrink: 0;
+  transition: background 0.2s;
+}
+.tm-vp-upgrade-btn:hover { background: #e01f1f; }
+
+/* Hidden audio element */
+#tmVaultAudio { display: none; }
+
+@media (max-width: 767px) {
+  .tm-vp { padding: 64px 24px; }
+  .tm-vp-header { flex-direction: column; align-items: flex-start; gap: 16px; margin-bottom: 32px; }
+  .tm-vp-now-playing { flex-direction: column; align-items: flex-start; gap: 14px; padding: 16px 20px; }
+  .tm-vp-controls { width: 100%; }
+  .tm-vp-progress-wrap { flex: 1; }
+  .tm-vp-volume-wrap { display: none; }
+  .tm-vp-track { padding: 14px 12px; gap: 12px; }
+  .tm-vp-upgrade-strip { flex-direction: column; align-items: flex-start; }
+}
+</style>
+
+<section class="tm-vp" id="vault-player">
+  <div class="tm-vp-bg"></div>
+  <audio id="tmVaultAudio" preload="none"></audio>
+
+  <div class="tm-vp-inner">
+
+    <!-- Header -->
+    <div class="tm-vp-header">
+      <div>
+        <div class="tm-vp-eyebrow">{{ section.settings.eyebrow | default: 'Vault Player' }}</div>
+        <div class="tm-vp-title">
+          <span>{{ section.settings.title_line1 | default: 'Exclusive' }}</span>
+          <span class="outline">{{ section.settings.title_line2 | default: 'Tracks' }}</span>
+        </div>
+      </div>
+      {% if tm_is_premium %}
+        <div class="tm-vp-tier-badge premium">Premium Access</div>
+      {% else %}
+        <div class="tm-vp-tier-badge free">Free Vault</div>
+      {% endif %}
+    </div>
+
+    <!-- Now Playing -->
+    <div class="tm-vp-now-playing" id="tmVPNowPlaying">
+      <div class="tm-vp-np-art" id="tmVPNPArt">
+        <div style="width:100%;height:100%;background:linear-gradient(135deg,rgba(255,42,42,0.2),rgba(13,13,13,0.9));"></div>
+      </div>
+      <div class="tm-vp-np-info">
+        <div class="tm-vp-np-title" id="tmVPNPTitle">Select a track</div>
+        <div class="tm-vp-np-sub" id="tmVPNPSub">T Mafianie · Vault</div>
+      </div>
+      <div style="flex:1;min-width:0;">
+        <div class="tm-vp-progress-wrap">
+          <div class="tm-vp-progress" id="tmVPProgress" onclick="tmVPSeek(event)">
+            <div class="tm-vp-progress-fill" id="tmVPFill"></div>
+          </div>
+          <div class="tm-vp-time" id="tmVPTime">0:00 / 0:00</div>
+        </div>
+      </div>
+      <div class="tm-vp-controls">
+        <button class="tm-vp-btn" onclick="tmVPPrev()" aria-label="Previous">
+          <svg viewBox="0 0 24 24"><path d="M6 6h2v12H6zm3.5 6 8.5 6V6z"/></svg>
+        </button>
+        <button class="tm-vp-btn play-btn" id="tmVPPlayBtn" onclick="tmVPToggle()" aria-label="Play/Pause">
+          <svg id="tmVPPlayIcon" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+        </button>
+        <button class="tm-vp-btn" onclick="tmVPNext()" aria-label="Next">
+          <svg viewBox="0 0 24 24"><path d="M6 18l8.5-6L6 6v12zm8.5-6v6h2V6h-2v6z"/></svg>
+        </button>
+        <div class="tm-vp-volume-wrap">
+          <button class="tm-vp-btn" onclick="tmVPMute()" aria-label="Mute">
+            <svg viewBox="0 0 24 24"><path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3A4.5 4.5 0 0 0 14 7.97v8.05c1.48-.73 2.5-2.25 2.5-4.02z"/></svg>
+          </button>
+          <div class="tm-vp-volume" id="tmVPVolume" onclick="tmVPSetVol(event)">
+            <div class="tm-vp-volume-fill" id="tmVPVolFill"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Track List -->
+    <div class="tm-vp-list" id="tmVPList">
+      {% assign locked_count = 0 %}
+      {% for block in section.blocks %}
+        {% if block.type == 'track' %}
+          {% assign is_locked = false %}
+          {% if block.settings.tier == 'premium' and tm_is_premium == false %}
+            {% assign is_locked = true %}
+            {% assign locked_count = locked_count | plus: 1 %}
+          {% endif %}
+
+          <div
+            class="tm-vp-track{% if is_locked %} locked{% endif %}"
+            data-index="{{ forloop.index0 }}"
+            data-src="{{ block.settings.audio_url }}"
+            data-title="{{ block.settings.title | escape }}"
+            data-artist="{{ block.settings.artist | default: 'T Mafianie' | escape }}"
+            data-album="{{ block.settings.album | escape }}"
+            data-art="{% if block.settings.cover %}{{ block.settings.cover | img_url: '200x200', crop: 'center' }}{% endif %}"
+            data-tier="{{ block.settings.tier | default: 'free' }}"
+            data-locked="{{ is_locked }}"
+            {% unless is_locked %}onclick="tmVPSelect(this)"{% endunless %}
+            {{ block.shopify_attributes }}
+          >
+            <div class="tm-vp-track-num" style="{% if is_locked %}display:block{% endif %}">
+              {{ forloop.index }}
+            </div>
+            <div class="tm-vp-playing-bars">
+              <div class="tm-vp-bar"></div>
+              <div class="tm-vp-bar"></div>
+              <div class="tm-vp-bar"></div>
+            </div>
+            <div class="tm-vp-track-art">
+              {% if block.settings.cover %}
+                <img src="{{ block.settings.cover | img_url: '200x200', crop: 'center' }}" alt="{{ block.settings.title }}" loading="lazy">
+              {% else %}
+                <div class="tm-vp-track-art-placeholder"></div>
+              {% endif %}
+            </div>
+            <div class="tm-vp-track-info">
+              <div class="tm-vp-track-name">{{ block.settings.title | default: 'Track Title' }}</div>
+              <div class="tm-vp-track-meta">
+                {{ block.settings.artist | default: 'T Mafianie' }}
+                {% if block.settings.album != blank %} · {{ block.settings.album }}{% endif %}
+              </div>
+            </div>
+            <div class="tm-vp-track-right">
+              {% if block.settings.duration != blank %}
+                <div class="tm-vp-track-dur">{{ block.settings.duration }}</div>
+              {% endif %}
+              {% if is_locked %}
+                <div class="tm-vp-lock">
+                  <svg viewBox="0 0 24 24"><path d="M18 8h-1V6c0-2.76-2.24-5-5-5S7 3.24 7 6v2H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V10c0-1.1-.9-2-2-2zm-6 9c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2zm3.1-9H8.9V6c0-1.71 1.39-3.1 3.1-3.1 1.71 0 3.1 1.39 3.1 3.1v2z"/></svg>
+                  Premium
+                </div>
+              {% else %}
+                {% if block.settings.tier == 'premium' %}
+                  <div style="font-family:'DM Sans',sans-serif;font-size:7px;letter-spacing:2px;text-transform:uppercase;color:#ff2a2a;border:1px solid rgba(255,42,42,0.3);padding:4px 8px;">Premium</div>
+                {% endif %}
+              {% endif %}
+            </div>
+          </div>
+        {% endif %}
+      {% endfor %}
+    </div>
+
+    {% if locked_count > 0 %}
+      <div class="tm-vp-upgrade-strip">
+        <div class="tm-vp-upgrade-text">
+          <strong>{{ locked_count }} premium track{% if locked_count > 1 %}s{% endif %} locked.</strong>
+          Upgrade to Vault Premium to unlock the full player.
+        </div>
+        {% if section.settings.upgrade_link != blank %}
+          <a href="{{ section.settings.upgrade_link }}" class="tm-vp-upgrade-btn">
+            {{ section.settings.upgrade_text | default: 'Upgrade to Premium' }}
+          </a>
+        {% endif %}
+      </div>
+    {% endif %}
+
+  </div>
+</section>
+
+<script>
+(function() {
+  var audio       = document.getElementById('tmVaultAudio');
+  var playIcon    = document.getElementById('tmVPPlayIcon');
+  var fillBar     = document.getElementById('tmVPFill');
+  var timeEl      = document.getElementById('tmVPTime');
+  var npTitle     = document.getElementById('tmVPNPTitle');
+  var npSub       = document.getElementById('tmVPNPSub');
+  var npArt       = document.getElementById('tmVPNPArt');
+  var volFill     = document.getElementById('tmVPVolFill');
+  var tracks      = Array.from(document.querySelectorAll('#tmVPList .tm-vp-track:not(.locked)'));
+  var currentIdx  = -1;
+  var isPlaying   = false;
+
+  var PLAY_PATH  = 'M8 5v14l11-7z';
+  var PAUSE_PATH = 'M6 19h4V5H6v14zm8-14v14h4V5h-4z';
+
+  function fmt(s) {
+    if (isNaN(s)) return '0:00';
+    var m = Math.floor(s / 60), sec = Math.floor(s % 60);
+    return m + ':' + (sec < 10 ? '0' : '') + sec;
+  }
+
+  function loadTrack(el, autoplay) {
+    // Remove active from all
+    document.querySelectorAll('.tm-vp-track').forEach(function(t) {
+      t.classList.remove('active', 'paused');
+    });
+    el.classList.add('active');
+
+    var src    = el.dataset.src;
+    var title  = el.dataset.title;
+    var artist = el.dataset.artist;
+    var album  = el.dataset.album;
+    var art    = el.dataset.art;
+
+    audio.src = src;
+    npTitle.textContent = title;
+    npSub.textContent   = (artist || 'T Mafianie') + (album ? ' · ' + album : '');
+    npArt.innerHTML     = art
+      ? '<img src="' + art + '" alt="' + title + '" loading="lazy" style="width:100%;height:100%;object-fit:cover;display:block;">'
+      : '<div style="width:100%;height:100%;background:linear-gradient(135deg,rgba(255,42,42,0.2),rgba(13,13,13,0.9));"></div>';
+
+    currentIdx = tracks.indexOf(el);
+    if (autoplay) { audio.play().catch(function(){}); }
+  }
+
+  function updatePlayIcon() {
+    playIcon.querySelector('path').setAttribute('d', isPlaying ? PAUSE_PATH : PLAY_PATH);
+  }
+
+  audio.addEventListener('play',  function() { isPlaying = true;  updatePlayIcon(); });
+  audio.addEventListener('pause', function() {
+    isPlaying = false; updatePlayIcon();
+    var el = tracks[currentIdx];
+    if (el) el.classList.add('paused');
+  });
+  audio.addEventListener('ended', function() { tmVPNext(); });
+  audio.addEventListener('timeupdate', function() {
+    if (!audio.duration) return;
+    var pct = (audio.currentTime / audio.duration) * 100;
+    fillBar.style.width = pct + '%';
+    timeEl.textContent  = fmt(audio.currentTime) + ' / ' + fmt(audio.duration);
+  });
+
+  window.tmVPSelect = function(el) {
+    if (el.dataset.locked === 'true') return;
+    if (tracks.indexOf(el) === currentIdx) {
+      tmVPToggle(); return;
+    }
+    loadTrack(el, true);
+  };
+
+  window.tmVPToggle = function() {
+    if (currentIdx === -1 && tracks.length) { loadTrack(tracks[0], true); return; }
+    if (isPlaying) { audio.pause(); } else { audio.play().catch(function(){}); }
+  };
+
+  window.tmVPNext = function() {
+    var next = currentIdx + 1 < tracks.length ? currentIdx + 1 : 0;
+    loadTrack(tracks[next], isPlaying);
+  };
+
+  window.tmVPPrev = function() {
+    if (audio.currentTime > 3) { audio.currentTime = 0; return; }
+    var prev = currentIdx - 1 >= 0 ? currentIdx - 1 : tracks.length - 1;
+    loadTrack(tracks[prev], isPlaying);
+  };
+
+  window.tmVPSeek = function(e) {
+    if (!audio.duration) return;
+    var rect = document.getElementById('tmVPProgress').getBoundingClientRect();
+    audio.currentTime = ((e.clientX - rect.left) / rect.width) * audio.duration;
+  };
+
+  window.tmVPSetVol = function(e) {
+    var rect = document.getElementById('tmVPVolume').getBoundingClientRect();
+    var vol  = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width));
+    audio.volume = vol;
+    volFill.style.width = (vol * 100) + '%';
+  };
+
+  window.tmVPMute = function() {
+    audio.muted = !audio.muted;
+    volFill.style.width = audio.muted ? '0%' : (audio.volume * 100) + '%';
+  };
+})();
+</script>
+
+{% schema %}
+{
+  "name": "Vault Player",
+  "settings": [
+    { "type": "text", "id": "eyebrow",     "label": "Eyebrow",              "default": "Vault Player" },
+    { "type": "text", "id": "title_line1", "label": "Title Line 1",         "default": "Exclusive" },
+    { "type": "text", "id": "title_line2", "label": "Title Line 2 (outline)","default": "Tracks" },
+    { "type": "header", "content": "Premium Upgrade" },
+    { "type": "text", "id": "upgrade_text", "label": "Upgrade Button Text", "default": "Upgrade to Premium" },
+    { "type": "url",  "id": "upgrade_link", "label": "Upgrade Button Link", "info": "Link to your Vault Premium product page" }
+  ],
+  "blocks": [
+    {
+      "type": "track",
+      "name": "Track",
+      "settings": [
+        { "type": "text",         "id": "title",     "label": "Track Title",  "default": "Untitled Track" },
+        { "type": "text",         "id": "artist",    "label": "Artist",       "default": "T Mafianie" },
+        { "type": "text",         "id": "album",     "label": "Album / Project" },
+        { "type": "text",         "id": "duration",  "label": "Duration",     "info": "e.g. 3:42", "default": "0:00" },
+        { "type": "image_picker", "id": "cover",     "label": "Cover Art" },
+        { "type": "text",         "id": "audio_url", "label": "Audio File URL", "info": "Direct link to .mp3 or .m4a file" },
+        {
+          "type": "select",
+          "id": "tier",
+          "label": "Tier",
+          "options": [
+            { "value": "free",    "label": "Free (all Vault members)" },
+            { "value": "premium", "label": "Premium only" }
+          ],
+          "default": "free"
+        }
+      ]
+    }
+  ],
+  "presets": [
+    {
+      "name": "Vault Player",
+      "blocks": [
+        { "type": "track", "settings": { "title": "Vault Exclusive #1", "artist": "T Mafianie", "album": "Unreleased", "tier": "free" } },
+        { "type": "track", "settings": { "title": "Vault Exclusive #2", "artist": "T Mafianie", "album": "Unreleased", "tier": "free" } },
+        { "type": "track", "settings": { "title": "Premium Track #1",   "artist": "T Mafianie", "album": "Vault Premium", "tier": "premium" } },
+        { "type": "track", "settings": { "title": "Premium Track #2",   "artist": "T Mafianie", "album": "Vault Premium", "tier": "premium" } }
+      ]
+    }
+  ]
+}
+{% endschema %}

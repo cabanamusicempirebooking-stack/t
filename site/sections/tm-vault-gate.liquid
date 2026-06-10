@@ -1,0 +1,310 @@
+{% comment %}
+  SECTION: tm-vault-gate.liquid
+  Any logged-in customer gets free vault access.
+  vault-premium tag = premium tier (checked in the player section).
+  Shopify registration forms cannot set customer tags, so we gate on login status only.
+{% endcomment %}
+
+{% assign tm_is_vault = false %}
+{% if customer %}
+  {% assign tm_is_vault = true %}
+{% endif %}
+
+{% unless tm_is_vault %}
+<style>
+  /* Fixed overlay covers the entire page — no DOM structure dependency */
+  #tm-vault-gate-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 8999;
+    background: #0d0d0d;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .tm-vg {
+    min-height: 100vh;
+    background: #0d0d0d;
+    display: flex; align-items: stretch;
+    position: relative; overflow: hidden;
+  }
+  .tm-vg-grid {
+    position: absolute; inset: 0;
+    background-image:
+      linear-gradient(rgba(255,42,42,0.03) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(255,42,42,0.03) 1px, transparent 1px);
+    background-size: 72px 72px;
+    pointer-events: none;
+  }
+  .tm-vg-glow {
+    position: absolute; top: 50%; left: 30%;
+    transform: translate(-50%, -50%);
+    width: 700px; height: 700px;
+    background: radial-gradient(ellipse, rgba(255,42,42,0.07) 0%, transparent 65%);
+    pointer-events: none;
+  }
+  .tm-vg-inner {
+    display: flex; width: 100%;
+    position: relative; z-index: 1;
+  }
+
+  /* ── LEFT PANEL ── */
+  .tm-vg-left {
+    flex: 1; min-width: 0;
+    padding: 80px 64px;
+    display: flex; flex-direction: column; justify-content: center;
+    border-right: 1px solid rgba(255,255,255,0.06);
+  }
+  .tm-vg-badge {
+    display: inline-flex; align-items: center; gap: 8px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 8px; font-weight: 500; letter-spacing: 3px; text-transform: uppercase;
+    color: rgba(255,255,255,0.3);
+    border: 1px solid rgba(255,255,255,0.1);
+    padding: 7px 14px; margin-bottom: 40px; width: fit-content;
+  }
+  .tm-vg-badge-dot {
+    width: 6px; height: 6px; border-radius: 50%; background: #ff2a2a;
+    animation: tmVGPulse 2s ease-in-out infinite;
+  }
+  @keyframes tmVGPulse {
+    0%,100% { opacity: 1; box-shadow: 0 0 0 0 rgba(255,42,42,0.6); }
+    50%      { opacity: 0.7; box-shadow: 0 0 0 6px rgba(255,42,42,0); }
+  }
+  .tm-vg-title {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: clamp(52px, 8vw, 100px);
+    line-height: 0.9; letter-spacing: -1px; color: #fff;
+    margin-bottom: 28px;
+  }
+  .tm-vg-title span { display: block; }
+  .tm-vg-title .outline {
+    color: transparent;
+    -webkit-text-stroke: 2px rgba(255,255,255,0.15);
+  }
+  .tm-vg-title .red { color: #ff2a2a; }
+  .tm-vg-sub {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 19px; font-weight: 300; font-style: italic;
+    color: rgba(255,255,255,0.4); line-height: 1.65;
+    margin-bottom: 48px; max-width: 420px;
+  }
+  .tm-vg-perks { display: flex; flex-direction: column; gap: 14px; }
+  .tm-vg-perk {
+    display: flex; align-items: center; gap: 14px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 12px; color: rgba(255,255,255,0.55); letter-spacing: 0.2px;
+  }
+  .tm-vg-perk::before {
+    content: '';
+    width: 18px; height: 1px; background: #ff2a2a; flex-shrink: 0;
+  }
+
+  /* ── RIGHT PANEL (form) ── */
+  .tm-vg-right {
+    width: 420px; flex-shrink: 0;
+    padding: 80px 56px;
+    display: flex; flex-direction: column; justify-content: center;
+    background: rgba(255,255,255,0.02);
+  }
+  .tm-vg-form-eyebrow {
+    font-family: 'DM Sans', sans-serif;
+    font-size: 9px; font-weight: 500; letter-spacing: 3px; text-transform: uppercase;
+    color: #ff2a2a; margin-bottom: 20px;
+    display: flex; align-items: center; gap: 10px;
+  }
+  .tm-vg-form-eyebrow::before { content: ''; width: 20px; height: 1px; background: #ff2a2a; }
+  .tm-vg-form-heading {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: clamp(28px, 3vw, 38px); line-height: 1;
+    color: #fff; margin-bottom: 8px; letter-spacing: 0.5px;
+  }
+  .tm-vg-form-sub {
+    font-family: 'DM Sans', sans-serif;
+    font-size: 12px; color: rgba(255,255,255,0.35);
+    line-height: 1.6; margin-bottom: 32px;
+  }
+
+  /* ── LOGGED IN, NO TAG ── */
+  .tm-vg-loggedin-note {
+    background: rgba(255,42,42,0.06);
+    border: 1px solid rgba(255,42,42,0.2);
+    padding: 14px 18px; margin-bottom: 24px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 11px; color: rgba(255,255,255,0.5); line-height: 1.5;
+  }
+  .tm-vg-loggedin-note strong { color: rgba(255,255,255,0.75); }
+
+  /* Form fields */
+  .tm-vg-field { margin-bottom: 14px; }
+  .tm-vg-field label {
+    display: block;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 8px; font-weight: 500; letter-spacing: 2.5px; text-transform: uppercase;
+    color: rgba(255,255,255,0.3); margin-bottom: 8px;
+  }
+  .tm-vg-field input {
+    width: 100%; background: rgba(255,255,255,0.04);
+    border: 1px solid rgba(255,255,255,0.1);
+    color: #fff; padding: 13px 16px;
+    font-family: 'DM Sans', sans-serif; font-size: 13px;
+    outline: none; transition: border-color 0.2s;
+    -webkit-appearance: none; border-radius: 0;
+    box-sizing: border-box;
+  }
+  .tm-vg-field input:focus { border-color: rgba(255,42,42,0.5); }
+  .tm-vg-field input::placeholder { color: rgba(255,255,255,0.2); }
+
+  .tm-vg-submit {
+    width: 100%; padding: 15px;
+    background: #ff2a2a; border: 1px solid #ff2a2a;
+    color: #fff;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 10px; font-weight: 500; letter-spacing: 2.5px; text-transform: uppercase;
+    cursor: pointer; transition: background 0.2s;
+    margin-top: 8px;
+  }
+  .tm-vg-submit:hover { background: #e01f1f; }
+
+  .tm-vg-login-link {
+    margin-top: 20px; text-align: center;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 10px; letter-spacing: 1px;
+    color: rgba(255,255,255,0.2);
+  }
+  .tm-vg-login-link a {
+    color: rgba(255,255,255,0.45); text-decoration: underline;
+    text-underline-offset: 3px; transition: color 0.2s;
+  }
+  .tm-vg-login-link a:hover { color: #fff; }
+
+  .tm-vg-terms {
+    margin-top: 16px; text-align: center;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 8px; letter-spacing: 1px; line-height: 1.7;
+    color: rgba(255,255,255,0.18);
+  }
+
+  /* Error / success */
+  .tm-vg-msg {
+    padding: 12px 16px; margin-bottom: 16px;
+    font-family: 'DM Sans', sans-serif; font-size: 11px; line-height: 1.5;
+  }
+  .tm-vg-msg.error { background: rgba(255,42,42,0.1); border: 1px solid rgba(255,42,42,0.25); color: rgba(255,100,100,0.9); }
+  .tm-vg-msg.success { background: rgba(50,200,100,0.08); border: 1px solid rgba(50,200,100,0.2); color: rgba(100,220,140,0.9); }
+
+  /* ── MOBILE ── */
+  @media (max-width: 767px) {
+    /* Stop gate above the bottom nav so it remains visible */
+    #tm-vault-gate-overlay {
+      bottom: calc(64px + env(safe-area-inset-bottom, 0px));
+    }
+    .tm-vg { min-height: calc(100vh - 64px - env(safe-area-inset-bottom, 0px)); }
+    .tm-vg-inner { flex-direction: column; }
+    .tm-vg-left { padding: 60px 24px 40px; border-right: none; border-bottom: 1px solid rgba(255,255,255,0.06); }
+    .tm-vg-right { width: 100%; padding: 40px 24px 60px; }
+    .tm-vg-perks { display: none; }
+  }
+</style>
+
+<div id="tm-vault-gate-overlay">
+<div class="tm-vg" id="vault-gate">
+  <div class="tm-vg-grid"></div>
+  <div class="tm-vg-glow"></div>
+  <div class="tm-vg-inner">
+
+    <!-- Left: value prop -->
+    <div class="tm-vg-left">
+      <div class="tm-vg-badge">
+        <div class="tm-vg-badge-dot"></div>
+        Members Only
+      </div>
+      <div class="tm-vg-title">
+        <span>The</span>
+        <span class="outline">Music</span>
+        <span class="red">Vault</span>
+      </div>
+      <p class="tm-vg-sub">{{ section.settings.left_sub | default: 'Exclusive content. Unreleased music. App-only discounts. Built for real supporters of Cabana Music Empire.' }}</p>
+      <div class="tm-vg-perks">
+        {% assign perks = section.settings.perks | default: 'Unreleased tracks before public release|Exclusive beat packs not in the store|10% off every order with code APP10|First access to every album drop|Members-only live stream sessions|Vault-only visual content' %}
+        {% assign perk_list = perks | split: '|' %}
+        {% for perk in perk_list %}
+          <div class="tm-vg-perk">{{ perk }}</div>
+        {% endfor %}
+      </div>
+    </div>
+
+    <!-- Right: form -->
+    <div class="tm-vg-right">
+      <div class="tm-vg-form-eyebrow">{{ section.settings.form_eyebrow | default: 'Join Free' }}</div>
+      <div class="tm-vg-form-heading">{{ section.settings.form_heading | default: 'Get Vault Access' }}</div>
+      <p class="tm-vg-form-sub">{{ section.settings.form_sub | default: 'Free to join. Just your name and email.' }}</p>
+
+      {% if customer %}
+        <div class="tm-vg-loggedin-note">
+          Signed in as <strong>{{ customer.email }}</strong> but not a Vault member yet. Fill out the form below to join — use a different email or <a href="/account/logout" style="color:rgba(255,42,42,0.7);">log out</a> to register fresh.
+        </div>
+      {% endif %}
+
+      {% form 'create_customer' %}
+        {% if form.errors %}
+          <div class="tm-vg-msg error">
+            {% for error in form.errors %}
+              {{ error | capitalize }}: {{ form.errors.messages[error] }}<br>
+            {% endfor %}
+          </div>
+        {% endif %}
+        {% if form.posted_successfully? %}
+          <div class="tm-vg-msg success">
+            You're in — check your email to confirm, then log in to access the Vault.
+          </div>
+        {% endif %}
+
+        <input type="hidden" name="return_to" value="{{ request.path }}">
+        <input type="hidden" name="customer[tags]" value="vault-member">
+        <input type="hidden" name="customer[note][source]" value="vault-gate">
+
+        <div class="tm-vg-field">
+          <label for="vg-first">First Name</label>
+          <input type="text" id="vg-first" name="customer[first_name]" placeholder="Your first name" autocomplete="given-name">
+        </div>
+        <div class="tm-vg-field">
+          <label for="vg-email">Email Address</label>
+          <input type="email" id="vg-email" name="customer[email]" placeholder="you@email.com" autocomplete="email" required>
+        </div>
+        <div class="tm-vg-field">
+          <label for="vg-pass">Create Password</label>
+          <input type="password" id="vg-pass" name="customer[password]" placeholder="Min. 8 characters" autocomplete="new-password" required>
+        </div>
+
+        <button type="submit" class="tm-vg-submit">{{ section.settings.form_btn | default: 'Get Vault Access' }}</button>
+      {% endform %}
+
+      <div class="tm-vg-login-link">
+        Already a Vault member? <a href="/account/login?return_url={{ request.path | url_encode }}">Log in here</a>
+      </div>
+      <p class="tm-vg-terms">{{ section.settings.terms | default: 'Free to join. No spam. Unsubscribe anytime.' }}</p>
+    </div>
+
+  </div>
+</div>
+</div><!-- /tm-vault-gate-overlay -->
+{% endunless %}
+
+{% schema %}
+{
+  "name": "Vault Gate",
+  "settings": [
+    { "type": "header", "content": "Left Panel" },
+    { "type": "textarea", "id": "left_sub", "label": "Subtitle", "default": "Exclusive content. Unreleased music. App-only discounts. Built for real supporters of Cabana Music Empire." },
+    { "type": "textarea", "id": "perks", "label": "Perk List (one per line, separate with |)", "default": "Unreleased tracks before public release|Exclusive beat packs not in the store|10% off every order with code APP10|First access to every album drop|Members-only live stream sessions|Vault-only visual content" },
+    { "type": "header", "content": "Form" },
+    { "type": "text", "id": "form_eyebrow", "label": "Eyebrow", "default": "Join Free" },
+    { "type": "text", "id": "form_heading", "label": "Form Heading", "default": "Get Vault Access" },
+    { "type": "text", "id": "form_sub", "label": "Form Subtext", "default": "Free to join. Just your name and email." },
+    { "type": "text", "id": "form_btn", "label": "Button Text", "default": "Get Vault Access" },
+    { "type": "text", "id": "terms", "label": "Terms Line", "default": "Free to join. No spam. Unsubscribe anytime." }
+  ],
+  "presets": [{ "name": "Vault Gate" }]
+}
+{% endschema %}

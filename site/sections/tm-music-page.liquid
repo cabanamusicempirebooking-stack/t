@@ -1,0 +1,124 @@
+{% comment %} SECTION: tm-music-page.liquid — Light theme music landing page {% endcomment %}
+<style>
+.tm-music-page { background: #f7f5f2; padding: 80px 64px 96px; }
+.tm-mp-header { margin-bottom: 64px; }
+.tm-mp-eyebrow { display: flex; align-items: center; gap: 12px; font-family: 'DM Sans', sans-serif; font-size: 9px; font-weight: 500; letter-spacing: 4px; text-transform: uppercase; color: #ff2a2a; margin-bottom: 14px; }
+.tm-mp-eyebrow::before { content: ''; display: block; width: 24px; height: 1px; background: #ff2a2a; }
+.tm-mp-title { font-family: 'Bebas Neue', sans-serif; font-size: clamp(64px, 10vw, 128px); line-height: 0.9; letter-spacing: 1px; color: #0d0d0d; }
+.tm-mp-title .ghost { color: transparent; -webkit-text-stroke: 1.5px rgba(13,13,13,0.18); }
+.tm-mp-subtitle { font-family: 'Cormorant Garamond', serif; font-style: italic; font-size: 20px; font-weight: 300; color: rgba(13,13,13,0.5); margin-top: 20px; max-width: 480px; line-height: 1.7; }
+
+/* ── Stream buttons ── */
+.tm-mp-platforms { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 36px; }
+.tm-mp-platform-btn { display: inline-flex; align-items: center; gap: 8px; font-family: 'DM Sans', sans-serif; font-size: 10px; font-weight: 600; letter-spacing: 2px; text-transform: uppercase; color: #0d0d0d; border: 1px solid rgba(13,13,13,0.2); padding: 11px 20px; text-decoration: none; transition: background 0.2s, border-color 0.2s, color 0.2s; }
+.tm-mp-platform-btn:hover { background: #ff2a2a; border-color: #ff2a2a; color: #fff; }
+.tm-mp-platform-btn--primary { background: #0d0d0d; color: #fff; border-color: #0d0d0d; }
+.tm-mp-platform-btn--primary:hover { background: #ff2a2a; border-color: #ff2a2a; }
+
+/* ── Divider ── */
+.tm-mp-divider { height: 1px; background: rgba(13,13,13,0.08); margin: 64px 0; }
+
+/* ── Latest releases label ── */
+.tm-mp-section-label { font-family: 'DM Sans', sans-serif; font-size: 9px; font-weight: 600; letter-spacing: 4px; text-transform: uppercase; color: rgba(13,13,13,0.35); margin-bottom: 28px; display: flex; align-items: center; gap: 14px; }
+.tm-mp-section-label::after { content: ''; flex: 1; height: 1px; background: rgba(13,13,13,0.08); }
+
+/* ── Playlist CTA card ── */
+.tm-mp-playlist-card { background: #fff; border: 1px solid rgba(13,13,13,0.08); padding: 48px; display: flex; align-items: center; gap: 48px; box-shadow: 0 4px 32px rgba(0,0,0,0.05); }
+.tm-mp-playlist-art { width: 120px; height: 120px; flex-shrink: 0; background: linear-gradient(135deg, #0d0d0d 0%, #2a2a2a 100%); display: flex; align-items: center; justify-content: center; }
+.tm-mp-playlist-art svg { width: 40px; height: 40px; color: #ff2a2a; }
+.tm-mp-playlist-info { flex: 1; }
+.tm-mp-playlist-title { font-family: 'Bebas Neue', sans-serif; font-size: 36px; letter-spacing: 1px; color: #0d0d0d; margin-bottom: 8px; }
+.tm-mp-playlist-meta { font-family: 'DM Sans', sans-serif; font-size: 13px; color: rgba(13,13,13,0.45); margin-bottom: 24px; }
+.tm-mp-playlist-btn { display: inline-flex; align-items: center; gap: 10px; font-family: 'DM Sans', sans-serif; font-size: 10px; font-weight: 600; letter-spacing: 2.5px; text-transform: uppercase; color: #fff; background: #ff2a2a; padding: 14px 28px; text-decoration: none; transition: background 0.2s, transform 0.2s; border: none; cursor: pointer; }
+.tm-mp-playlist-btn:hover { background: #0d0d0d; transform: translateY(-2px); }
+
+/* ── Social links row ── */
+.tm-mp-socials { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 48px; }
+.tm-mp-social-link { display: inline-flex; align-items: center; gap: 8px; font-family: 'DM Sans', sans-serif; font-size: 11px; font-weight: 500; letter-spacing: 1.5px; text-transform: uppercase; color: rgba(13,13,13,0.55); text-decoration: none; padding: 10px 16px; background: #fff; border: 1px solid rgba(13,13,13,0.1); transition: color 0.2s, border-color 0.2s; }
+.tm-mp-social-link:hover { color: #ff2a2a; border-color: #ff2a2a; }
+
+@media (max-width: 767px) {
+  .tm-music-page { padding: 60px 20px 72px; }
+  .tm-mp-playlist-card { flex-direction: column; align-items: flex-start; gap: 24px; padding: 28px 20px; }
+  .tm-mp-playlist-art { width: 80px; height: 80px; }
+  .tm-mp-platforms { gap: 8px; }
+  .tm-mp-playlist-btn { width: 100%; justify-content: center; }
+}
+</style>
+
+<section class="tm-music-page">
+  <div class="tm-mp-header">
+    <div class="tm-mp-eyebrow">{{ section.settings.eyebrow | default: 'Cabana Music Empire' }}</div>
+    <div class="tm-mp-title">
+      {{ section.settings.title_line1 | default: 'Music' }}<br>
+      <span class="ghost">{{ section.settings.title_line2 | default: 'Catalog' }}</span>
+    </div>
+    <p class="tm-mp-subtitle">{{ section.settings.subtitle | default: 'Stream the full catalog — albums, singles, and features from T Mafianie.' }}</p>
+
+    <div class="tm-mp-platforms">
+      {% if section.settings.spotify_url != blank %}
+        <a href="{{ section.settings.spotify_url }}" class="tm-mp-platform-btn tm-mp-platform-btn--primary" target="_blank" rel="noopener">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0C5.4 0 0 5.4 0 12s5.4 12 12 12 12-5.4 12-12S18.66 0 12 0zm5.521 17.34c-.24.359-.66.48-1.021.24-2.82-1.74-6.36-2.101-10.561-1.141-.418.122-.779-.179-.899-.539-.12-.421.18-.78.54-.9 4.56-1.021 8.52-.6 11.64 1.32.42.18.479.659.301 1.02zm1.44-3.3c-.301.42-.841.6-1.262.3-3.239-1.98-8.159-2.58-11.939-1.38-.479.12-1.02-.12-1.14-.6-.12-.48.12-1.021.6-1.141C9.6 9.9 15 10.561 18.72 12.84c.361.181.54.78.241 1.2zm.12-3.36C15.24 8.4 8.82 8.16 5.16 9.301c-.6.179-1.2-.181-1.38-.721-.18-.601.18-1.2.72-1.381 4.26-1.26 11.28-1.02 15.721 1.621.539.3.719 1.02.419 1.56-.299.421-1.02.599-1.559.3z"/></svg>
+          Spotify
+        </a>
+      {% endif %}
+      {% if section.settings.apple_url != blank %}
+        <a href="{{ section.settings.apple_url }}" class="tm-mp-platform-btn" target="_blank" rel="noopener">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M23.994 6.124a9.23 9.23 0 00-.24-2.19c-.317-1.31-1.062-2.31-2.18-3.043a6.733 6.733 0 00-2.55-.88 13.56 13.56 0 00-1.534-.106c-.62-.007-1.24 0-1.86 0H8.397c-.62 0-1.24-.007-1.86 0a13.56 13.56 0 00-1.534.106 6.733 6.733 0 00-2.55.88C1.335 1.624.59 2.624.273 3.934a9.23 9.23 0 00-.24 2.19C.006 6.74 0 7.36 0 7.98v8.04c0 .62.006 1.24.033 1.856a9.23 9.23 0 00.24 2.19c.317 1.31 1.062 2.31 2.18 3.043a6.733 6.733 0 002.55.88 13.56 13.56 0 001.534.106c.62.007 1.24 0 1.86 0h7.213c.62 0 1.24.007 1.86 0a13.56 13.56 0 001.534-.106 6.733 6.733 0 002.55-.88c1.118-.733 1.863-1.733 2.18-3.043a9.23 9.23 0 00.24-2.19c.027-.616.033-1.236.033-1.856V7.98c0-.62-.006-1.24-.033-1.856zM12 17.5c-3.038 0-5.5-2.462-5.5-5.5S8.962 6.5 12 6.5s5.5 2.462 5.5 5.5-2.462 5.5-5.5 5.5zm5.7-9.9a1.3 1.3 0 110-2.6 1.3 1.3 0 010 2.6zM12 8.5a3.5 3.5 0 100 7 3.5 3.5 0 000-7z"/></svg>
+          Apple Music
+        </a>
+      {% endif %}
+      <a href="{{ section.settings.youtube_url | default: 'https://youtube.com/playlist?list=PLkMYq48kgVNP4NM04luHycqjje_uc9H1m' }}" class="tm-mp-platform-btn" target="_blank" rel="noopener">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M23.498 6.186a3.016 3.016 0 00-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 00.502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 002.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 002.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/></svg>
+        YouTube
+      </a>
+      {% if section.settings.soundcloud_url != blank %}
+        <a href="{{ section.settings.soundcloud_url }}" class="tm-mp-platform-btn" target="_blank" rel="noopener">
+          <svg width="16" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M11.56 8.87V17h8.76c1.04-.19 1.68-1.1 1.68-2.08 0-1.29-1.04-2.32-2.33-2.32-.16 0-.32.01-.47.04A4.833 4.833 0 0014.56 9c-.3 0-.58.04-.85.1V8.87C13.71 7.26 12.48 6 11 6c-.75 0-1.43.3-1.93.78a4.16 4.16 0 012.49 2.09zM0 14.5C0 15.88 1.12 17 2.5 17S5 15.88 5 14.5c0-.37-.08-.71-.22-1.02C4.55 13.17 4.28 13 4 13c-.16 0-.31.05-.44.13A2.495 2.495 0 000 14.5z"/></svg>
+          SoundCloud
+        </a>
+      {% endif %}
+    </div>
+  </div>
+
+  <div class="tm-mp-divider"></div>
+
+  <div class="tm-mp-section-label">Full Playlist</div>
+
+  <div class="tm-mp-playlist-card">
+    <div class="tm-mp-playlist-art">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/>
+        <path d="M9 18V5l12-2v13"/>
+      </svg>
+    </div>
+    <div class="tm-mp-playlist-info">
+      <div class="tm-mp-playlist-title">{{ section.settings.playlist_title | default: 'T Mafianie — Full Music Catalog' }}</div>
+      <div class="tm-mp-playlist-meta">{{ section.settings.playlist_meta | default: 'Albums · Singles · Features · Collaborations' }}</div>
+      <a href="{{ section.settings.youtube_url | default: 'https://youtube.com/playlist?list=PLkMYq48kgVNP4NM04luHycqjje_uc9H1m' }}" class="tm-mp-playlist-btn" target="_blank" rel="noopener">
+        Stream on YouTube →
+      </a>
+    </div>
+  </div>
+</section>
+
+{% schema %}
+{
+  "name": "TM Music Page",
+  "settings": [
+    { "type": "text",    "id": "eyebrow",        "label": "Eyebrow",           "default": "Cabana Music Empire" },
+    { "type": "text",    "id": "title_line1",    "label": "Title Line 1",      "default": "Music" },
+    { "type": "text",    "id": "title_line2",    "label": "Title Line 2",      "default": "Catalog" },
+    { "type": "textarea","id": "subtitle",        "label": "Subtitle",          "default": "Stream the full catalog — albums, singles, and features from T Mafianie." },
+    { "type": "header",  "content": "Streaming Links" },
+    { "type": "url",     "id": "youtube_url",    "label": "YouTube Playlist URL" },
+    { "type": "url",     "id": "spotify_url",    "label": "Spotify URL" },
+    { "type": "url",     "id": "apple_url",      "label": "Apple Music URL" },
+    { "type": "url",     "id": "soundcloud_url", "label": "SoundCloud URL" },
+    { "type": "header",  "content": "Playlist Card" },
+    { "type": "text",    "id": "playlist_title", "label": "Playlist Title",    "default": "T Mafianie — Full Music Catalog" },
+    { "type": "text",    "id": "playlist_meta",  "label": "Playlist Subtitle", "default": "Albums · Singles · Features · Collaborations" }
+  ],
+  "presets": [{ "name": "TM Music Page" }]
+}
+{% endschema %}

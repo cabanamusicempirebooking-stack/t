@@ -1,0 +1,210 @@
+{% comment %}
+  CME Bottom Navigation — Mobile App-Style Nav Bar
+  ─────────────────────────────────────────────────
+  Mobile only (hidden via CSS at ≥768px).
+  No JavaScript. No cart/checkout interaction.
+  No form submission. Pure navigation links only.
+
+  z-index: 150 — below Shopify cart drawer and search modal.
+
+  Active state: detected via request.path and template.name.
+
+  Links:
+    HOME    → /
+    MUSIC   → YouTube playlist (external, opens new tab)
+    BEATS   → YouTube playlist (external, opens new tab)
+    SHOP    → /collections (shows all collections list)
+    BOOKING → /pages/booking
+
+  DO NOT modify this file to interact with cart, checkout,
+  product forms, quick-add, or any Shopify AJAX endpoints.
+{% endcomment %}
+
+{%- liquid
+  assign current = request.path
+
+  assign is_home    = false
+  assign is_music   = false
+  assign is_beats   = false
+  assign is_shop    = false
+  assign is_booking = false
+
+  comment
+    Home: index template only
+  endcomment
+  if template.name == 'index'
+    assign is_home = true
+  endif
+
+  comment
+    Music: /pages/music
+  endcomment
+  if current contains '/pages/music'
+    assign is_music = true
+  endif
+
+  comment
+    Beats: /pages/beats
+  endcomment
+  if current contains '/pages/beats'
+    assign is_beats = true
+  endif
+
+  comment
+    Fan List pages activate the Music tab
+  endcomment
+  if current contains '/pages/fanlist'
+    assign is_music = true
+  endif
+  if current contains '/pages/fan-list-2'
+    assign is_music = true
+  endif
+
+  comment
+    Shop: /pages/shop, collection pages, product pages, collections list
+  endcomment
+  if current contains '/pages/shop'
+    assign is_shop = true
+  endif
+  if template.name == 'collection'
+    assign is_shop = true
+  endif
+  if template.name == 'product'
+    assign is_shop = true
+  endif
+  if template.name == 'list-collections'
+    assign is_shop = true
+  endif
+
+  comment
+    Booking: /pages/booking
+  endcomment
+  if current contains '/pages/booking'
+    assign is_booking = true
+  endif
+-%}
+
+<nav
+  class="cme-bottom-nav"
+  aria-label="App navigation"
+  role="navigation"
+>
+
+  {%- comment -%} HOME {%- endcomment -%}
+  <a
+    href="/"
+    class="cme-nav-tab{% if is_home %} cme-nav-tab--active{% endif %}"
+    aria-label="Home"
+    {%- if is_home %} aria-current="page"{% endif %}
+  >
+    <svg
+      class="cme-nav-tab__icon"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      stroke-width="{% if is_home %}2{% else %}1.75{% endif %}"
+      stroke-linecap="round"
+      stroke-linejoin="round"
+      aria-hidden="true"
+    >
+      <path d="M3 11l9-8 9 8"/>
+      <path d="M5 10v10h14V10"/>
+    </svg>
+    <span class="cme-nav-tab__label">Home</span>
+  </a>
+
+  {%- comment -%} MUSIC — /pages/music {%- endcomment -%}
+  <a
+    href="/pages/music"
+    class="cme-nav-tab{% if is_music %} cme-nav-tab--active{% endif %}"
+    aria-label="Music"
+    {%- if is_music %} aria-current="page"{% endif %}
+  >
+    <svg
+      class="cme-nav-tab__icon"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      stroke-width="{% if is_music %}2{% else %}1.75{% endif %}"
+      stroke-linecap="round"
+      stroke-linejoin="round"
+      aria-hidden="true"
+    >
+      <circle cx="6" cy="18" r="3"/>
+      <circle cx="18" cy="16" r="3"/>
+      <path d="M9 18V5l12-2v13"/>
+    </svg>
+    <span class="cme-nav-tab__label">Music</span>
+  </a>
+
+  {%- comment -%} BEATS — /pages/beats {%- endcomment -%}
+  <a
+    href="/pages/beats"
+    class="cme-nav-tab{% if is_beats %} cme-nav-tab--active{% endif %}"
+    aria-label="Beats"
+    {%- if is_beats %} aria-current="page"{% endif %}
+  >
+    <svg
+      class="cme-nav-tab__icon"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      stroke-width="{% if is_beats %}2{% else %}1.75{% endif %}"
+      stroke-linecap="round"
+      stroke-linejoin="round"
+      aria-hidden="true"
+    >
+      <rect x="3" y="4" width="4" height="16" rx="1"/>
+      <rect x="10" y="9" width="4" height="11" rx="1"/>
+      <rect x="17" y="2" width="4" height="18" rx="1"/>
+    </svg>
+    <span class="cme-nav-tab__label">Beats</span>
+  </a>
+
+  {%- comment -%} SHOP — CME store landing page {%- endcomment -%}
+  <a
+    href="/pages/shop"
+    class="cme-nav-tab{% if is_shop %} cme-nav-tab--active{% endif %}"
+    aria-label="Shop"
+    {%- if is_shop %} aria-current="page"{% endif %}
+  >
+    <svg
+      class="cme-nav-tab__icon"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      stroke-width="{% if is_shop %}2{% else %}1.75{% endif %}"
+      stroke-linecap="round"
+      stroke-linejoin="round"
+      aria-hidden="true"
+    >
+      <path d="M6 7h12l-1 13H7L6 7z"/>
+      <path d="M9 7a3 3 0 0 1 6 0"/>
+    </svg>
+    <span class="cme-nav-tab__label">Shop</span>
+  </a>
+
+  {%- comment -%} BOOKING {%- endcomment -%}
+  <a
+    href="/pages/booking"
+    class="cme-nav-tab{% if is_booking %} cme-nav-tab--active{% endif %}"
+    aria-label="Booking"
+    {%- if is_booking %} aria-current="page"{% endif %}
+  >
+    <svg
+      class="cme-nav-tab__icon"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      stroke-width="{% if is_booking %}2{% else %}1.75{% endif %}"
+      stroke-linecap="round"
+      stroke-linejoin="round"
+      aria-hidden="true"
+    >
+      <rect x="3" y="4" width="18" height="18" rx="2"/>
+      <path d="M16 2v4M8 2v4M3 10h18"/>
+    </svg>
+    <span class="cme-nav-tab__label">Booking</span>
+  </a>
+
+</nav>

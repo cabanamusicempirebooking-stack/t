@@ -1,0 +1,88 @@
+{% comment %}SECTION: tm-vault-signup.liquid — Vault email capture{% endcomment %}
+
+<style>
+.tm-vs{--red:#ff2a2a;--k:#0d0d0d;--off:#f7f5f2;--b:rgba(13,13,13,.1);--ease:cubic-bezier(.22,1,.36,1);font-family:'DM Sans',sans-serif}
+.tm-vs *,.tm-vs *::before,.tm-vs *::after{box-sizing:border-box}
+.tm-vs-section{background:var(--off);padding:100px 64px;border-top:1px solid var(--b)}
+.tm-vs-inner{max-width:680px;margin:0 auto;text-align:center}
+.tm-vs-eye{display:flex;align-items:center;justify-content:center;gap:12px;font-size:9px;font-weight:500;letter-spacing:4px;text-transform:uppercase;color:var(--red);margin-bottom:18px}
+.tm-vs-eye::before,.tm-vs-eye::after{content:'';display:block;width:24px;height:1px;background:var(--red)}
+.tm-vs-title{font-family:'Bebas Neue',sans-serif;font-size:clamp(44px,7vw,88px);line-height:.9;color:var(--k);letter-spacing:1px;margin-bottom:18px}
+.tm-vs-title .hi{color:var(--red)}
+.tm-vs-sub{font-size:14px;color:rgba(13,13,13,.55);line-height:1.75;margin-bottom:48px;max-width:520px;margin-left:auto;margin-right:auto}
+.tm-vs-form-wrap{background:#fff;border:1px solid var(--b);padding:40px 36px}
+.tm-vs-success{background:rgba(255,42,42,.05);border:1px solid rgba(255,42,42,.2);padding:36px 24px;text-align:center}
+.tm-vs-success-title{font-family:'Bebas Neue',sans-serif;font-size:44px;letter-spacing:2px;color:var(--k);margin-bottom:10px}
+.tm-vs-success-sub{font-size:13px;color:rgba(13,13,13,.55)}
+.tm-vs-error{background:rgba(255,42,42,.05);border:1px solid rgba(255,42,42,.2);padding:12px 16px;margin-bottom:16px;font-size:12px;color:var(--red)}
+.tm-vs-row{margin-bottom:14px}
+.tm-vs-label{display:block;font-size:8px;font-weight:500;letter-spacing:3px;text-transform:uppercase;color:rgba(13,13,13,.38);margin-bottom:8px;text-align:left}
+.tm-vs-input{width:100%;border:1px solid rgba(13,13,13,.15);padding:15px 18px;font-family:'DM Sans',sans-serif;font-size:14px;font-weight:300;color:var(--k);outline:none;transition:border-color .25s;-webkit-appearance:none;border-radius:0;background:#fff}
+.tm-vs-input::placeholder{color:rgba(13,13,13,.3)}
+.tm-vs-input:focus{border-color:rgba(255,42,42,.45)}
+.tm-vs-submit{width:100%;background:var(--k);border:1px solid var(--k);color:#fff;font-family:'DM Sans',sans-serif;font-size:10px;font-weight:500;letter-spacing:3px;text-transform:uppercase;padding:17px 24px;cursor:pointer;transition:background .25s,border-color .25s;margin-top:8px}
+.tm-vs-submit:hover{background:var(--red);border-color:var(--red)}
+.tm-vs-terms{font-size:10px;color:rgba(13,13,13,.3);margin-top:14px;line-height:1.6}
+
+@media(max-width:767px){
+  .tm-vs-section{padding:72px 24px}
+  .tm-vs-form-wrap{padding:28px 20px}
+}
+</style>
+
+<section class="tm-vs tm-vs-section" id="vault-signup">
+  <div class="tm-vs-inner">
+    <div class="tm-vs-eye">{{ section.settings.eyebrow }}</div>
+    <h2 class="tm-vs-title">{{ section.settings.heading | replace: '[red]', '<span class="hi">' | replace: '[/red]', '</span>' }}</h2>
+    <p class="tm-vs-sub">{{ section.settings.subheading }}</p>
+
+    <div class="tm-vs-form-wrap">
+      {% form 'customer', id: 'vault-signup-form' %}
+        <input type="hidden" name="contact[tags]" value="vault-member,newsletter">
+        <input type="hidden" name="customer[accepts_marketing]" value="true">
+
+        {% if form.posted_successfully? %}
+          <div class="tm-vs-success">
+            <div class="tm-vs-success-title">{{ section.settings.success_title }}</div>
+            <p class="tm-vs-success-sub">{{ section.settings.success_message }}</p>
+          </div>
+        {% else %}
+          {% if form.errors %}
+            <div class="tm-vs-error">
+              {% for error in form.errors %}
+                {{ form.errors.messages[error] }}
+              {% endfor %}
+            </div>
+          {% endif %}
+
+          <div class="tm-vs-row">
+            <label class="tm-vs-label" for="vault-first-name">First Name</label>
+            <input class="tm-vs-input" type="text" id="vault-first-name" name="customer[first_name]" placeholder="Your first name" autocomplete="given-name">
+          </div>
+          <div class="tm-vs-row">
+            <label class="tm-vs-label" for="vault-email">Email Address *</label>
+            <input class="tm-vs-input" type="email" id="vault-email" name="customer[email]" placeholder="your@email.com" required autocomplete="email">
+          </div>
+          <button type="submit" class="tm-vs-submit">{{ section.settings.button_text }}</button>
+          <p class="tm-vs-terms">{{ section.settings.terms_text }}</p>
+        {% endif %}
+      {% endform %}
+    </div>
+  </div>
+</section>
+
+{% schema %}
+{
+  "name": "Vault Signup",
+  "settings": [
+    {"type":"text","id":"eyebrow","label":"Eyebrow","default":"FREE VAULT ACCESS"},
+    {"type":"text","id":"heading","label":"Heading (use [red]...[/red] for accent)","default":"Join The [red]Vault[/red] Starter Pack"},
+    {"type":"textarea","id":"subheading","label":"Subheading","default":"Get exclusive updates, early drop alerts, and app-only content — free. No spam. Just real fan access."},
+    {"type":"text","id":"button_text","label":"Button Text","default":"Join The Vault Free"},
+    {"type":"text","id":"success_title","label":"Success Heading","default":"You're In The Vault."},
+    {"type":"textarea","id":"success_message","label":"Success Message","default":"Welcome to the movement. Watch your inbox for exclusive drops and early access."},
+    {"type":"text","id":"terms_text","label":"Terms Text","default":"No spam. Vault updates only. Unsubscribe anytime."}
+  ],
+  "presets":[{"name":"Vault Signup"}]
+}
+{% endschema %}

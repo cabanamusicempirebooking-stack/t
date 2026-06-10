@@ -1,0 +1,354 @@
+{% comment %}
+  SECTION: tm-songs-bangers.liquid
+  Ready-Made Bangers — Songs With Hooks store.
+  Standalone section, split from tm-fanlist.liquid.
+  Mobile-optimized: buy button always visible.
+{% endcomment %}
+
+<style>
+.tm-fl-songs{--red:#ff2a2a;--k:#0d0d0d;--off:#f7f5f2;--soft:#eeebe6;--mu:rgba(13,13,13,.38);--mu2:rgba(13,13,13,.55);--b:rgba(13,13,13,.08);--b2:rgba(13,13,13,.15);--ease:cubic-bezier(.22,1,.36,1);background:#fff;padding:112px 64px;border-top:1px solid rgba(13,13,13,.08);font-family:'DM Sans',sans-serif;color:var(--k)}
+.tm-fl-songs *,.tm-fl-songs *::before,.tm-fl-songs *::after{box-sizing:border-box}
+.tm-fl-songs-hd{margin-bottom:56px;display:flex;align-items:flex-end;justify-content:space-between}
+.tm-fl-songs-eye{display:flex;align-items:center;gap:12px;font-size:9px;font-weight:500;letter-spacing:4px;text-transform:uppercase;color:var(--red);margin-bottom:14px}
+.tm-fl-songs-eye::before{content:'';display:block;width:24px;height:1px;background:var(--red)}
+.tm-fl-songs-title{font-family:'Bebas Neue',sans-serif;font-size:clamp(52px,6.5vw,88px);letter-spacing:1px;line-height:.95}
+.tm-fl-songs-title .gh{color:transparent;-webkit-text-stroke:1.5px rgba(13,13,13,.18)}
+.tm-fl-songs-va{font-size:10px;font-weight:500;letter-spacing:2.5px;text-transform:uppercase;color:var(--k);text-decoration:none;border-bottom:1px solid var(--b2);padding-bottom:2px;display:inline-block;transition:color .2s,border-color .2s}
+.tm-fl-songs-va:hover{color:var(--red);border-color:var(--red)}
+.tm-fl-songs-cols{display:grid;grid-template-columns:48px 44px 1fr 100px 100px 80px 120px;gap:16px;padding:0 24px 12px;border-bottom:2px solid var(--k)}
+.tm-fl-songs-col{font-size:8px;font-weight:500;letter-spacing:3px;text-transform:uppercase;color:var(--mu)}
+.tm-fl-song-row{display:grid;grid-template-columns:48px 44px 1fr 100px 100px 80px 120px;gap:16px;align-items:center;padding:14px 24px;border-bottom:1px solid var(--b);cursor:pointer;position:relative;background:#fff;transition:background .2s}
+.tm-fl-song-row::before{content:'';position:absolute;left:0;top:0;bottom:0;width:0;background:var(--red);transition:width .3s var(--ease)}
+.tm-fl-song-row:hover{background:var(--off)}
+.tm-fl-song-row:hover::before,.tm-fl-song-row.tm-fl-sr-active::before{width:3px}
+.tm-fl-song-row.tm-fl-sr-active{background:rgba(255,42,42,.04)}
+.tm-fl-song-num{font-family:'Bebas Neue',sans-serif;font-size:20px;color:var(--b2);text-align:center;transition:color .2s}
+.tm-fl-song-row:hover .tm-fl-song-num,.tm-fl-song-row.tm-fl-sr-active .tm-fl-song-num{color:var(--red)}
+.tm-fl-song-playbtn{width:34px;height:34px;border:1px solid var(--b);border-radius:50%;background:none;cursor:pointer;display:flex;align-items:center;justify-content:center;color:var(--mu);transition:background .2s,border-color .2s,color .2s;flex-shrink:0}
+.tm-fl-song-playbtn:hover{background:var(--k);border-color:var(--k);color:#fff}
+.tm-fl-song-row.tm-fl-sr-active .tm-fl-song-playbtn{background:var(--red);border-color:var(--red);color:#fff}
+.tm-fl-song-wave{display:none;align-items:center;justify-content:center;gap:2px}
+.tm-fl-song-row.tm-fl-sr-active.tm-fl-sr-playing .tm-fl-song-wave{display:flex}
+.tm-fl-song-row.tm-fl-sr-active.tm-fl-sr-playing .tm-fl-song-play-icon{display:none}
+.tm-fl-song-wave span{display:block;width:2px;background:#fff;border-radius:1px;animation:tmBsWave .9s ease-in-out infinite}
+.tm-fl-song-wave span:nth-child(1){height:5px;animation-delay:0s}.tm-fl-song-wave span:nth-child(2){height:12px;animation-delay:.15s}.tm-fl-song-wave span:nth-child(3){height:8px;animation-delay:.3s}.tm-fl-song-wave span:nth-child(4){height:16px;animation-delay:.1s}
+.tm-fl-song-info{min-width:0}
+.tm-fl-song-name{font-size:14px;font-weight:500;color:var(--k);margin-bottom:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tm-fl-song-tags{display:flex;gap:5px;flex-wrap:wrap}
+.tm-fl-song-tag{font-size:8px;letter-spacing:2px;text-transform:uppercase;color:var(--mu);border:1px solid var(--b);padding:2px 7px}
+.tm-fl-song-bpm{font-family:'Bebas Neue',sans-serif;font-size:18px;letter-spacing:1px;color:var(--mu)}
+.tm-fl-song-key{font-size:12px;color:var(--mu)}
+.tm-fl-song-prog-wrap{display:flex;flex-direction:column;gap:4px}
+.tm-fl-song-price{font-family:'Bebas Neue',sans-serif;font-size:20px;letter-spacing:1px;color:var(--red)}
+.tm-fl-song-prog-bar{height:2px;background:var(--b);border-radius:1px;cursor:pointer;position:relative;display:none}
+.tm-fl-song-row.tm-fl-sr-active .tm-fl-song-prog-bar{display:block}
+.tm-fl-song-prog-fill{height:100%;background:var(--red);border-radius:1px;width:0%;transition:width .1s linear;pointer-events:none}
+.tm-fl-song-time{font-size:9px;color:var(--mu);display:none}
+.tm-fl-song-row.tm-fl-sr-active .tm-fl-song-time{display:block}
+.tm-fl-song-buy{display:flex;align-items:center;justify-content:flex-end}
+.tm-fl-song-buy a,.tm-fl-song-buy button{font-size:8px;font-weight:500;letter-spacing:2px;text-transform:uppercase;color:var(--mu);border:1px solid var(--b);padding:7px 12px;background:none;cursor:pointer;text-decoration:none;font-family:'DM Sans',sans-serif;display:inline-block;transition:background .2s,border-color .2s,color .2s;opacity:0;white-space:nowrap}
+.tm-fl-song-row:hover .tm-fl-song-buy a,.tm-fl-song-row:hover .tm-fl-song-buy button,.tm-fl-song-row.tm-fl-sr-active .tm-fl-song-buy a,.tm-fl-song-row.tm-fl-sr-active .tm-fl-song-buy button{opacity:1}
+.tm-fl-song-buy a:hover,.tm-fl-song-buy button:hover{background:var(--k);border-color:var(--k);color:#fff}
+.tm-fl-songs-empty{padding:56px;text-align:center;border:1px dashed var(--b);font-size:13px;color:var(--mu)}
+.tm-fl-songs-footer{display:flex;gap:14px;margin-top:40px;flex-wrap:wrap}
+.tmbs-btn-dark{font-family:'DM Sans',sans-serif;font-size:10px;font-weight:500;letter-spacing:2.5px;text-transform:uppercase;color:#fff;background:var(--k);padding:15px 34px;border:1px solid var(--k);text-decoration:none;display:inline-block;transition:background .25s,border-color .25s,transform .25s}
+.tmbs-btn-dark:hover{background:var(--red);border-color:var(--red);transform:translateY(-2px)}
+.tmbs-btn-outline{font-family:'DM Sans',sans-serif;font-size:10px;font-weight:500;letter-spacing:2.5px;text-transform:uppercase;color:var(--k);border:1px solid var(--b2);padding:15px 34px;text-decoration:none;display:inline-flex;align-items:center;gap:8px;transition:border-color .25s,transform .25s}
+.tmbs-btn-outline:hover{border-color:var(--k);transform:translateY(-2px)}
+.tmbs-rv{opacity:0;transform:translateY(20px);transition:opacity .8s cubic-bezier(.22,1,.36,1),transform .8s cubic-bezier(.22,1,.36,1)}
+.tmbs-rv.on{opacity:1;transform:translateY(0)}
+@keyframes tmBsWave{0%,100%{transform:scaleY(1)}50%{transform:scaleY(.3)}}
+
+/* ── MOBILE ── */
+@media(max-width:767px){
+  .tm-fl-songs{padding:64px 0 80px}
+
+  .tm-fl-songs-hd{padding:0 20px;flex-direction:column;align-items:flex-start;gap:14px;margin-bottom:28px}
+
+  /* Hide column header row */
+  .tm-fl-songs-cols{display:none}
+
+  /* Switch rows from 7-col grid to flex */
+  .tm-fl-song-row{display:flex;flex-wrap:nowrap;align-items:center;gap:10px;padding:14px 20px}
+
+  /* Red left stripe conflicts with flex layout */
+  .tm-fl-song-row::before{display:none}
+
+  /* Hide non-essential columns */
+  .tm-fl-song-num{display:none}
+  .tm-fl-song-bpm{display:none}
+  .tm-fl-song-key{display:none}
+
+  /* Play button */
+  .tm-fl-song-playbtn{flex-shrink:0}
+
+  /* Title + tags — takes remaining space */
+  .tm-fl-song-info{flex:1;min-width:0}
+
+  /* Price — show, hide progress/time */
+  .tm-fl-song-prog-wrap{flex-shrink:0;display:flex;flex-direction:column;align-items:flex-end}
+  .tm-fl-song-price{font-size:14px}
+  .tm-fl-song-prog-bar{display:none!important}
+  .tm-fl-song-time{display:none!important}
+
+  /* BUY BUTTON: always visible on mobile */
+  .tm-fl-song-buy{display:flex!important;flex-shrink:0}
+  .tm-fl-song-buy a,
+  .tm-fl-song-buy button{
+    opacity:1!important;
+    font-size:8px;
+    letter-spacing:1.5px;
+    padding:9px 11px;
+    background:#0d0d0d;
+    color:#fff;
+    border-color:#0d0d0d;
+    white-space:nowrap
+  }
+  .tm-fl-song-buy a:hover,
+  .tm-fl-song-buy button:hover{background:#ff2a2a;border-color:#ff2a2a}
+
+  /* Footer buttons */
+  .tm-fl-songs-footer{padding:0 20px;flex-direction:column;gap:10px;margin-top:28px}
+  .tmbs-btn-dark,.tmbs-btn-outline{width:100%;text-align:center;justify-content:center;padding:14px 20px}
+}
+</style>
+
+<section class="tm-fl-songs tmbs-rv" id="songs-with-hooks">
+  <div class="tm-fl-songs-hd">
+    <div>
+      <div class="tm-fl-songs-eye">{{ section.settings.songs_eyebrow }}</div>
+      <h2 class="tm-fl-songs-title">{{ section.settings.songs_title }} <span class="gh">{{ section.settings.songs_title_ghost }}</span></h2>
+      <p style="font-size:13px;color:rgba(13,13,13,.5);margin-top:10px;max-width:520px;line-height:1.65">{{ section.settings.songs_desc }}</p>
+    </div>
+    {% if section.settings.songs_va_link != blank %}<a href="{{ section.settings.songs_va_link }}" class="tm-fl-songs-va">{{ section.settings.songs_va_text }} →</a>{% endif %}
+  </div>
+
+  {%- assign song_blocks = section.blocks | where: 'type', 'song' -%}
+  {% if song_blocks.size > 0 %}
+    <div class="tm-fl-songs-cols">
+      <div class="tm-fl-songs-col" style="text-align:center">#</div>
+      <div class="tm-fl-songs-col"></div>
+      <div class="tm-fl-songs-col">Title / Vibe</div>
+      <div class="tm-fl-songs-col">BPM</div>
+      <div class="tm-fl-songs-col">Key</div>
+      <div class="tm-fl-songs-col">Price</div>
+      <div class="tm-fl-songs-col"></div>
+    </div>
+    {% for block in song_blocks %}
+      {%- assign vibes = block.settings.vibes | split: ',' -%}
+      <div class="tm-fl-song-row{% if forloop.first %} tm-fl-sr-active{% endif %}" data-src="{{ block.settings.audio_url }}" {{ block.shopify_attributes }}>
+        <div class="tm-fl-song-num">{{ forloop.index }}</div>
+        <button type="button" class="tm-fl-song-playbtn" aria-label="Play {{ block.settings.title }}">
+          <svg class="tm-fl-song-play-icon" width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>
+          <div class="tm-fl-song-wave"><span></span><span></span><span></span><span></span></div>
+        </button>
+        <div class="tm-fl-song-info">
+          <div class="tm-fl-song-name">{{ block.settings.title | default: 'Untitled' }}</div>
+          <div class="tm-fl-song-tags">{% for vibe in vibes %}<span class="tm-fl-song-tag">{{ vibe | strip }}</span>{% endfor %}</div>
+        </div>
+        <div class="tm-fl-song-bpm">{{ block.settings.bpm | default: '—' }}</div>
+        <div class="tm-fl-song-key">{{ block.settings.key | default: '—' }}</div>
+        <div class="tm-fl-song-prog-wrap">
+          <div class="tm-fl-song-price">{{ block.settings.price | default: '$—' }}</div>
+          <div class="tm-fl-song-prog-bar"><div class="tm-fl-song-prog-fill"></div></div>
+          <div class="tm-fl-song-time">0:00 / 0:00</div>
+        </div>
+        <div class="tm-fl-song-buy">
+          {% if block.settings.buy_link != blank %}
+            <a href="{{ block.settings.buy_link }}">Get Song →</a>
+          {% else %}
+            <button type="button" onclick="event.stopPropagation();tmBsOrder('{{ block.settings.title | escape }}','{{ block.settings.price | escape }}')">Get Song →</button>
+          {% endif %}
+        </div>
+      </div>
+    {% endfor %}
+  {% else %}
+    <div class="tm-fl-songs-empty">No songs added yet — add a "Song" block in the Theme Editor.</div>
+  {% endif %}
+
+  <div class="tm-fl-songs-footer">
+    {% if section.settings.songs_cta1_text != blank %}
+      <button type="button" class="tmbs-btn-dark" onclick="tmBsOrder('Custom Song Order','{{ section.settings.songs_cta1_price | default: "Contact for Pricing" }}')">{{ section.settings.songs_cta1_text }}</button>
+    {% endif %}
+    {% if section.settings.songs_cta2_text != blank %}
+      <a href="{{ section.settings.songs_cta2_link }}" class="tmbs-btn-outline">{{ section.settings.songs_cta2_text }} →</a>
+    {% endif %}
+  </div>
+</section>
+
+<!-- ORDER MODAL -->
+<div id="tmBsModal" style="display:none;position:fixed;inset:0;z-index:9999;align-items:center;justify-content:center;background:rgba(0,0,0,0.85);">
+  <div style="background:#111;border:1px solid rgba(255,255,255,0.1);max-width:480px;width:92%;padding:40px 36px;position:relative;font-family:'DM Sans',sans-serif;">
+    <button onclick="tmBsCloseModal()" style="position:absolute;top:16px;right:16px;background:none;border:none;color:rgba(255,255,255,0.4);font-size:22px;cursor:pointer;line-height:1;">✕</button>
+    <div style="font-size:8px;letter-spacing:3px;text-transform:uppercase;color:#ff2a2a;margin-bottom:10px;">Song Order</div>
+    <div id="tmBsTitle" style="font-family:'Bebas Neue',sans-serif;font-size:32px;letter-spacing:2px;color:#f0ede8;margin-bottom:4px;"></div>
+    <div id="tmBsPrice" style="font-family:'Bebas Neue',sans-serif;font-size:22px;color:#ff2a2a;margin-bottom:28px;"></div>
+    {% form 'contact', id: 'tmBsForm' %}
+      {% if form.posted_successfully? %}
+        <div style="text-align:center;padding:20px 0;">
+          <div style="font-family:'Bebas Neue',sans-serif;font-size:28px;color:#f0ede8;margin-bottom:8px;">Order Received 🔥</div>
+          <div style="font-size:13px;color:rgba(240,237,232,0.5);margin-bottom:24px;">T Mafianie will hit you back to confirm and send payment details.</div>
+          <button type="button" onclick="tmBsCloseModal()" style="background:#ff2a2a;border:none;color:#fff;font-family:'DM Sans',sans-serif;font-size:10px;font-weight:600;letter-spacing:2px;text-transform:uppercase;padding:14px 32px;cursor:pointer;">Close</button>
+        </div>
+      {% else %}
+        <input type="hidden" name="contact[name]"    id="tmbs-h-name"    value="">
+        <input type="hidden" name="contact[email]"   id="tmbs-h-email"   value="">
+        <input type="hidden" name="contact[body]"    id="tmbs-h-body"    value="">
+        <input type="hidden" name="contact[subject]" id="tmbs-h-subject" value="">
+        <div style="margin-bottom:14px;">
+          <label style="font-size:8px;letter-spacing:2px;text-transform:uppercase;color:rgba(240,237,232,0.4);display:block;margin-bottom:6px;">Your Name *</label>
+          <input id="tmbs-v-name" type="text" placeholder="Artist / Producer name" style="width:100%;background:#1a1a1a;border:1px solid rgba(255,255,255,0.1);color:#f0ede8;padding:12px 14px;font-family:'DM Sans',sans-serif;font-size:13px;outline:none;box-sizing:border-box;">
+        </div>
+        <div style="margin-bottom:14px;">
+          <label style="font-size:8px;letter-spacing:2px;text-transform:uppercase;color:rgba(240,237,232,0.4);display:block;margin-bottom:6px;">Your Email *</label>
+          <input id="tmbs-v-email" type="email" placeholder="your@email.com" style="width:100%;background:#1a1a1a;border:1px solid rgba(255,255,255,0.1);color:#f0ede8;padding:12px 14px;font-family:'DM Sans',sans-serif;font-size:13px;outline:none;box-sizing:border-box;">
+        </div>
+        <div style="margin-bottom:24px;">
+          <label style="font-size:8px;letter-spacing:2px;text-transform:uppercase;color:rgba(240,237,232,0.4);display:block;margin-bottom:6px;">Phone (optional)</label>
+          <input id="tmbs-v-phone" type="tel" placeholder="(555) 000-0000" style="width:100%;background:#1a1a1a;border:1px solid rgba(255,255,255,0.1);color:#f0ede8;padding:12px 14px;font-family:'DM Sans',sans-serif;font-size:13px;outline:none;box-sizing:border-box;">
+        </div>
+        <div id="tmBsErr" style="display:none;font-size:11px;color:#ff2a2a;margin-bottom:14px;"></div>
+        <button type="button" onclick="tmBsSubmit('shopify')" style="width:100%;background:#ff2a2a;border:none;color:#fff;font-family:'DM Sans',sans-serif;font-size:10px;font-weight:600;letter-spacing:2px;text-transform:uppercase;padding:15px;cursor:pointer;margin-bottom:10px;">Send Order Request →</button>
+        <div id="tmbs-pp-wrap">
+          <button type="button" onclick="tmBsSubmit('paypal')" style="width:100%;background:#0070ba;border:none;color:#fff;font-family:'DM Sans',sans-serif;font-size:10px;font-weight:600;letter-spacing:2px;text-transform:uppercase;padding:15px;cursor:pointer;margin-bottom:10px;">Pay Now via PayPal →</button>
+        </div>
+        <div id="tmbs-note" style="font-size:10px;color:rgba(240,237,232,0.25);text-align:center;margin-top:8px;">"Send Order Request" notifies T Mafianie — he'll reach out to confirm &amp; collect payment.</div>
+      {% endif %}
+    {% endform %}
+  </div>
+</div>
+
+<audio id="tmBsSA" preload="none" controlsList="nodownload" oncontextmenu="return false;"></audio>
+
+<script>
+(function(){
+  var bsSection = document.getElementById('songs-with-hooks');
+  if (bsSection) bsSection.addEventListener('contextmenu', function(e){ e.preventDefault(); return false; });
+
+  function bsScramble(a){ setTimeout(function(){ try{ if(a&&!a.paused)a.removeAttribute('src'); }catch(e){} },3000); }
+
+  var io = new IntersectionObserver(function(es){ es.forEach(function(x){ if(x.isIntersecting){ x.target.classList.add('on'); io.unobserve(x.target); } }); },{ threshold:.07 });
+  document.querySelectorAll('.tmbs-rv').forEach(function(el){ io.observe(el); });
+
+  /* Songs player */
+  (function(){
+    var a = document.getElementById('tmBsSA'); if(!a)return;
+    var rs = [].slice.call(document.querySelectorAll('.tm-fl-song-row')); var c = 0;
+    function fmt(s){ if(!s||isNaN(s))return'0:00'; return Math.floor(s/60)+':'+String(Math.floor(s%60)).padStart(2,'0'); }
+    function ld(i,pl){
+      if(!rs[i])return; c=i;
+      rs.forEach(function(r){ r.classList.remove('tm-fl-sr-active','tm-fl-sr-playing'); });
+      rs[i].classList.add('tm-fl-sr-active');
+      var fill=rs[i].querySelector('.tm-fl-song-prog-fill'), t=rs[i].querySelector('.tm-fl-song-time');
+      if(fill)fill.style.width='0%';
+      if(t)t.textContent='0:00 / 0:00';
+      var s=rs[i].dataset.src;
+      if(s){ a.src=s; a.load(); if(pl){ a.play().catch(function(){}); bsScramble(a); } } else a.src='';
+    }
+    a.addEventListener('play',  function(){ if(rs[c])rs[c].classList.add('tm-fl-sr-playing'); });
+    a.addEventListener('pause', function(){ if(rs[c])rs[c].classList.remove('tm-fl-sr-playing'); });
+    a.addEventListener('ended', function(){ rs[c]&&rs[c].classList.remove('tm-fl-sr-playing'); ld((c+1)%rs.length,true); });
+    a.addEventListener('timeupdate', function(){
+      if(!a.duration||!rs[c])return;
+      var p=(a.currentTime/a.duration)*100;
+      var fill=rs[c].querySelector('.tm-fl-song-prog-fill'), t=rs[c].querySelector('.tm-fl-song-time');
+      if(fill)fill.style.width=p+'%';
+      if(t)t.textContent=fmt(a.currentTime)+' / '+fmt(a.duration);
+    });
+    rs.forEach(function(r,i){
+      r.addEventListener('click',function(e){
+        if(e.target.closest('.tm-fl-song-buy'))return;
+        if(i===c){ if(a.paused)a.play().catch(function(){}); else a.pause(); }
+        else ld(i,true);
+      });
+    });
+    if(rs.length)ld(0,false);
+  })();
+
+  /* Order modal */
+  var _song='', _price='';
+  var _pp = '{{ section.settings.paypal_email | default: "tmafianie101@gmail.com" }}';
+
+  window.tmBsOrder = function(title,price){
+    _song=title; _price=price;
+    document.getElementById('tmBsTitle').textContent=title;
+    document.getElementById('tmBsPrice').textContent=price;
+    var n=document.getElementById('tmbs-v-name'), e=document.getElementById('tmbs-v-email'), p=document.getElementById('tmbs-v-phone'), err=document.getElementById('tmBsErr');
+    if(n)n.value=''; if(e)e.value=''; if(p)p.value=''; if(err)err.style.display='none';
+    var custom=!price||price==='Custom Order'||price==='Contact for Pricing'||isNaN(parseFloat(price.replace(/[^0-9.]/g,'')));
+    var pp=document.getElementById('tmbs-pp-wrap'), note=document.getElementById('tmbs-note');
+    if(pp)pp.style.display=custom?'none':'block';
+    if(note)note.textContent=custom?'T Mafianie will reach out to discuss pricing and confirm your order.':'"Send Order Request" notifies T Mafianie — he\'ll reach out to confirm & collect payment.';
+    document.getElementById('tmBsModal').style.display='flex';
+    document.body.style.overflow='hidden';
+  };
+
+  window.tmBsCloseModal = function(){
+    document.getElementById('tmBsModal').style.display='none';
+    document.body.style.overflow='';
+  };
+
+  window.tmBsSubmit = function(method){
+    var n=(document.getElementById('tmbs-v-name')||{}).value||'';
+    var e=(document.getElementById('tmbs-v-email')||{}).value||'';
+    var ph=(document.getElementById('tmbs-v-phone')||{}).value||'';
+    var err=document.getElementById('tmBsErr');
+    n=n.trim(); e=e.trim();
+    if(!n||!e){ if(err){ err.textContent='Please enter your name and email.'; err.style.display='block'; } return; }
+    if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e)){ if(err){ err.textContent='Please enter a valid email address.'; err.style.display='block'; } return; }
+    if(err)err.style.display='none';
+    var body='=== SONG ORDER ===\nSong: '+_song+'\nPrice: '+_price+'\nBuyer Name: '+n+'\nBuyer Email: '+e+(ph?'\nPhone: '+ph:'')+'\nPayment: '+(method==='paypal'?'PayPal':'Pending')+'\nTime: '+new Date().toLocaleString();
+    document.getElementById('tmbs-h-name').value=n;
+    document.getElementById('tmbs-h-email').value=e;
+    document.getElementById('tmbs-h-body').value=body;
+    document.getElementById('tmbs-h-subject').value='Song Order: '+_song+' ('+_price+')';
+    if(method==='paypal'){
+      var amt=_price.replace(/[^0-9.]/g,'');
+      window.open('https://www.paypal.com/cgi-bin/webscr?cmd=_xclick&business='+encodeURIComponent(_pp)+'&item_name='+encodeURIComponent('Song License: '+_song)+'&amount='+encodeURIComponent(amt)+'&currency_code=USD&no_shipping=1&custom='+encodeURIComponent('Buyer: '+n+' | '+e)+'&return='+encodeURIComponent(window.location.href+'?order=success')+'&cancel_return='+encodeURIComponent(window.location.href),'_blank');
+    }
+    document.getElementById('tmBsForm').submit();
+  };
+
+  var modal=document.getElementById('tmBsModal');
+  if(modal)modal.addEventListener('click',function(e){ if(e.target===this)tmBsCloseModal(); });
+  document.addEventListener('keydown',function(e){ if(e.key==='Escape')tmBsCloseModal(); });
+})();
+</script>
+
+{% schema %}
+{
+  "name": "TM Ready-Made Bangers",
+  "settings": [
+    { "type": "header",   "content": "Section Header" },
+    { "type": "text",     "id": "songs_eyebrow",    "label": "Eyebrow",           "default": "Songs · With Hooks" },
+    { "type": "text",     "id": "songs_title",       "label": "Title",             "default": "Ready-Made" },
+    { "type": "text",     "id": "songs_title_ghost", "label": "Title Ghost Word",  "default": "Bangers" },
+    { "type": "textarea", "id": "songs_desc",        "label": "Description",       "default": "Full songs with hooks, melodies, and bars — ready for you to use or build on." },
+    { "type": "text",     "id": "songs_va_text",     "label": "View All Text",     "default": "View All Songs" },
+    { "type": "url",      "id": "songs_va_link",     "label": "View All Link" },
+    { "type": "header",   "content": "Footer Buttons" },
+    { "type": "text",     "id": "songs_cta1_text",   "label": "CTA 1 Text",        "default": "Custom Song Order" },
+    { "type": "text",     "id": "songs_cta1_price",  "label": "CTA 1 Order Label", "default": "Custom Order", "info": "Shows in the order modal for custom orders." },
+    { "type": "text",     "id": "songs_cta2_text",   "label": "CTA 2 Text",        "default": "Watch on YouTube" },
+    { "type": "url",      "id": "songs_cta2_link",   "label": "CTA 2 Link" },
+    { "type": "header",   "content": "Order Settings" },
+    { "type": "text",     "id": "paypal_email",      "label": "PayPal Email",      "default": "tmafianie101@gmail.com" }
+  ],
+  "blocks": [
+    {
+      "type": "song",
+      "name": "Song With Hook",
+      "settings": [
+        { "type": "text", "id": "title",     "label": "Song Title",                     "default": "Untitled Song" },
+        { "type": "text", "id": "vibes",     "label": "Vibes / Tags (comma separated)", "default": "Hip-Hop, Melodic" },
+        { "type": "text", "id": "bpm",       "label": "BPM",                            "default": "140" },
+        { "type": "text", "id": "key",       "label": "Key",                            "default": "C Min" },
+        { "type": "text", "id": "price",     "label": "Price",                          "default": "$299" },
+        { "type": "text", "id": "audio_url", "label": "Audio File URL (.mp3)", "info": "Admin → Content → Files → Upload .mp3 → copy URL → paste here." },
+        { "type": "url",  "id": "buy_link",  "label": "Buy / License Link (blank = order form)" }
+      ]
+    }
+  ],
+  "presets": [{ "name": "TM Ready-Made Bangers" }]
+}
+{% endschema %}

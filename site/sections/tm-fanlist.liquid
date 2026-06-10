@@ -1,0 +1,458 @@
+{% comment %}
+  SECTION: tm-fanlist.liquid  v4 — Fan Capture Only
+  Songs With Hooks store moved to tm-songs-bangers.liquid
+  ─────────────────────────────────────────────────────────
+  DATA ROUTING:
+    EMAIL tab  → {% form 'contact' %} → contact[body] contains full details
+    SMS tab    → same form, different body format
+    BOTH tab   → same form, email + phone in body
+{% endcomment %}
+
+<style>
+.tm-fl{--red:#ff2a2a;--gold:#c9a84c;--k:#0d0d0d;--off:#f7f5f2;--soft:#eeebe6;--mu:rgba(13,13,13,.38);--mu2:rgba(13,13,13,.55);--b:rgba(13,13,13,.08);--b2:rgba(13,13,13,.15);--ease:cubic-bezier(.22,1,.36,1);font-family:'DM Sans',sans-serif;color:var(--k)}
+.tm-fl *,.tm-fl *::before,.tm-fl *::after{box-sizing:border-box}
+.tm-fl-hero{background:var(--k);position:relative;overflow:hidden;padding:100px 64px 80px;text-align:center;display:flex;flex-direction:column;align-items:center}
+.tm-fl-hero-grid{position:absolute;inset:0;background-image:linear-gradient(rgba(255,42,42,.06) 1px,transparent 1px),linear-gradient(90deg,rgba(255,42,42,.06) 1px,transparent 1px);background-size:60px 60px;pointer-events:none}
+.tm-fl-hero-glow{position:absolute;top:-10%;left:50%;transform:translateX(-50%);width:800px;height:800px;background:radial-gradient(ellipse,rgba(255,42,42,.10) 0%,transparent 68%);border-radius:50%;pointer-events:none}
+.tm-fl-badge{display:inline-flex;align-items:center;gap:10px;background:rgba(255,42,42,.1);border:1px solid rgba(255,42,42,.25);padding:9px 18px;margin-bottom:32px;animation:tmFLfup .9s var(--ease) both .1s}
+.tm-fl-badge-dot{width:7px;height:7px;background:var(--red);border-radius:50%;animation:tmFLpulse 1.8s ease infinite}
+.tm-fl-badge span{font-size:9px;font-weight:500;letter-spacing:3px;text-transform:uppercase;color:var(--red)}
+.tm-fl-hero-eyebrow{display:flex;align-items:center;justify-content:center;gap:14px;font-size:9px;font-weight:500;letter-spacing:4px;text-transform:uppercase;color:rgba(240,237,232,.45);margin-bottom:20px;animation:tmFLfup .9s var(--ease) both .2s}
+.tm-fl-hero-eyebrow::before,.tm-fl-hero-eyebrow::after{content:'';display:block;width:28px;height:1px;background:rgba(255,42,42,.5)}
+.tm-fl-hero-h1{font-family:'Bebas Neue',sans-serif;font-size:clamp(64px,14vw,180px);line-height:.85;letter-spacing:-1px;color:#f0ede8;margin-bottom:24px;animation:tmFLfup 1s var(--ease) both .3s}
+.tm-fl-hero-h1 .tm-fl-outline{display:block;color:transparent;-webkit-text-stroke:2px rgba(240,237,232,.15)}
+.tm-fl-hero-sub{font-family:'Cormorant Garamond',serif;font-style:italic;font-size:clamp(16px,2.2vw,22px);font-weight:300;color:rgba(240,237,232,.45);max-width:520px;line-height:1.65;margin-bottom:48px;animation:tmFLfup .9s var(--ease) both .45s}
+.tm-fl-preview{width:100%;max-width:600px;animation:tmFLfup .9s var(--ease) both .55s}
+.tm-fl-track{display:flex;align-items:center;gap:16px;padding:16px 20px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.07);cursor:pointer;transition:background .25s,border-color .25s;position:relative;overflow:hidden;margin-bottom:3px}
+.tm-fl-track::before{content:'';position:absolute;left:0;top:0;bottom:0;width:3px;background:var(--red);transform:scaleY(0);transform-origin:bottom;transition:transform .35s var(--ease)}
+.tm-fl-track:hover,.tm-fl-track.tm-fl-active{background:rgba(255,42,42,.07);border-color:rgba(255,42,42,.3)}
+.tm-fl-track:hover::before,.tm-fl-track.tm-fl-active::before{transform:scaleY(1)}
+.tm-fl-track-art{width:46px;height:46px;flex-shrink:0;position:relative;overflow:hidden;display:flex;align-items:center;justify-content:center;font-family:'Bebas Neue',sans-serif;font-size:15px;letter-spacing:2px;color:rgba(255,42,42,.5);background:linear-gradient(135deg,#1a0505,#2d0a0a)}
+.tm-fl-track-art-play{position:absolute;inset:0;background:rgba(255,42,42,.88);display:flex;align-items:center;justify-content:center;opacity:0;transition:opacity .22s}
+.tm-fl-track:hover .tm-fl-track-art-play,.tm-fl-track.tm-fl-active .tm-fl-track-art-play{opacity:1}
+.tm-fl-track-art-play svg{width:13px;height:13px;fill:#fff}
+.tm-fl-track-info{flex:1;min-width:0;text-align:left}
+.tm-fl-track-name{font-family:'Bebas Neue',sans-serif;font-size:17px;letter-spacing:2px;color:#f0ede8;line-height:1;margin-bottom:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tm-fl-track-meta{font-size:9px;letter-spacing:2.5px;text-transform:uppercase;color:rgba(240,237,232,.3)}
+.tm-fl-bars{display:flex;align-items:flex-end;gap:2px;height:16px;opacity:0;transition:opacity .2s}
+.tm-fl-track.tm-fl-active .tm-fl-bars{opacity:1}
+.tm-fl-bar{width:3px;background:var(--red);border-radius:1px;height:4px}
+.tm-fl-track.tm-fl-active.tm-fl-playing .tm-fl-bar:nth-child(1){animation:tmFLbar .8s ease infinite 0s}
+.tm-fl-track.tm-fl-active.tm-fl-playing .tm-fl-bar:nth-child(2){animation:tmFLbar .8s ease infinite .15s}
+.tm-fl-track.tm-fl-active.tm-fl-playing .tm-fl-bar:nth-child(3){animation:tmFLbar .8s ease infinite .3s}
+.tm-fl-track.tm-fl-active.tm-fl-playing .tm-fl-bar:nth-child(4){animation:tmFLbar .8s ease infinite .45s}
+.tm-fl-music-links{display:flex;gap:10px;justify-content:center;margin-top:18px;flex-wrap:wrap}
+.tm-fl-music-link{padding:10px 20px;border:1px solid rgba(255,255,255,.1);font-size:9px;font-weight:500;letter-spacing:2.5px;text-transform:uppercase;color:rgba(240,237,232,.35);text-decoration:none;transition:border-color .2s,color .2s}
+.tm-fl-music-link:hover{border-color:rgba(255,42,42,.5);color:var(--red)}
+.tm-fl-capture{background:var(--off);padding:96px 64px;border-top:1px solid var(--b)}
+.tm-fl-capture-inner{max-width:760px;margin:0 auto}
+.tm-fl-cap-hd{text-align:center;margin-bottom:52px}
+.tm-fl-cap-eye{display:flex;align-items:center;justify-content:center;gap:12px;font-size:9px;font-weight:500;letter-spacing:4px;text-transform:uppercase;color:var(--red);margin-bottom:16px}
+.tm-fl-cap-eye::before,.tm-fl-cap-eye::after{content:'';display:block;width:20px;height:1px;background:var(--red)}
+.tm-fl-cap-title{font-family:'Bebas Neue',sans-serif;font-size:clamp(42px,7.5vw,84px);line-height:.9;letter-spacing:1px;margin-bottom:18px}
+.tm-fl-cap-title .hi{color:var(--red)}
+.tm-fl-cap-desc{font-size:14px;color:var(--mu2);line-height:1.7;max-width:480px;margin:0 auto}
+.tm-fl-perks{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:48px}
+.tm-fl-perk{background:#fff;border:1px solid var(--b);padding:22px 20px;position:relative;overflow:hidden;transition:border-color .25s,box-shadow .25s}
+.tm-fl-perk:hover{border-color:rgba(255,42,42,.25);box-shadow:0 4px 24px rgba(255,42,42,.06)}
+.tm-fl-perk::after{content:'';position:absolute;bottom:0;left:16px;right:16px;height:2px;background:var(--red);transform:scaleX(0);transform-origin:left;transition:transform .35s var(--ease)}
+.tm-fl-perk:hover::after{transform:scaleX(1)}
+.tm-fl-perk-icon{font-size:22px;margin-bottom:12px}
+.tm-fl-perk-label{font-size:9px;font-weight:500;letter-spacing:3px;text-transform:uppercase;color:var(--red);margin-bottom:6px}
+.tm-fl-perk-text{font-size:12px;color:var(--mu);line-height:1.6}
+.tm-fl-tabs{display:flex;border:1px solid var(--b);overflow:hidden;margin-bottom:0}
+.tm-fl-tab-btn{flex:1;padding:15px;font-size:10px;font-weight:500;letter-spacing:2.5px;text-transform:uppercase;background:transparent;border:none;color:var(--mu);cursor:pointer;transition:background .2s,color .2s;font-family:'DM Sans',sans-serif}
+.tm-fl-tab-btn:not(:last-child){border-right:1px solid var(--b)}
+.tm-fl-tab-btn.active{background:var(--k);color:#fff}
+.tm-fl-tab-btn:not(.active):hover{background:var(--soft)}
+.tm-fl-panels{border:1px solid var(--b);border-top:none;background:#fff;padding:32px}
+.tm-fl-panel{display:none}
+.tm-fl-panel.active{display:block}
+.tm-fl-success-banner{background:rgba(255,42,42,.06);border:1px solid rgba(255,42,42,.2);padding:28px 24px;text-align:center}
+.tm-fl-success-banner-title{font-family:'Bebas Neue',sans-serif;font-size:40px;letter-spacing:2px;color:var(--k);margin-bottom:8px}
+.tm-fl-success-banner-sub{font-size:13px;color:var(--mu2)}
+.tm-fl-error-banner{background:rgba(255,42,42,.05);border:1px solid rgba(255,42,42,.2);padding:12px 16px;margin-bottom:16px;font-size:12px;color:var(--red)}
+.tm-fl-row{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px}
+.tm-fl-row.single{grid-template-columns:1fr}
+.tm-fl-label{display:block;font-size:8px;font-weight:500;letter-spacing:3px;text-transform:uppercase;color:var(--mu);margin-bottom:8px}
+.tm-fl-input{width:100%;background:#fff;border:1px solid var(--b2);padding:15px 18px;font-family:'DM Sans',sans-serif;font-size:14px;font-weight:300;color:var(--k);outline:none;transition:border-color .25s;-webkit-appearance:none;border-radius:0}
+.tm-fl-input::placeholder{color:var(--mu)}
+.tm-fl-input:focus{border-color:rgba(255,42,42,.45)}
+select.tm-fl-input{cursor:pointer;background-color:#fff}
+.tm-fl-phone-wrap{display:flex}
+.tm-fl-phone-prefix{background:var(--soft);border:1px solid var(--b2);border-right:none;padding:15px 14px;font-size:13px;color:var(--mu2);flex-shrink:0;white-space:nowrap;line-height:1.4}
+.tm-fl-phone-wrap .tm-fl-input{border-left:none}
+.tm-fl-tags{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:8px}
+.tm-fl-tag{padding:7px 15px;border:1px solid var(--b);font-size:9px;font-weight:500;letter-spacing:2px;text-transform:uppercase;color:var(--mu);cursor:pointer;transition:all .2s;user-select:none;font-family:'DM Sans',sans-serif;background:transparent}
+.tm-fl-tag:hover{border-color:rgba(255,42,42,.3);color:var(--red)}
+.tm-fl-tag.sel{border-color:var(--red);color:var(--red);background:rgba(255,42,42,.05)}
+.tm-fl-consent-wrap{display:flex;align-items:flex-start;gap:12px;margin-bottom:8px;cursor:pointer}
+.tm-fl-consent-real{width:18px;height:18px;margin:2px 0 0;flex-shrink:0;accent-color:var(--red);cursor:pointer}
+.tm-fl-consent-text{font-size:11px;color:var(--mu);line-height:1.65}
+.tm-fl-consent-text a{color:var(--red);text-decoration:none;border-bottom:1px solid rgba(255,42,42,.25)}
+.tm-fl-submit{width:100%;padding:20px;background:var(--k);border:1px solid var(--k);color:#fff;font-family:'DM Sans',sans-serif;font-size:10px;font-weight:500;letter-spacing:3px;text-transform:uppercase;cursor:pointer;transition:background .25s,border-color .25s,transform .2s;margin-top:20px;display:block}
+.tm-fl-submit:hover{background:var(--red);border-color:var(--red);transform:translateY(-2px)}
+.tm-fl-divider{display:flex;align-items:center;gap:16px;margin:20px 0;font-size:9px;letter-spacing:3px;text-transform:uppercase;color:var(--mu)}
+.tm-fl-divider::before,.tm-fl-divider::after{content:'';flex:1;height:1px;background:var(--b)}
+.tm-fl-proof{display:flex;align-items:center;justify-content:center;gap:28px;margin-top:28px;padding-top:24px;border-top:1px solid var(--b);flex-wrap:wrap}
+.tm-fl-proof-item{display:flex;align-items:center;gap:8px}
+.tm-fl-proof-num{font-family:'Bebas Neue',sans-serif;font-size:24px;color:var(--k)}
+.tm-fl-proof-lbl{font-size:9px;letter-spacing:2px;text-transform:uppercase;color:var(--mu)}
+.tm-fl-proof-div{width:1px;height:28px;background:var(--b)}
+.tm-fl-social-links{display:flex;gap:10px;justify-content:center;flex-wrap:wrap}
+.tm-fl-social-link{padding:10px 20px;border:1px solid var(--b2);font-size:9px;font-weight:500;letter-spacing:2.5px;text-transform:uppercase;color:var(--mu);text-decoration:none;transition:border-color .2s,color .2s}
+.tm-fl-social-link:hover{border-color:var(--red);color:var(--red)}
+.tm-fl-rv{opacity:0;transform:translateY(20px);transition:opacity .8s var(--ease),transform .8s var(--ease)}
+.tm-fl-rv.on{opacity:1;transform:translateY(0)}
+@keyframes tmFLfup{from{opacity:0;transform:translateY(24px)}to{opacity:1;transform:translateY(0)}}
+@keyframes tmFLpulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.5;transform:scale(.85)}}
+@keyframes tmFLbar{0%,100%{height:4px}50%{height:15px}}
+@media(max-width:860px){
+  .tm-fl-hero,.tm-fl-capture{padding:64px 24px}
+  .tm-fl-perks{grid-template-columns:1fr}
+  .tm-fl-row{grid-template-columns:1fr}
+  .tm-fl-proof{flex-direction:column;gap:12px}
+  .tm-fl-proof-div{display:none}
+  .tm-fl-panels{padding:24px 20px}
+}
+</style>
+
+<div class="tm-fl">
+
+<section class="tm-fl-hero">
+  <div class="tm-fl-hero-grid"></div>
+  <div class="tm-fl-hero-glow"></div>
+  {% if section.settings.show_badge %}
+  <div class="tm-fl-badge"><span class="tm-fl-badge-dot"></span><span>{{ section.settings.badge_text }}</span></div>
+  {% endif %}
+  <div class="tm-fl-hero-eyebrow">{{ section.settings.hero_eyebrow }}</div>
+  <h1 class="tm-fl-hero-h1">{{ section.settings.hero_title_line1 }}<span class="tm-fl-outline">{{ section.settings.hero_title_line2 }}</span></h1>
+  <p class="tm-fl-hero-sub">{{ section.settings.hero_subtitle }}</p>
+  {%- assign preview_blocks = section.blocks | where: 'type', 'preview_track' -%}
+  {% if preview_blocks.size > 0 %}
+  <div class="tm-fl-preview">
+    {% for block in preview_blocks %}
+    <div class="tm-fl-track {% if forloop.first %}tm-fl-active{% endif %}" data-src="{{ block.settings.audio_url }}" {{ block.shopify_attributes }}>
+      <div class="tm-fl-track-art"><span>{{ block.settings.art_initials | default: '♪' }}</span><div class="tm-fl-track-art-play"><svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg></div></div>
+      <div class="tm-fl-track-info"><div class="tm-fl-track-name">{{ block.settings.title | default: 'Track' }}</div><div class="tm-fl-track-meta">{{ block.settings.album }}</div></div>
+      <div class="tm-fl-bars"><div class="tm-fl-bar"></div><div class="tm-fl-bar"></div><div class="tm-fl-bar"></div><div class="tm-fl-bar"></div></div>
+    </div>
+    {% endfor %}
+    <div class="tm-fl-music-links">
+      {% if section.settings.apple_music_url != blank %}<a href="{{ section.settings.apple_music_url }}" target="_blank" class="tm-fl-music-link">🎵 Apple Music</a>{% endif %}
+      {% if section.settings.youtube_url != blank %}<a href="{{ section.settings.youtube_url }}" target="_blank" class="tm-fl-music-link">▶ YouTube</a>{% endif %}
+      {% if section.settings.spotify_url != blank %}<a href="{{ section.settings.spotify_url }}" target="_blank" class="tm-fl-music-link">● Spotify</a>{% endif %}
+    </div>
+  </div>
+  {% endif %}
+</section>
+
+<section class="tm-fl-capture" id="tm-fan-capture">
+  <div class="tm-fl-capture-inner">
+    <div class="tm-fl-cap-hd tm-fl-rv">
+      <div class="tm-fl-cap-eye">{{ section.settings.cap_eyebrow }}</div>
+      <h2 class="tm-fl-cap-title">{{ section.settings.cap_title_1 }} <span class="hi">{{ section.settings.cap_title_red }}</span><br>{{ section.settings.cap_title_2 }}</h2>
+      <p class="tm-fl-cap-desc">{{ section.settings.cap_desc }}</p>
+    </div>
+    <div class="tm-fl-perks tm-fl-rv">
+      <div class="tm-fl-perk"><div class="tm-fl-perk-icon">🔥</div><div class="tm-fl-perk-label">Early Access</div><div class="tm-fl-perk-text">{{ section.settings.perk1_text }}</div></div>
+      <div class="tm-fl-perk"><div class="tm-fl-perk-icon">💰</div><div class="tm-fl-perk-label">Exclusive Deals</div><div class="tm-fl-perk-text">{{ section.settings.perk2_text }}</div></div>
+      <div class="tm-fl-perk"><div class="tm-fl-perk-icon">📲</div><div class="tm-fl-perk-label">Direct Updates</div><div class="tm-fl-perk-text">{{ section.settings.perk3_text }}</div></div>
+    </div>
+
+    {% form 'contact', id: 'tmfl-main-form' %}
+      {% if form.posted_successfully? %}
+        <div class="tm-fl-panels" style="padding:40px;text-align:center;">
+          <div class="tm-fl-success-banner">
+            <div class="tm-fl-success-banner-title">You're In. 🔥</div>
+            <div class="tm-fl-success-banner-sub">{{ section.settings.success_text }}</div>
+          </div>
+        </div>
+      {% else %}
+
+        <div class="tm-fl-tabs tm-fl-rv" id="tmfl-tabs">
+          <button type="button" class="tm-fl-tab-btn active" onclick="tmFlTab('email',this)">✉ Email</button>
+          <button type="button" class="tm-fl-tab-btn" onclick="tmFlTab('sms',this)">📲 SMS</button>
+          <button type="button" class="tm-fl-tab-btn" onclick="tmFlTab('both',this)">⚡ Both</button>
+        </div>
+
+        <input type="hidden" name="contact[name]"    id="tmfl-name"    value="Fan">
+        <input type="hidden" name="contact[email]"   id="tmfl-email"   value="placeholder@fanlist.com">
+        <input type="hidden" name="contact[body]"    id="tmfl-body"    value="Fan List Signup">
+        <input type="hidden" name="contact[subject]" id="tmfl-subject" value="Fan List Signup">
+
+        <div class="tm-fl-panels tm-fl-rv">
+
+          {% if form.errors %}
+            <div class="tm-fl-error-banner">⚠ Something went wrong — please check your info and try again.</div>
+          {% endif %}
+
+          <div class="tm-fl-panel active" id="tm-fl-panel-email">
+            <div class="tm-fl-row">
+              <div><label class="tm-fl-label" for="tmfl-fn-e">First Name</label><input type="text" id="tmfl-fn-e" class="tm-fl-input" placeholder="Your name" autocomplete="given-name"></div>
+              <div><label class="tm-fl-label" for="tmfl-ln-e">Last Name</label><input type="text" id="tmfl-ln-e" class="tm-fl-input" placeholder="Optional" autocomplete="family-name"></div>
+            </div>
+            <div class="tm-fl-row single">
+              <div><label class="tm-fl-label" for="tmfl-em-e">Email Address *</label>
+              <input type="email" id="tmfl-em-e" class="tm-fl-input" placeholder="yourname@email.com" autocomplete="email"></div>
+            </div>
+            <div class="tm-fl-row single" style="margin-bottom:16px">
+              <div>
+                <label class="tm-fl-label">What are you interested in?</label>
+                <div class="tm-fl-tags" id="tmfl-tags-e">
+                  <span class="tm-fl-tag sel" onclick="this.classList.toggle('sel')">New Songs</span>
+                  <span class="tm-fl-tag sel" onclick="this.classList.toggle('sel')">Songs w/ Hooks</span>
+                  <span class="tm-fl-tag" onclick="this.classList.toggle('sel')">Beat Drops</span>
+                  <span class="tm-fl-tag" onclick="this.classList.toggle('sel')">Vault Subscription</span>
+                  <span class="tm-fl-tag" onclick="this.classList.toggle('sel')">Merch</span>
+                  <span class="tm-fl-tag" onclick="this.classList.toggle('sel')">Booking / Features</span>
+                </div>
+              </div>
+            </div>
+            <label class="tm-fl-consent-wrap">
+              <input type="checkbox" id="tmfl-consent-e" class="tm-fl-consent-real">
+              <span class="tm-fl-consent-text">I agree to receive email updates from T Mafianie / Cabana Music Empire. No spam. <a href="/policies/privacy-policy">Privacy Policy</a>.</span>
+            </label>
+          </div>
+
+          <div class="tm-fl-panel" id="tm-fl-panel-sms">
+            <div class="tm-fl-row">
+              <div><label class="tm-fl-label" for="tmfl-fn-s">First Name *</label><input type="text" id="tmfl-fn-s" class="tm-fl-input" placeholder="Your name"></div>
+              <div><label class="tm-fl-label" for="tmfl-loc-s">City / State</label><input type="text" id="tmfl-loc-s" class="tm-fl-input" placeholder="Dallas, TX"></div>
+            </div>
+            <div class="tm-fl-row single">
+              <div><label class="tm-fl-label" for="tmfl-ph-s">Phone Number *</label>
+              <div class="tm-fl-phone-wrap"><span class="tm-fl-phone-prefix">🇺🇸 +1</span><input type="tel" id="tmfl-ph-s" class="tm-fl-input" placeholder="(214) 000-0000"></div></div>
+            </div>
+            <div class="tm-fl-row single">
+              <div><label class="tm-fl-label" for="tmfl-em-s">Email (optional)</label><input type="email" id="tmfl-em-s" class="tm-fl-input" placeholder="yourname@email.com"></div>
+            </div>
+            <div class="tm-fl-row single" style="margin-bottom:16px">
+              <div><label class="tm-fl-label" for="tmfl-src-s">How'd you find T Mafianie?</label>
+              <select id="tmfl-src-s" class="tm-fl-input"><option value="">— Select —</option><option>YouTube / T Mafianie TV</option><option>TikTok</option><option>Instagram</option><option>Twitter / X</option><option>Word of mouth</option><option>Apple Music / Spotify</option><option>Other</option></select></div>
+            </div>
+            <label class="tm-fl-consent-wrap">
+              <input type="checkbox" id="tmfl-consent-s" class="tm-fl-consent-real">
+              <span class="tm-fl-consent-text">I agree to receive SMS/text updates from T Mafianie / CME. Msg &amp; data rates may apply. Reply STOP to opt out anytime.</span>
+            </label>
+          </div>
+
+          <div class="tm-fl-panel" id="tm-fl-panel-both">
+            <div class="tm-fl-row">
+              <div><label class="tm-fl-label" for="tmfl-fn-b">First Name *</label><input type="text" id="tmfl-fn-b" class="tm-fl-input" placeholder="Your name" autocomplete="given-name"></div>
+              <div><label class="tm-fl-label" for="tmfl-loc-b">City / State</label><input type="text" id="tmfl-loc-b" class="tm-fl-input" placeholder="Dallas, TX"></div>
+            </div>
+            <div class="tm-fl-row single">
+              <div><label class="tm-fl-label" for="tmfl-em-b">Email Address *</label><input type="email" id="tmfl-em-b" class="tm-fl-input" placeholder="yourname@email.com" autocomplete="email"></div>
+            </div>
+            <div class="tm-fl-row single">
+              <div><label class="tm-fl-label" for="tmfl-ph-b">Phone Number *</label>
+              <div class="tm-fl-phone-wrap"><span class="tm-fl-phone-prefix">🇺🇸 +1</span><input type="tel" id="tmfl-ph-b" class="tm-fl-input" placeholder="(214) 000-0000" autocomplete="tel"></div></div>
+            </div>
+            <div class="tm-fl-row single" style="margin-bottom:16px">
+              <div>
+                <label class="tm-fl-label">What are you interested in?</label>
+                <div class="tm-fl-tags" id="tmfl-tags-b">
+                  <span class="tm-fl-tag sel" onclick="this.classList.toggle('sel')">New Songs</span>
+                  <span class="tm-fl-tag sel" onclick="this.classList.toggle('sel')">Songs w/ Hooks</span>
+                  <span class="tm-fl-tag" onclick="this.classList.toggle('sel')">Beat Drops</span>
+                  <span class="tm-fl-tag" onclick="this.classList.toggle('sel')">Vault Subscription</span>
+                  <span class="tm-fl-tag" onclick="this.classList.toggle('sel')">Merch</span>
+                  <span class="tm-fl-tag" onclick="this.classList.toggle('sel')">Booking / Features</span>
+                </div>
+              </div>
+            </div>
+            <label class="tm-fl-consent-wrap">
+              <input type="checkbox" id="tmfl-consent-b" class="tm-fl-consent-real">
+              <span class="tm-fl-consent-text">I agree to receive email &amp; SMS updates from T Mafianie / CME. Reply STOP anytime. <a href="/policies/privacy-policy">Privacy Policy</a>.</span>
+            </label>
+          </div>
+
+          <button type="submit" class="tm-fl-submit" id="tmfl-submit-btn" onclick="return tmFlBuildAndValidate()">Lock In My Spot →</button>
+
+        </div>
+      {% endif %}
+    {% endform %}
+
+    <div class="tm-fl-divider tm-fl-rv">or follow</div>
+    <div class="tm-fl-social-links tm-fl-rv">
+      {% if section.settings.apple_music_url != blank %}<a href="{{ section.settings.apple_music_url }}" target="_blank" class="tm-fl-social-link">Apple Music</a>{% endif %}
+      {% if section.settings.youtube_url != blank %}<a href="{{ section.settings.youtube_url }}" target="_blank" class="tm-fl-social-link">YouTube</a>{% endif %}
+      {% if section.settings.twitter_url != blank %}<a href="{{ section.settings.twitter_url }}" target="_blank" class="tm-fl-social-link">Twitter / X</a>{% endif %}
+    </div>
+    <div class="tm-fl-proof tm-fl-rv">
+      <div class="tm-fl-proof-item"><span class="tm-fl-proof-num">{{ section.settings.stat1_num }}</span>&nbsp;<span class="tm-fl-proof-lbl">{{ section.settings.stat1_lbl }}</span></div>
+      <div class="tm-fl-proof-div"></div>
+      <div class="tm-fl-proof-item"><span class="tm-fl-proof-num">{{ section.settings.stat2_num }}</span>&nbsp;<span class="tm-fl-proof-lbl">{{ section.settings.stat2_lbl }}</span></div>
+      <div class="tm-fl-proof-div"></div>
+      <div class="tm-fl-proof-item"><span class="tm-fl-proof-num">{{ section.settings.stat3_num }}</span>&nbsp;<span class="tm-fl-proof-lbl">{{ section.settings.stat3_lbl }}</span></div>
+    </div>
+  </div>
+</section>
+
+</div>
+
+<audio id="tmFlPA" preload="none" controlsList="nodownload" oncontextmenu="return false;"></audio>
+
+<script>
+(function(){
+  ['tm-fl-preview'].forEach(function(cls){
+    var el = document.querySelector('.'+cls);
+    if (el) el.addEventListener('contextmenu', function(e){ e.preventDefault(); return false; });
+  });
+
+  function scrambleSrc(a) {
+    setTimeout(function(){ try { if (a && !a.paused) a.removeAttribute('src'); } catch(e){} }, 3000);
+  }
+
+  var io=new IntersectionObserver(function(e){e.forEach(function(x){if(x.isIntersecting){x.target.classList.add('on');io.unobserve(x.target);}});},{threshold:.07});
+  document.querySelectorAll('.tm-fl-rv').forEach(function(el){io.observe(el);});
+
+  var tmFlActiveTab = 'email';
+
+  window.tmFlTab=function(t,btn){
+    tmFlActiveTab=t;
+    document.querySelectorAll('.tm-fl-tab-btn').forEach(function(b){b.classList.remove('active');});
+    btn.classList.add('active');
+    document.querySelectorAll('.tm-fl-panel').forEach(function(p){p.classList.remove('active');});
+    var p=document.getElementById('tm-fl-panel-'+t);
+    if(p)p.classList.add('active');
+    var sb=document.getElementById('tmfl-submit-btn');
+    if(sb){sb.textContent=t==='sms'?'Send My Number →':t==='both'?'⚡ Lock In Full Access →':'Lock In My Spot →';}
+  };
+
+  window.tmFlBuildAndValidate=function(){
+    var tab=tmFlActiveTab;
+    var err=[];
+    function val(id){var el=document.getElementById(id);return el?el.value.trim():'';}
+    function tags(id){return[].slice.call(document.querySelectorAll('#'+id+' .tm-fl-tag.sel')).map(function(t){return t.textContent.trim();}).join(', ');}
+    function consent(id){var el=document.getElementById(id);return el&&el.checked;}
+    var body='';
+    var subject='Fan List Signup — '+tab.toUpperCase()+' | T Mafianie';
+    if(tab==='email'){
+      var em=val('tmfl-em-e');
+      if(!em){err.push('Email address is required.');}
+      if(!consent('tmfl-consent-e')){err.push('Please check the consent box.');}
+      body='=== FAN EMAIL SIGNUP ===\n'+'Email: '+em+'\n'+'Name: '+val('tmfl-fn-e')+' '+val('tmfl-ln-e')+'\n'+'Interests: '+(tags('tmfl-tags-e')||'none')+'\n'+'Consent: YES\n'+'Time: '+(new Date().toLocaleString());
+    } else if(tab==='sms'){
+      var ph=val('tmfl-ph-s');
+      var fn=val('tmfl-fn-s');
+      if(!fn){err.push('First name is required.');}
+      if(!ph){err.push('Phone number is required.');}
+      if(!consent('tmfl-consent-s')){err.push('Please check the consent box.');}
+      body='=== FAN SMS SIGNUP ===\n'+'Name: '+fn+'\n'+'Phone: +1 '+ph.replace(/\D/g,'')+'\n'+'Email: '+(val('tmfl-em-s')||'not provided')+'\n'+'City: '+(val('tmfl-loc-s')||'not provided')+'\n'+'Found via: '+(val('tmfl-src-s')||'not provided')+'\n'+'SMS Consent: YES\n'+'Time: '+(new Date().toLocaleString());
+    } else if(tab==='both'){
+      var em2=val('tmfl-em-b');
+      var ph2=val('tmfl-ph-b');
+      var fn2=val('tmfl-fn-b');
+      if(!fn2){err.push('First name is required.');}
+      if(!em2){err.push('Email address is required.');}
+      if(!ph2){err.push('Phone number is required.');}
+      if(!consent('tmfl-consent-b')){err.push('Please check the consent box.');}
+      body='=== FAN EMAIL + SMS SIGNUP ===\n'+'Name: '+fn2+'\n'+'Email: '+em2+'\n'+'Phone: +1 '+ph2.replace(/\D/g,'')+'\n'+'City: '+(val('tmfl-loc-b')||'not provided')+'\n'+'Interests: '+(tags('tmfl-tags-b')||'none')+'\n'+'Email Consent: YES\n'+'SMS Consent: YES\n'+'Time: '+(new Date().toLocaleString());
+    }
+    if(err.length){
+      var eb=document.getElementById('tmfl-inline-err');
+      if(!eb){eb=document.createElement('div');eb.id='tmfl-inline-err';eb.className='tm-fl-error-banner';eb.style.marginBottom='12px';var panels=document.querySelector('.tm-fl-panels');if(panels)panels.insertBefore(eb,panels.firstChild);}
+      eb.textContent='⚠ '+err.join(' ');
+      return false;
+    }
+    var eb2=document.getElementById('tmfl-inline-err');
+    if(eb2)eb2.remove();
+    var nameVal='Fan';
+    var emailVal='noemail@fanlist.com';
+    if(tab==='email'){nameVal=(val('tmfl-fn-e')||'Fan')+' '+(val('tmfl-ln-e')||'');emailVal=val('tmfl-em-e')||'noemail@fanlist.com';}
+    else if(tab==='sms'){nameVal=val('tmfl-fn-s')||'Fan';emailVal=val('tmfl-em-s')||'sms-only@fanlist.com';}
+    else if(tab==='both'){nameVal=val('tmfl-fn-b')||'Fan';emailVal=val('tmfl-em-b')||'noemail@fanlist.com';}
+    var nf=document.getElementById('tmfl-name');
+    var ef=document.getElementById('tmfl-email');
+    var bf=document.getElementById('tmfl-body');
+    var sf=document.getElementById('tmfl-subject');
+    if(nf)nf.value=nameVal.trim();
+    if(ef)ef.value=emailVal;
+    if(bf)bf.value=body;
+    if(sf)sf.value=subject;
+    var sb2=document.getElementById('tmfl-submit-btn');
+    var mf=document.getElementById('tmfl-main-form');
+    if(sb2){sb2.disabled=true;sb2.textContent='Sending…';}
+    if(mf){
+      fetch(mf.action,{method:'POST',body:new FormData(mf)}).then(function(r){
+        if(r.url.indexOf('posted_successfully')>-1){
+          var tabs=document.getElementById('tmfl-tabs');
+          if(tabs)tabs.style.display='none';
+          var pnls=mf.querySelector('.tm-fl-panels');
+          if(pnls)pnls.innerHTML='<div style="padding:40px;text-align:center;"><div class="tm-fl-success-banner"><div class="tm-fl-success-banner-title">You\'re In. 🔥</div><div class="tm-fl-success-banner-sub">{{ section.settings.success_text | escape }}</div></div></div>';
+        }else{
+          if(sb2){sb2.disabled=false;sb2.textContent='Lock In My Spot →';}
+          mf.submit();
+        }
+      }).catch(function(){
+        if(sb2){sb2.disabled=false;sb2.textContent='Lock In My Spot →';}
+        mf.submit();
+      });
+    }
+    return false;
+  };
+
+  /* Preview player */
+  (function(){
+    var a=document.getElementById('tmFlPA');if(!a)return;
+    var ts=[].slice.call(document.querySelectorAll('.tm-fl-track'));var c=0;
+    function ld(i,pl){if(!ts[i])return;c=i;ts.forEach(function(t){t.classList.remove('tm-fl-active','tm-fl-playing');});ts[i].classList.add('tm-fl-active');var s=ts[i].dataset.src;if(s){a.src=s;a.load();if(pl){a.play().catch(function(){});scrambleSrc(a);}}}
+    a.addEventListener('play',function(){if(ts[c])ts[c].classList.add('tm-fl-playing');});
+    a.addEventListener('pause',function(){if(ts[c])ts[c].classList.remove('tm-fl-playing');});
+    a.addEventListener('ended',function(){ts[c]&&ts[c].classList.remove('tm-fl-playing');ld((c+1)%ts.length,true);});
+    ts.forEach(function(t,i){t.addEventListener('click',function(){if(i===c){if(a.paused)a.play().catch(function(){});else a.pause();}else ld(i,true);});});
+    if(ts.length)ld(0,false);
+  })();
+})();
+</script>
+
+{% schema %}
+{
+  "name": "TM Fan List",
+  "settings": [
+    { "type": "header",   "content": "Hero / Music Preview" },
+    { "type": "checkbox", "id": "show_badge",       "label": "Show Live Badge",       "default": true },
+    { "type": "text",     "id": "badge_text",        "label": "Badge Text",            "default": "New Project Incoming — Get First Access" },
+    { "type": "text",     "id": "hero_eyebrow",      "label": "Eyebrow",               "default": "Official Fan List · Est. 2024" },
+    { "type": "text",     "id": "hero_title_line1",  "label": "Title Line 1 (solid)",  "default": "Join The" },
+    { "type": "text",     "id": "hero_title_line2",  "label": "Title Line 2 (outline)","default": "Movement" },
+    { "type": "text",     "id": "hero_subtitle",     "label": "Subtitle",              "default": "Get exclusive drops, beats, and behind-the-scenes access before the rest of the world hears it." },
+    { "type": "url",      "id": "apple_music_url",   "label": "Apple Music URL" },
+    { "type": "url",      "id": "youtube_url",       "label": "YouTube URL" },
+    { "type": "url",      "id": "spotify_url",       "label": "Spotify URL" },
+    { "type": "url",      "id": "twitter_url",       "label": "Twitter / X URL" },
+    { "type": "header",   "content": "Fan Capture Form" },
+    { "type": "text",     "id": "cap_eyebrow",       "label": "Section Eyebrow",       "default": "Fan Access · No Cap" },
+    { "type": "text",     "id": "cap_title_1",       "label": "Title Part 1",          "default": "First to" },
+    { "type": "text",     "id": "cap_title_red",     "label": "Title Red Word",        "default": "Know." },
+    { "type": "text",     "id": "cap_title_2",       "label": "Title Part 2",          "default": "First to Hear." },
+    { "type": "textarea", "id": "cap_desc",          "label": "Description",           "default": "Drop your info and lock in. You'll get exclusive access to new music, song packs, merch releases, and content that never hits the timeline." },
+    { "type": "text",     "id": "perk1_text",        "label": "Perk 1 Text",           "default": "Hear new songs and hook packs before they drop publicly." },
+    { "type": "text",     "id": "perk2_text",        "label": "Perk 2 Text",           "default": "Fan-only pricing on songs with hooks and limited merch." },
+    { "type": "text",     "id": "perk3_text",        "label": "Perk 3 Text",           "default": "No algorithm. Straight to your inbox or phone." },
+    { "type": "text",     "id": "success_text",      "label": "Success Message",       "default": "Welcome to the movement. You'll be the first to know when something drops. Stay locked." },
+    { "type": "header",   "content": "Stats Bar" },
+    { "type": "text",     "id": "stat1_num",         "label": "Stat 1 Number",         "default": "3+" },
+    { "type": "text",     "id": "stat1_lbl",         "label": "Stat 1 Label",          "default": "Albums" },
+    { "type": "text",     "id": "stat2_num",         "label": "Stat 2 Number",         "default": "∞" },
+    { "type": "text",     "id": "stat2_lbl",         "label": "Stat 2 Label",          "default": "Songs in Catalog" },
+    { "type": "text",     "id": "stat3_num",         "label": "Stat 3 Number",         "default": "100%" },
+    { "type": "text",     "id": "stat3_lbl",         "label": "Stat 3 Label",          "default": "Independent" }
+  ],
+  "blocks": [
+    {
+      "type": "preview_track",
+      "name": "Preview Track",
+      "settings": [
+        { "type": "text", "id": "title",     "label": "Song Title",            "default": "Inner God" },
+        { "type": "text", "id": "album",     "label": "Album / Project",       "default": "The Trinity EP" },
+        { "type": "text", "id": "art_initials","label":"Art Initials (2-3 chars)","default":"IG" },
+        { "type": "text", "id": "audio_url", "label": "Audio File URL (.mp3)", "info": "Admin → Content → Files → Upload .mp3 → copy URL → paste here." }
+      ]
+    }
+  ],
+  "presets": [{ "name": "TM Fan List" }]
+}
+{% endschema %}

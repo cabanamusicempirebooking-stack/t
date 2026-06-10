@@ -1,0 +1,205 @@
+{% comment %}
+  SECTION: tm-merch.liquid
+  Fully dynamic — loops your Shopify collection automatically.
+  Quick-add via AJAX. Auto badge for Sale / New / Sold Out.
+  Color swatches from Color/Colour variant option.
+  White theme.
+{% endcomment %}
+
+<style>
+.tm-merch { padding: 112px 64px; background: #ffffff; }
+
+.tm-merch-header { margin-bottom: 56px; display: flex; align-items: flex-end; justify-content: space-between; }
+.tm-eyebrow { display: flex; align-items: center; gap: 12px; font-size: 9px; font-weight: 500; letter-spacing: 4px; text-transform: uppercase; color: #ff2a2a; margin-bottom: 14px; font-family: 'DM Sans', sans-serif; }
+.tm-eyebrow::before { content: ''; display: block; width: 24px; height: 1px; background: #ff2a2a; }
+.tm-section-title { font-family: 'Bebas Neue', sans-serif; font-size: clamp(52px, 6.5vw, 88px); letter-spacing: 1px; line-height: 0.95; color: #0d0d0d; }
+.tm-section-title .ghost { color: transparent; -webkit-text-stroke: 1.5px rgba(13,13,13,0.18); }
+
+.tm-view-all { font-family: 'DM Sans', sans-serif; font-size: 10px; font-weight: 500; letter-spacing: 2.5px; text-transform: uppercase; color: #0d0d0d; text-decoration: none; border-bottom: 1px solid rgba(13,13,13,0.2); padding-bottom: 2px; margin-bottom: 6px; display: inline-block; transition: color 0.2s, border-color 0.2s; }
+.tm-view-all:hover { color: #ff2a2a; border-color: #ff2a2a; }
+
+.tm-merch-grid { display: grid; grid-template-columns: repeat(var(--tm-cols, 4), 1fr); gap: 20px; margin-bottom: 48px; }
+
+.tm-merch-card { background: #f7f5f2; overflow: hidden; position: relative; border: 1px solid rgba(13,13,13,0.06); transition: transform 0.4s cubic-bezier(0.22,1,0.36,1), box-shadow 0.4s; }
+.tm-merch-card:hover { transform: translateY(-6px); box-shadow: 0 20px 60px rgba(0,0,0,0.1); }
+
+.tm-merch-img { aspect-ratio: 3/4; position: relative; overflow: hidden; background: #eeebe6; }
+.tm-merch-img img { width: 100%; height: 100%; object-fit: cover; transition: transform 0.6s cubic-bezier(0.22,1,0.36,1); }
+.tm-merch-card:hover .tm-merch-img img { transform: scale(1.05); }
+
+.tm-badge { position: absolute; top: 12px; left: 12px; font-family: 'DM Sans', sans-serif; font-size: 8px; font-weight: 500; letter-spacing: 2.5px; text-transform: uppercase; padding: 4px 10px; z-index: 2; }
+.tm-badge--sale { background: #ff2a2a; color: white; }
+.tm-badge--new  { background: #0d0d0d; color: white; }
+.tm-badge--sold { background: rgba(13,13,13,0.65); color: white; }
+
+.tm-quick-add { position: absolute; bottom: 0; left: 0; right: 0; font-family: 'DM Sans', sans-serif; font-size: 9px; font-weight: 500; letter-spacing: 2.5px; text-transform: uppercase; color: white; background: #0d0d0d; padding: 13px; border: none; transform: translateY(100%); transition: transform 0.35s cubic-bezier(0.22,1,0.36,1), background 0.2s; cursor: pointer; z-index: 2; width: 100%; }
+.tm-merch-card:hover .tm-quick-add { transform: translateY(0); }
+.tm-quick-add:hover { background: #ff2a2a; }
+.tm-quick-add:disabled { background: #aaa; cursor: not-allowed; }
+
+.tm-merch-body { padding: 16px 18px 20px; }
+.tm-merch-type { font-family: 'DM Sans', sans-serif; font-size: 8px; letter-spacing: 3px; text-transform: uppercase; color: rgba(13,13,13,0.38); margin-bottom: 6px; }
+.tm-merch-name { font-family: 'DM Sans', sans-serif; font-size: 13px; font-weight: 500; color: #0d0d0d; margin-bottom: 10px; line-height: 1.4; }
+.tm-merch-name a { text-decoration: none; color: inherit; transition: color 0.2s; }
+.tm-merch-name a:hover { color: #ff2a2a; }
+.tm-merch-bottom { display: flex; justify-content: space-between; align-items: center; }
+.tm-price-wrap { display: flex; align-items: baseline; gap: 8px; }
+.tm-price { font-family: 'Bebas Neue', sans-serif; font-size: 22px; letter-spacing: 1px; color: #0d0d0d; }
+.tm-price--sale { color: #ff2a2a; }
+.tm-price--compare { font-family: 'DM Sans', sans-serif; font-size: 12px; color: rgba(13,13,13,0.38); text-decoration: line-through; }
+
+.tm-swatches { display: flex; gap: 5px; }
+.tm-swatch { width: 14px; height: 14px; border-radius: 50%; border: 1.5px solid rgba(0,0,0,0.15); transition: transform 0.2s; }
+.tm-swatch:hover { transform: scale(1.2); }
+
+.tm-empty { grid-column: 1/-1; padding: 80px; text-align: center; border: 1px dashed rgba(13,13,13,0.15); font-family: 'DM Sans', sans-serif; font-size: 13px; color: rgba(13,13,13,0.4); }
+
+.tm-merch-footer { display: flex; gap: 14px; }
+.tm-btn-dark { font-family: 'DM Sans', sans-serif; font-size: 10px; font-weight: 500; letter-spacing: 2.5px; text-transform: uppercase; color: white; background: #0d0d0d; padding: 15px 34px; border: 1px solid #0d0d0d; text-decoration: none; display: inline-block; transition: background 0.25s, border-color 0.25s, transform 0.25s; }
+.tm-btn-dark:hover { background: #ff2a2a; border-color: #ff2a2a; transform: translateY(-2px); }
+.tm-btn-outline { font-family: 'DM Sans', sans-serif; font-size: 10px; font-weight: 500; letter-spacing: 2.5px; text-transform: uppercase; color: #0d0d0d; border: 1px solid rgba(13,13,13,0.25); padding: 15px 34px; text-decoration: none; display: inline-flex; align-items: center; gap: 10px; transition: border-color 0.25s, transform 0.25s; }
+.tm-btn-outline:hover { border-color: #0d0d0d; transform: translateY(-2px); }
+</style>
+
+<section class="tm-merch" id="merch" style="--tm-cols: {{ section.settings.columns }};">
+  <div class="tm-merch-header">
+    <div>
+      <div class="tm-eyebrow">{{ section.settings.eyebrow }}</div>
+      <h2 class="tm-section-title">{{ section.settings.title }} <span class="ghost">{{ section.settings.title_ghost }}</span></h2>
+    </div>
+    {% if section.settings.collection != blank %}
+      <a href="{{ collections[section.settings.collection].url }}" class="tm-view-all">
+        View All {{ collections[section.settings.collection].title }} →
+      </a>
+    {% endif %}
+  </div>
+
+  <div class="tm-merch-grid">
+    {%- assign col = collections[section.settings.collection] -%}
+    {%- if col != blank and col.products_count > 0 -%}
+      {%- for product in col.products limit: section.settings.product_limit -%}
+
+        {%- assign on_sale = false -%}
+        {%- if product.compare_at_price > product.price -%}{%- assign on_sale = true -%}{%- endif -%}
+        {%- assign sold_out = false -%}
+        {%- unless product.available -%}{%- assign sold_out = true -%}{%- endunless -%}
+
+        <div class="tm-merch-card">
+          <div class="tm-merch-img">
+            {%- if product.featured_image -%}
+              <a href="{{ product.url }}">
+                <img
+                  src="{{ product.featured_image | img_url: '600x800', crop: 'center' }}"
+                  alt="{{ product.featured_image.alt | escape }}"
+                  loading="{% if forloop.index <= 4 %}eager{% else %}lazy{% endif %}"
+                  width="600" height="800">
+              </a>
+            {%- endif -%}
+
+            {%- if sold_out -%}
+              <div class="tm-badge tm-badge--sold">Sold Out</div>
+            {%- elsif on_sale -%}
+              <div class="tm-badge tm-badge--sale">Sale</div>
+            {%- elsif product.tags contains 'new' or product.tags contains 'New' -%}
+              <div class="tm-badge tm-badge--new">New</div>
+            {%- endif -%}
+
+            {%- unless sold_out -%}
+              <button class="tm-quick-add"
+                data-vid="{{ product.first_available_variant.id }}">Add to Cart</button>
+            {%- endunless -%}
+          </div>
+
+          <div class="tm-merch-body">
+            <div class="tm-merch-type">{{ product.type | default: 'Apparel' }}</div>
+            <div class="tm-merch-name"><a href="{{ product.url }}">{{ product.title }}</a></div>
+            <div class="tm-merch-bottom">
+              <div class="tm-price-wrap">
+                <span class="tm-price {%- if on_sale %} tm-price--sale{%- endif -%}">
+                  {{ product.price | money }}
+                </span>
+                {%- if on_sale -%}
+                  <span class="tm-price--compare">{{ product.compare_at_price | money }}</span>
+                {%- endif -%}
+              </div>
+              {%- comment -%}Color swatches{%- endcomment -%}
+              {%- assign cidx = nil -%}
+              {%- for opt in product.options -%}
+                {%- if opt == 'Color' or opt == 'Colour' -%}{%- assign cidx = forloop.index0 -%}{%- endif -%}
+              {%- endfor -%}
+              {%- if cidx != nil -%}
+                <div class="tm-swatches">
+                  {%- assign seen = '' -%}
+                  {%- for v in product.variants limit: 8 -%}
+                    {%- assign vc = v.options[cidx] -%}
+                    {%- unless seen contains vc -%}
+                      {%- assign seen = seen | append: vc | append: '|' -%}
+                      <div class="tm-swatch" title="{{ vc }}" style="background:{{ vc | downcase | replace: ' ','' }};"></div>
+                    {%- endunless -%}
+                  {%- endfor -%}
+                </div>
+              {%- endif -%}
+            </div>
+          </div>
+        </div>
+
+      {%- endfor -%}
+    {%- else -%}
+      <div class="tm-empty">No collection selected, or collection is empty.<br>Set your collection in Theme Editor → TM Merch Grid.</div>
+    {%- endif -%}
+  </div>
+
+  <div class="tm-merch-footer">
+    {%- if section.settings.collection != blank -%}
+      <a href="{{ collections[section.settings.collection].url }}" class="tm-btn-dark">{{ section.settings.cta1_text }}</a>
+    {%- endif -%}
+    {%- if section.settings.cta2_link != blank -%}
+      <a href="{{ section.settings.cta2_link }}" class="tm-btn-outline">{{ section.settings.cta2_text }} →</a>
+    {%- endif -%}
+  </div>
+</section>
+
+<script>
+document.querySelectorAll('.tm-quick-add').forEach(btn => {
+  btn.addEventListener('click', async e => {
+    e.preventDefault(); e.stopPropagation();
+    const vid = btn.dataset.vid;
+    if (!vid) return;
+    const orig = btn.textContent;
+    btn.textContent = 'Adding…'; btn.disabled = true;
+    try {
+      const r = await fetch('/cart/add.js', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
+        body: JSON.stringify({ id: parseInt(vid), quantity: 1 })
+      });
+      if (!r.ok) throw new Error();
+      btn.textContent = '✓ Added'; btn.style.background = '#ff2a2a';
+      const cart = await (await fetch('/cart.js')).json();
+      document.querySelectorAll('[data-cart-count]').forEach(el => el.textContent = cart.item_count);
+    } catch {
+      btn.textContent = 'Error – Try Again'; btn.style.background = '#ff2a2a';
+    }
+    setTimeout(() => { btn.textContent = orig; btn.style.background = ''; btn.disabled = false; }, 2500);
+  });
+});
+</script>
+
+{% schema %}
+{
+  "name": "TM Merch Grid",
+  "settings": [
+    { "type": "paragraph", "content": "Select a Shopify collection. Products, prices, images, and sale badges all pull in automatically." },
+    { "type": "text",       "id": "eyebrow",        "label": "Eyebrow Label",           "default": "Apparel & Accessories" },
+    { "type": "text",       "id": "title",           "label": "Title",                   "default": "CME" },
+    { "type": "text",       "id": "title_ghost",     "label": "Ghost Word",              "default": "Collection" },
+    { "type": "collection", "id": "collection",      "label": "Shopify Collection",      "info": "e.g. 'gear', 'apparel', or 'all'" },
+    { "type": "range",      "id": "product_limit",   "label": "Max Products to Show",    "min": 2, "max": 16, "step": 1, "default": 4 },
+    { "type": "select",     "id": "columns",         "label": "Grid Columns",            "options": [{"value":"2","label":"2"},{"value":"3","label":"3"},{"value":"4","label":"4"}], "default": "4" },
+    { "type": "text",       "id": "cta1_text",       "label": "Button 1 Text",           "default": "Shop All Gear" },
+    { "type": "text",       "id": "cta2_text",       "label": "Button 2 Text",           "default": "View Hats" },
+    { "type": "url",        "id": "cta2_link",       "label": "Button 2 Link" }
+  ],
+  "presets": [{ "name": "TM Merch Grid" }]
+}
+{% endschema %}

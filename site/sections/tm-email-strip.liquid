@@ -1,0 +1,85 @@
+{% comment %}
+  SECTION: tm-email-strip.liquid  (white theme)
+  Uses Shopify native contact form — no app needed.
+{% endcomment %}
+<style>
+.tm-email-strip { background: #f7f5f2; border-top: 1px solid rgba(13,13,13,0.08); border-bottom: 1px solid rgba(13,13,13,0.08); padding: 64px; display: flex; align-items: center; justify-content: space-between; gap: 48px; }
+.tm-email-headline { font-family: 'Bebas Neue', sans-serif; font-size: 36px; letter-spacing: 2px; color: #0d0d0d; margin-bottom: 6px; }
+.tm-email-sub { font-family: 'DM Sans', sans-serif; font-size: 13px; color: rgba(13,13,13,0.45); }
+.tm-email-form-wrap { display: flex; }
+.tm-email-input { background: #ffffff; border: 1px solid rgba(13,13,13,0.15); color: #0d0d0d; font-family: 'DM Sans', sans-serif; font-size: 13px; font-weight: 300; padding: 14px 20px; outline: none; width: 320px; border-right: none; transition: border-color 0.2s; }
+.tm-email-input::placeholder { color: rgba(13,13,13,0.35); }
+.tm-email-input:focus { border-color: rgba(13,13,13,0.35); }
+.tm-email-btn { font-family: 'DM Sans', sans-serif; font-size: 10px; font-weight: 500; letter-spacing: 2.5px; text-transform: uppercase; color: white; background: #0d0d0d; padding: 14px 28px; border: 1px solid #0d0d0d; cursor: pointer; white-space: nowrap; transition: background 0.2s, border-color 0.2s; }
+.tm-email-btn:hover { background: #ff2a2a; border-color: #ff2a2a; }
+@media (max-width: 767px) {
+  .tm-email-strip { flex-direction: column; padding: 48px 20px; gap: 28px; }
+  .tm-email-input { width: 100%; }
+}
+</style>
+
+<div class="tm-email-strip">
+  <div>
+    <div class="tm-email-headline">{{ section.settings.headline }}</div>
+    <div class="tm-email-sub">{{ section.settings.subtext }}</div>
+  </div>
+  <div>
+    {% form 'contact', id: 'tm-es-form' %}
+      {% if form.posted_successfully? %}
+        <p style="font-family:'DM Sans',sans-serif;font-size:13px;color:#ff2a2a;">✓ You're in! Welcome to the movement.</p>
+      {% else %}
+        <input type="hidden" name="contact[name]" value="Newsletter Subscriber">
+        <div class="tm-email-form-wrap">
+          <input type="email" name="contact[email]" class="tm-email-input" placeholder="{{ section.settings.placeholder }}" required>
+          <button type="submit" class="tm-email-btn">{{ section.settings.btn_text }}</button>
+        </div>
+        {% if form.errors %}
+          <p style="margin-top:8px;font-family:'DM Sans',sans-serif;font-size:12px;color:rgba(13,13,13,0.5);">⚠ Something went wrong. Please try again.</p>
+        {% endif %}
+      {% endif %}
+    {% endform %}
+  </div>
+</div>
+
+<script>
+(function(){
+  var form = document.getElementById('tm-es-form');
+  if (!form) return;
+  var active = true;
+  form.addEventListener('submit', function(e) {
+    if (!active) return;
+    e.preventDefault();
+    var btn = form.querySelector('.tm-email-btn');
+    var orig = btn ? btn.textContent : '';
+    if (btn) { btn.textContent = '…'; btn.disabled = true; }
+    fetch(form.action, { method: 'POST', body: new FormData(form) })
+      .then(function(r) {
+        if (r.url.indexOf('posted_successfully') > -1) {
+          form.innerHTML = '<p style="font-family:\'DM Sans\',sans-serif;font-size:13px;color:#ff2a2a;">✓ You\'re in! Welcome to the movement.</p>';
+        } else {
+          if (btn) { btn.textContent = orig; btn.disabled = false; }
+          active = false;
+          form.submit();
+        }
+      })
+      .catch(function() {
+        if (btn) { btn.textContent = orig; btn.disabled = false; }
+        active = false;
+        form.submit();
+      });
+  });
+})();
+</script>
+
+{% schema %}
+{
+  "name": "TM Email Strip",
+  "settings": [
+    { "type": "text", "id": "headline",    "label": "Headline",     "default": "Stay in the Loop" },
+    { "type": "text", "id": "subtext",     "label": "Subtext",      "default": "New drops, exclusive beats, and first access to merch." },
+    { "type": "text", "id": "placeholder", "label": "Placeholder",  "default": "Enter your email address" },
+    { "type": "text", "id": "btn_text",    "label": "Button Text",  "default": "Subscribe" }
+  ],
+  "presets": [{ "name": "TM Email Strip" }]
+}
+{% endschema %}

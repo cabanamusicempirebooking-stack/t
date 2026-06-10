@@ -1,0 +1,52 @@
+{
+  "sections": {
+    "tm-booking": {
+      "type": "tm-booking",
+      "blocks": {
+        "booking_type_x4GNLx": {
+          "type": "booking_type",
+          "settings": {
+            "name": "Live Performances",
+            "desc": "Clubs, concerts, festivals, private events"
+          }
+        },
+        "booking_type_HCJpUT": {
+          "type": "booking_type",
+          "settings": {
+            "name": "Custom Features",
+            "desc": "Get T Mafianie on your track"
+          }
+        },
+        "booking_type_qyMJ8C": {
+          "type": "booking_type",
+          "settings": {
+            "name": "Beat Licensing",
+            "desc": "Exclusive & non-exclusive licenses"
+          }
+        },
+        "booking_type_wWdThf": {
+          "type": "booking_type",
+          "settings": {
+            "name": "Brand Partnerships",
+            "desc": "Collaborations & endorsements"
+          }
+        }
+      },
+      "block_order": [
+        "booking_type_x4GNLx",
+        "booking_type_HCJpUT",
+        "booking_type_qyMJ8C",
+        "booking_type_wWdThf"
+      ],
+      "name": "TM Booking",
+      "settings": {
+        "eyebrow": "Inquiries",
+        "title": "Book T",
+        "title_ghost": "Mafianie",
+        "description": "Ready to bring the energy to your event or collaboration? The team responds within 48 hours.",
+        "form_subtitle": "We respond within 48 hours."
+      }
+    }
+  },
+  "order": ["tm-booking"]
+}

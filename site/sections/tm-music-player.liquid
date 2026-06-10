@@ -1,0 +1,728 @@
+{% comment %}
+  SECTION: tm-music-player.liquid
+  Place in: sections/tm-music-player.liquid
+
+  A full-featured music player. Each track is a block.
+  Upload audio files to Shopify Files (Admin → Content → Files)
+  then paste the file URL into each track block.
+
+  FEATURES:
+  - Play / pause with animated waveform visualizer
+  - Progress bar with click-to-seek
+  - Track list with album art
+  - Keyboard: Space = play/pause, Left/Right = seek 10s
+  - Auto-advance to next track
+  - Responsive
+{% endcomment %}
+
+<style>
+.tm-player {
+  padding: 112px 64px;
+  background: var(--tm-player-bg, #0d0d0d);
+  position: relative;
+  overflow: hidden;
+}
+
+/* Background watermark */
+.tm-player::before {
+  content: 'CME';
+  position: absolute;
+  right: -40px; top: 50%;
+  transform: translateY(-50%);
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 420px; letter-spacing: -20px; line-height: 1;
+  color: rgba(255,255,255,0.025);
+  user-select: none; pointer-events: none;
+}
+
+/* Section header */
+.tm-player-header { margin-bottom: 64px; }
+.tm-player-eyebrow {
+  display: flex; align-items: center; gap: 12px;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 9px; font-weight: 500;
+  letter-spacing: 4px; text-transform: uppercase;
+  color: #ff2a2a; margin-bottom: 14px;
+}
+.tm-player-eyebrow::before { content: ''; display: block; width: 24px; height: 1px; background: #ff2a2a; }
+.tm-player-title {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: clamp(52px, 6.5vw, 88px);
+  letter-spacing: 1px; line-height: 0.95;
+  color: #f0ede8;
+}
+.tm-player-title .gh {
+  color: transparent;
+  -webkit-text-stroke: 1.5px rgba(240,237,232,0.15);
+}
+
+/* Main player card */
+.tm-player-card {
+  background: #111;
+  border: 1px solid rgba(255,255,255,0.07);
+  margin-bottom: 3px;
+}
+
+/* Now playing bar */
+.tm-now-playing {
+  display: grid;
+  grid-template-columns: 80px 1fr auto;
+  gap: 0;
+  align-items: stretch;
+  min-height: 88px;
+}
+
+.tm-np-art {
+  width: 80px; height: 80px;
+  background: #1a1a1a;
+  position: relative; overflow: hidden;
+  flex-shrink: 0; align-self: center;
+}
+.tm-np-art img {
+  width: 100%; height: 100%; object-fit: cover;
+  transition: opacity .3s;
+}
+.tm-np-art-placeholder {
+  position: absolute; inset: 0;
+  display: flex; align-items: center; justify-content: center;
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 28px; letter-spacing: 2px;
+  color: rgba(255,255,255,0.15);
+}
+
+/* Waveform animation */
+.tm-np-art-wave {
+  position: absolute; inset: 0;
+  display: flex; align-items: center; justify-content: center; gap: 3px;
+  opacity: 0; transition: opacity .3s;
+  background: rgba(0,0,0,0.55);
+}
+.tm-np-art-wave.playing { opacity: 1; }
+.tm-np-art-wave span {
+  display: block; width: 3px;
+  background: #ff2a2a; border-radius: 2px;
+  animation: tmWave 0.9s ease-in-out infinite;
+}
+.tm-np-art-wave span:nth-child(1) { height: 10px; animation-delay: 0s; }
+.tm-np-art-wave span:nth-child(2) { height: 22px; animation-delay: 0.15s; }
+.tm-np-art-wave span:nth-child(3) { height: 16px; animation-delay: 0.3s; }
+.tm-np-art-wave span:nth-child(4) { height: 28px; animation-delay: 0.1s; }
+.tm-np-art-wave span:nth-child(5) { height: 14px; animation-delay: 0.25s; }
+
+@keyframes tmWave {
+  0%, 100% { transform: scaleY(1); }
+  50%       { transform: scaleY(0.3); }
+}
+
+/* Track info in now-playing */
+.tm-np-info {
+  padding: 20px 28px;
+  display: flex; flex-direction: column; justify-content: center; gap: 4px;
+  border-right: 1px solid rgba(255,255,255,0.06);
+}
+.tm-np-label {
+  font-family: 'DM Sans', sans-serif;
+  font-size: 8px; font-weight: 500;
+  letter-spacing: 3px; text-transform: uppercase;
+  color: rgba(240,237,232,0.35);
+}
+.tm-np-title {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 26px; letter-spacing: 2px;
+  color: #f0ede8; line-height: 1;
+}
+.tm-np-album {
+  font-family: 'DM Sans', sans-serif;
+  font-size: 11px; color: rgba(240,237,232,0.42);
+  letter-spacing: 0.5px;
+}
+
+/* Controls */
+.tm-controls {
+  display: flex; flex-direction: column;
+  justify-content: center;
+  padding: 20px 28px; gap: 12px;
+  min-width: 280px;
+}
+
+.tm-ctrl-btns {
+  display: flex; align-items: center; gap: 20px;
+}
+
+.tm-btn-ctrl {
+  background: none; border: none; padding: 0;
+  color: rgba(240,237,232,0.5);
+  display: flex; align-items: center; justify-content: center;
+  transition: color .2s, transform .15s;
+}
+.tm-btn-ctrl:hover { color: #f0ede8; transform: scale(1.1); }
+
+.tm-btn-play {
+  width: 48px; height: 48px;
+  border: 1.5px solid rgba(240,237,232,0.3) !important;
+  border-radius: 50%;
+  background: none !important;
+  color: #f0ede8 !important;
+  display: flex; align-items: center; justify-content: center;
+  transition: background .2s, border-color .2s, transform .15s !important;
+}
+.tm-btn-play:hover { background: #ff2a2a !important; border-color: #ff2a2a !important; transform: scale(1.05) !important; }
+
+.tm-btn-play svg { margin-left: 2px; }
+.tm-btn-play.is-playing svg.icon-play { display: none; }
+.tm-btn-play.is-playing svg.icon-pause { display: block !important; }
+.icon-pause { display: none; }
+
+/* Progress */
+.tm-progress-wrap { display: flex; align-items: center; gap: 10px; }
+.tm-time {
+  font-family: 'DM Sans', sans-serif;
+  font-size: 10px; font-weight: 500;
+  color: rgba(240,237,232,0.42);
+  letter-spacing: 0.5px; white-space: nowrap;
+  min-width: 36px;
+}
+.tm-progress-track {
+  flex: 1; height: 3px;
+  background: rgba(255,255,255,0.1);
+  border-radius: 2px; cursor: pointer;
+  position: relative;
+}
+.tm-progress-fill {
+  height: 100%; background: #ff2a2a;
+  border-radius: 2px; width: 0%;
+  transition: width .1s linear;
+  pointer-events: none;
+}
+.tm-progress-thumb {
+  position: absolute; top: 50%;
+  transform: translate(-50%, -50%);
+  width: 12px; height: 12px;
+  background: #f0ede8; border-radius: 50%;
+  left: 0%; opacity: 0;
+  transition: opacity .2s;
+  pointer-events: none;
+}
+.tm-progress-track:hover .tm-progress-thumb { opacity: 1; }
+
+/* Volume */
+.tm-volume-wrap { display: flex; align-items: center; gap: 8px; }
+.tm-volume-icon { color: rgba(240,237,232,0.4); flex-shrink: 0; }
+.tm-volume-slider {
+  -webkit-appearance: none; appearance: none;
+  width: 72px; height: 3px;
+  background: rgba(255,255,255,0.12);
+  border-radius: 2px; outline: none; cursor: pointer;
+}
+.tm-volume-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 11px; height: 11px;
+  background: #f0ede8; border-radius: 50%;
+}
+
+/* Track list */
+.tm-tracklist { background: #0d0d0d; }
+
+.tm-track-row {
+  display: grid;
+  grid-template-columns: 56px 56px 1fr auto auto;
+  gap: 0; align-items: center;
+  border-bottom: 1px solid rgba(255,255,255,0.05);
+  cursor: pointer;
+  transition: background .2s;
+  position: relative;
+}
+.tm-track-row::before {
+  content: '';
+  position: absolute; left: 0; top: 0; bottom: 0; width: 0;
+  background: #ff2a2a;
+  transition: width .3s var(--ease, cubic-bezier(0.22,1,0.36,1));
+}
+.tm-track-row:hover { background: rgba(255,255,255,0.03); }
+.tm-track-row:hover::before { width: 2px; }
+.tm-track-row.active { background: rgba(255,42,42,0.06); }
+.tm-track-row.active::before { width: 2px; background: #ff2a2a; }
+
+.tm-track-num {
+  display: flex; align-items: center; justify-content: center;
+  padding: 18px 0; height: 100%;
+  font-family: 'Bebas Neue', sans-serif; font-size: 18px;
+  color: rgba(240,237,232,0.25);
+  transition: color .2s;
+}
+.tm-track-row.active .tm-track-num,
+.tm-track-row:hover .tm-track-num { color: #ff2a2a; }
+
+/* Mini art in tracklist */
+.tm-track-art {
+  width: 40px; height: 40px; margin: 8px;
+  background: #1a1a1a; overflow: hidden; flex-shrink: 0;
+  position: relative;
+}
+.tm-track-art img { width: 100%; height: 100%; object-fit: cover; }
+.tm-track-art-ph {
+  position: absolute; inset: 0;
+  display: flex; align-items: center; justify-content: center;
+  font-family: 'Bebas Neue', sans-serif; font-size: 12px;
+  color: rgba(255,255,255,0.2);
+}
+/* Mini wave on active */
+.tm-track-art-wave {
+  position: absolute; inset: 0;
+  display: flex; align-items: center; justify-content: center; gap: 2px;
+  background: rgba(0,0,0,0.6); opacity: 0;
+  transition: opacity .2s;
+}
+.tm-track-row.active.is-playing .tm-track-art-wave { opacity: 1; }
+.tm-track-art-wave span {
+  display: block; width: 2px; background: #ff2a2a; border-radius: 1px;
+  animation: tmWave 0.9s ease-in-out infinite;
+}
+.tm-track-art-wave span:nth-child(1) { height: 6px; }
+.tm-track-art-wave span:nth-child(2) { height: 14px; animation-delay: .15s; }
+.tm-track-art-wave span:nth-child(3) { height: 10px; animation-delay: .3s; }
+.tm-track-art-wave span:nth-child(4) { height: 18px; animation-delay: .1s; }
+
+.tm-track-info { padding: 14px 20px 14px 8px; }
+.tm-track-title {
+  font-family: 'DM Sans', sans-serif;
+  font-size: 13px; font-weight: 500;
+  color: rgba(240,237,232,0.85); margin-bottom: 3px;
+  transition: color .2s;
+}
+.tm-track-row:hover .tm-track-title,
+.tm-track-row.active .tm-track-title { color: #f0ede8; }
+.tm-track-album {
+  font-family: 'DM Sans', sans-serif;
+  font-size: 11px; color: rgba(240,237,232,0.35);
+}
+
+.tm-track-duration {
+  padding: 0 24px;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 11px; color: rgba(240,237,232,0.35);
+  white-space: nowrap;
+}
+.tm-track-link {
+  padding: 0 20px;
+  display: flex; align-items: center;
+}
+.tm-track-link a {
+  font-family: 'DM Sans', sans-serif;
+  font-size: 8px; font-weight: 500;
+  letter-spacing: 2px; text-transform: uppercase;
+  color: rgba(240,237,232,0.3);
+  border: 1px solid rgba(255,255,255,0.08);
+  padding: 5px 12px;
+  transition: color .2s, border-color .2s;
+  white-space: nowrap;
+}
+.tm-track-link a:hover { color: #f0ede8; border-color: rgba(255,255,255,0.25); }
+
+/* Empty state */
+.tm-player-empty {
+  padding: 80px 40px; text-align: center;
+  border: 1px dashed rgba(255,255,255,0.1);
+  font-family: 'DM Sans', sans-serif;
+  font-size: 13px; color: rgba(240,237,232,0.35);
+}
+
+/* ── Mobile ── */
+@media (max-width: 767px) {
+  .tm-player { padding: 64px 20px 48px; }
+  .tm-player::before { font-size: 200px; right: -15px; }
+  .tm-player-header { margin-bottom: 40px; }
+  .tm-now-playing {
+    grid-template-columns: 64px 1fr;
+    grid-template-rows: auto auto;
+    min-height: unset;
+  }
+  .tm-np-art { width: 64px; height: 64px; }
+  .tm-controls {
+    grid-column: 1 / -1;
+    padding: 12px 16px;
+    min-width: unset;
+    border-top: 1px solid rgba(255,255,255,0.05);
+    gap: 10px;
+  }
+  .tm-volume-wrap { display: none !important; }
+  .tm-ctrl-btns { gap: 20px; }
+  .tm-btn-play { width: 42px; height: 42px; }
+  .tm-track-row { grid-template-columns: 40px 46px 1fr auto; }
+  .tm-track-link { display: none; }
+  .tm-track-art { width: 36px; height: 36px; margin: 10px 5px; }
+  .tm-track-info { padding: 12px 12px 12px 6px; }
+}
+
+/* No tracks yet note */
+.tm-add-note {
+  margin-top: 28px; padding: 20px 24px;
+  border: 1px solid rgba(255,255,255,0.06);
+  display: flex; align-items: center; gap: 14px;
+  background: rgba(255,42,42,0.06);
+}
+.tm-add-note-icon { color: #ff2a2a; flex-shrink: 0; }
+.tm-add-note-text {
+  font-family: 'DM Sans', sans-serif;
+  font-size: 12px; color: rgba(240,237,232,0.5); line-height: 1.6;
+}
+.tm-add-note-text strong { color: rgba(240,237,232,0.8); }
+</style>
+
+<section class="tm-player" id="listen">
+  <div class="tm-player-header">
+    <div class="tm-player-eyebrow">{{ section.settings.eyebrow }}</div>
+    <h2 class="tm-player-title">
+      {{ section.settings.title }}
+      <span class="gh">{{ section.settings.title_ghost }}</span>
+    </h2>
+  </div>
+
+  {% if section.blocks.size > 0 %}
+
+    <!-- NOW PLAYING BAR -->
+    <div class="tm-player-card">
+      <div class="tm-now-playing">
+        <div class="tm-np-art" id="tmNpArt">
+          {% assign first = section.blocks.first %}
+          {% if first.settings.track_art %}
+            <img src="{{ first.settings.track_art | img_url: '160x160', crop: 'center' }}" alt="{{ first.settings.track_title }}" id="tmNpImg">
+          {% else %}
+            <div class="tm-np-art-placeholder" id="tmNpPh">♪</div>
+          {% endif %}
+          <div class="tm-np-art-wave" id="tmNpWave">
+            <span></span><span></span><span></span><span></span><span></span>
+          </div>
+        </div>
+
+        <div class="tm-np-info">
+          <div class="tm-np-label">Now Playing</div>
+          <div class="tm-np-title" id="tmNpTitle">{{ section.blocks.first.settings.track_title | default: 'Select a track' }}</div>
+          <div class="tm-np-album" id="tmNpAlbum">{{ section.blocks.first.settings.track_album | default: '' }}</div>
+        </div>
+
+        <div class="tm-controls">
+          <div class="tm-ctrl-btns">
+            <!-- Prev -->
+            <button class="tm-btn-ctrl" id="tmBtnPrev" title="Previous">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M6 6h2v12H6zm3.5 6 8.5 6V6z"/></svg>
+            </button>
+            <!-- Play/Pause -->
+            <button class="tm-btn-play tm-btn-ctrl" id="tmBtnPlay" title="Play / Pause">
+              <svg class="icon-play" width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>
+              <svg class="icon-pause" width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M6 19h4V5H6zm8-14v14h4V5z"/></svg>
+            </button>
+            <!-- Next -->
+            <button class="tm-btn-ctrl" id="tmBtnNext" title="Next">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M6 18l8.5-6L6 6v12zm2-8.14L11.03 12 8 14.14V9.86zM16 6h2v12h-2z"/></svg>
+            </button>
+            <!-- Volume -->
+            <div class="tm-volume-wrap" style="margin-left:8px;">
+              <span class="tm-volume-icon">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02z"/></svg>
+              </span>
+              <input type="range" class="tm-volume-slider" id="tmVolume" min="0" max="1" step="0.01" value="0.8">
+            </div>
+          </div>
+          <!-- Progress -->
+          <div class="tm-progress-wrap">
+            <span class="tm-time" id="tmTimeCur">0:00</span>
+            <div class="tm-progress-track" id="tmProgress">
+              <div class="tm-progress-fill" id="tmFill"></div>
+              <div class="tm-progress-thumb" id="tmThumb"></div>
+            </div>
+            <span class="tm-time" id="tmTimeTot">0:00</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- TRACK LIST -->
+    <div class="tm-tracklist">
+      {% for block in section.blocks %}
+        <div class="tm-track-row {% if forloop.first %}active{% endif %}"
+          data-index="{{ forloop.index0 }}"
+          data-src="{{ block.settings.track_url }}"
+          data-title="{{ block.settings.track_title | escape }}"
+          data-album="{{ block.settings.track_album | escape }}"
+          data-art="{% if block.settings.track_art %}{{ block.settings.track_art | img_url: '160x160', crop: 'center' }}{% endif %}"
+          {{ block.shopify_attributes }}>
+
+          <div class="tm-track-num">{{ forloop.index }}</div>
+
+          <div class="tm-track-art">
+            {% if block.settings.track_art %}
+              <img src="{{ block.settings.track_art | img_url: '80x80', crop: 'center' }}" alt="{{ block.settings.track_title }}" loading="lazy">
+            {% else %}
+              <div class="tm-track-art-ph">♪</div>
+            {% endif %}
+            <div class="tm-track-art-wave">
+              <span></span><span></span><span></span><span></span>
+            </div>
+          </div>
+
+          <div class="tm-track-info">
+            <div class="tm-track-title">{{ block.settings.track_title | default: 'Untitled Track' }}</div>
+            <div class="tm-track-album">{{ block.settings.track_album | default: '' }}</div>
+          </div>
+
+          <div class="tm-track-duration" id="tmDur{{ forloop.index0 }}">—</div>
+
+          <div class="tm-track-link">
+            {% if block.settings.track_buy_link != blank %}
+              <a href="{{ block.settings.track_buy_link }}">Buy →</a>
+            {% endif %}
+          </div>
+        </div>
+      {% endfor %}
+    </div>
+
+    {% if section.settings.show_upload_note %}
+      <div class="tm-add-note">
+        <div class="tm-add-note-icon">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z"/></svg>
+        </div>
+        <div class="tm-add-note-text">
+          <strong>To add music:</strong> Go to Admin → Content → Files, upload your .mp3 file, then copy the URL and paste it into each track block's "Audio File URL" field in the Theme Editor.
+        </div>
+      </div>
+    {% endif %}
+
+  {% else %}
+    <div class="tm-player-empty">
+      No tracks added yet.<br>Click "Add block → Track" in the Theme Editor to add your first song.
+    </div>
+  {% endif %}
+</section>
+
+<audio id="tmAudio" preload="metadata" controlsList="nodownload" oncontextmenu="return false;"></audio>
+
+<script>
+(function() {
+  'use strict';
+
+  // Block right-click on player
+  var playerEl = document.getElementById('listen');
+  if (playerEl) playerEl.addEventListener('contextmenu', function(e){ e.preventDefault(); return false; });
+
+  // Scramble src from DOM after playback starts (file still streams — just hidden from inspect)
+  function scrambleSrc(a) {
+    setTimeout(function(){ try { if (a && !a.paused) a.removeAttribute('src'); } catch(e){} }, 3000);
+  }
+
+  const audio   = document.getElementById('tmAudio');
+  if (!audio) return;
+
+  const btnPlay = document.getElementById('tmBtnPlay');
+  const btnPrev = document.getElementById('tmBtnPrev');
+  const btnNext = document.getElementById('tmBtnNext');
+  const progress= document.getElementById('tmProgress');
+  const fill    = document.getElementById('tmFill');
+  const thumb   = document.getElementById('tmThumb');
+  const timeCur = document.getElementById('tmTimeCur');
+  const timeTot = document.getElementById('tmTimeTot');
+  const volume  = document.getElementById('tmVolume');
+  const npTitle = document.getElementById('tmNpTitle');
+  const npAlbum = document.getElementById('tmNpAlbum');
+  const npWave  = document.getElementById('tmNpWave');
+  const npImg   = document.getElementById('tmNpImg');
+  const npPh    = document.getElementById('tmNpPh');
+  const rows    = Array.from(document.querySelectorAll('.tm-track-row'));
+
+  let currentIdx = 0;
+  audio.volume = 0.8;
+
+  function fmt(s) {
+    if (isNaN(s)) return '0:00';
+    const m = Math.floor(s / 60);
+    const ss = String(Math.floor(s % 60)).padStart(2, '0');
+    return m + ':' + ss;
+  }
+
+  function loadTrack(idx, autoplay) {
+    if (!rows[idx]) return;
+    currentIdx = idx;
+    const row = rows[idx];
+    const src   = row.dataset.src;
+    const title = row.dataset.title;
+    const album = row.dataset.album;
+    const art   = row.dataset.art;
+
+    if (npTitle) npTitle.textContent = title || 'Untitled';
+    if (npAlbum) npAlbum.textContent = album || '';
+
+    if (npImg) {
+      if (art) { npImg.src = art; npImg.style.display = 'block'; if (npPh) npPh.style.display = 'none'; }
+      else      { npImg.style.display = 'none'; if (npPh) npPh.style.display = 'flex'; }
+    }
+
+    rows.forEach(r => { r.classList.remove('active', 'is-playing'); });
+    row.classList.add('active');
+
+    if (fill)  fill.style.width = '0%';
+    if (thumb) thumb.style.left = '0%';
+    if (timeCur) timeCur.textContent = '0:00';
+    if (timeTot) timeTot.textContent = '0:00';
+
+    if (src) {
+      audio.src = src;
+      audio.load();
+      if (autoplay) { audio.play().catch(() => {}); scrambleSrc(audio); }
+    } else {
+      audio.src = '';
+    }
+  }
+
+  function setPlaying(playing) {
+    if (!btnPlay) return;
+    btnPlay.classList.toggle('is-playing', playing);
+    if (npWave) npWave.classList.toggle('playing', playing);
+    rows.forEach((r, i) => {
+      r.classList.toggle('is-playing', i === currentIdx && playing);
+    });
+  }
+
+  if (btnPlay) btnPlay.addEventListener('click', () => {
+    if (audio.paused) { audio.play().catch(() => {}); scrambleSrc(audio); }
+    else audio.pause();
+  });
+
+  audio.addEventListener('play',  () => setPlaying(true));
+  audio.addEventListener('pause', () => setPlaying(false));
+  audio.addEventListener('ended', () => {
+    setPlaying(false);
+    const next = (currentIdx + 1) % rows.length;
+    loadTrack(next, true);
+  });
+
+  if (btnPrev) btnPrev.addEventListener('click', () => {
+    const prev = (currentIdx - 1 + rows.length) % rows.length;
+    loadTrack(prev, !audio.paused);
+  });
+  if (btnNext) btnNext.addEventListener('click', () => {
+    const next = (currentIdx + 1) % rows.length;
+    loadTrack(next, !audio.paused);
+  });
+
+  audio.addEventListener('loadedmetadata', () => {
+    if (timeTot) timeTot.textContent = fmt(audio.duration);
+    const durEl = document.getElementById('tmDur' + currentIdx);
+    if (durEl) durEl.textContent = fmt(audio.duration);
+  });
+
+  audio.addEventListener('timeupdate', () => {
+    if (!audio.duration) return;
+    const pct = (audio.currentTime / audio.duration) * 100;
+    if (fill)  fill.style.width  = pct + '%';
+    if (thumb) thumb.style.left  = pct + '%';
+    if (timeCur) timeCur.textContent = fmt(audio.currentTime);
+  });
+
+  if (progress) {
+    progress.addEventListener('click', e => {
+      if (!audio.duration) return;
+      const rect = progress.getBoundingClientRect();
+      const pct  = (e.clientX - rect.left) / rect.width;
+      audio.currentTime = pct * audio.duration;
+    });
+
+    let dragging = false;
+    progress.addEventListener('mousedown', () => { dragging = true; });
+    document.addEventListener('mousemove', e => {
+      if (!dragging || !audio.duration) return;
+      const rect = progress.getBoundingClientRect();
+      const pct  = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width));
+      audio.currentTime = pct * audio.duration;
+    });
+    document.addEventListener('mouseup', () => { dragging = false; });
+  }
+
+  if (volume) volume.addEventListener('input', () => { audio.volume = parseFloat(volume.value); });
+
+  rows.forEach((row, i) => {
+    row.addEventListener('click', () => {
+      if (i === currentIdx) {
+        if (audio.paused) { audio.play().catch(() => {}); scrambleSrc(audio); }
+        else audio.pause();
+      } else {
+        loadTrack(i, true);
+      }
+    });
+  });
+
+  document.addEventListener('keydown', e => {
+    if (['INPUT','TEXTAREA','SELECT'].includes(e.target.tagName)) return;
+    if (e.code === 'Space') { e.preventDefault(); btnPlay && btnPlay.click(); }
+    if (e.code === 'ArrowRight') { audio.currentTime = Math.min(audio.duration || 0, audio.currentTime + 10); }
+    if (e.code === 'ArrowLeft')  { audio.currentTime = Math.max(0, audio.currentTime - 10); }
+  });
+
+  if (rows.length > 0) loadTrack(0, false);
+})();
+</script>
+
+{% schema %}
+{
+  "name": "TM Music Player",
+  "settings": [
+    {
+      "type": "paragraph",
+      "content": "HOW TO ADD MUSIC: Go to Shopify Admin → Content → Files → Upload your .mp3 → copy the URL → paste it into the 'Audio File URL' field in each Track block below."
+    },
+    { "type": "text",     "id": "eyebrow",          "label": "Eyebrow Label",   "default": "Listen" },
+    { "type": "text",     "id": "title",             "label": "Title",           "default": "Music" },
+    { "type": "text",     "id": "title_ghost",       "label": "Ghost Word",      "default": "Player" },
+    { "type": "checkbox", "id": "show_upload_note",  "label": "Show upload tip", "default": true,
+      "info": "Shows instructions for adding audio. Turn off once your tracks are set up." }
+  ],
+  "blocks": [
+    {
+      "type": "track",
+      "name": "Track",
+      "settings": [
+        {
+          "type": "text",
+          "id": "track_title",
+          "label": "Track Title",
+          "default": "Track Name"
+        },
+        {
+          "type": "text",
+          "id": "track_album",
+          "label": "Album / Project",
+          "default": "Album Name",
+          "info": "Shows under the track title (e.g. Japan, Awake 3)"
+        },
+        {
+          "type": "text",
+          "id": "track_url",
+          "label": "Audio File URL (.mp3)",
+          "info": "Go to Admin → Content → Files → Upload your .mp3 → copy the URL → paste it here."
+        },
+        {
+          "type": "image_picker",
+          "id": "track_art",
+          "label": "Track / Album Art",
+          "info": "Optional. Square image recommended (500x500px+)."
+        },
+        {
+          "type": "url",
+          "id": "track_buy_link",
+          "label": "Buy Link (optional)",
+          "info": "Links to the product page for this track or album."
+        }
+      ]
+    }
+  ],
+  "presets": [
+    {
+      "name": "TM Music Player",
+      "blocks": [
+        { "type": "track", "settings": { "track_title": "Japan",   "track_album": "Japan — 2024" } },
+        { "type": "track", "settings": { "track_title": "Awake 3", "track_album": "Awake 3 — 2024" } },
+        { "type": "track", "settings": { "track_title": "Awake 2", "track_album": "Awake 2 — 2023" } }
+      ]
+    }
+  ]
+}
+{% endschema %}

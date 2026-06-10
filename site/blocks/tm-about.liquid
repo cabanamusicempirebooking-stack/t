@@ -1,0 +1,503 @@
+{% comment %}
+  SECTION: tm-about.liquid
+  About the Brand — T Mafianie / Cabana Music Empire / CME Audio
+  - Responsive two-column layout (photo stack left, bio right) on desktop
+  - Single-column stacked on mobile
+  - Matches site design language: Bebas Neue + DM Sans, #ff2a2a accent, #f7f5f2 / #0d0d0d palette
+  - Up to 3 customizer images with optional caption
+  - SEO: structured heading hierarchy, descriptive alt text, schema-ready id
+  - All copy is editable from the Theme Customizer (no hardcoded content)
+{% endcomment %}
+
+<style>
+/* ── ABOUT SECTION WRAPPER ── */
+#tm-about-brand {
+  background: #f7f5f2;
+  padding: 100px 64px;
+  position: relative;
+  overflow: hidden;
+}
+
+/* Subtle background texture matching site grid */
+#tm-about-brand::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image:
+    linear-gradient(rgba(13,13,13,0.03) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(13,13,13,0.03) 1px, transparent 1px);
+  background-size: 72px 72px;
+  mask-image: radial-gradient(ellipse 100% 80% at 50% 50%, black 30%, transparent 100%);
+  -webkit-mask-image: radial-gradient(ellipse 100% 80% at 50% 50%, black 30%, transparent 100%);
+  pointer-events: none;
+}
+
+/* Ghost watermark */
+#tm-about-brand::after {
+  content: 'CME';
+  position: absolute;
+  left: -30px;
+  bottom: -40px;
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 340px;
+  letter-spacing: -12px;
+  line-height: 1;
+  color: rgba(255,42,42,0.04);
+  user-select: none;
+  pointer-events: none;
+}
+
+/* ── INNER GRID ── */
+.tm-about-inner {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  grid-template-columns: 420px 1fr;
+  gap: 80px;
+  align-items: start;
+  max-width: 1280px;
+  margin: 0 auto;
+}
+
+/* ── PHOTO COLUMN ── */
+.tm-about-photos {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.tm-about-photo-primary {
+  width: 100%;
+  aspect-ratio: 4 / 5;
+  overflow: hidden;
+  position: relative;
+}
+
+.tm-about-photo-primary img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: top center;
+  display: block;
+  transition: transform 0.6s cubic-bezier(0.22,1,0.36,1);
+}
+.tm-about-photo-primary:hover img {
+  transform: scale(1.03);
+}
+
+/* Red accent bar on primary photo */
+.tm-about-photo-primary::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  width: 3px;
+  height: 40%;
+  background: #ff2a2a;
+}
+
+.tm-about-photos-secondary {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+
+.tm-about-photo-secondary {
+  overflow: hidden;
+  aspect-ratio: 1 / 1;
+}
+
+.tm-about-photo-secondary img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  transition: transform 0.6s cubic-bezier(0.22,1,0.36,1);
+}
+.tm-about-photo-secondary:hover img {
+  transform: scale(1.05);
+}
+
+/* ── BIO COLUMN ── */
+.tm-about-content {
+  padding-top: 8px;
+}
+
+.tm-about-overline {
+  font-family: 'DM Sans', sans-serif;
+  font-size: 9px;
+  font-weight: 500;
+  letter-spacing: 4px;
+  text-transform: uppercase;
+  color: #ff2a2a;
+  margin-bottom: 20px;
+  display: block;
+}
+
+.tm-about-heading {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: clamp(52px, 5.5vw, 80px);
+  letter-spacing: 1px;
+  line-height: 0.93;
+  color: #0d0d0d;
+  margin: 0 0 32px 0;
+}
+
+.tm-about-heading em {
+  color: #ff2a2a;
+  font-style: normal;
+}
+
+.tm-about-subheading {
+  font-family: 'DM Sans', sans-serif;
+  font-size: 13px;
+  font-weight: 500;
+  letter-spacing: 2.5px;
+  text-transform: uppercase;
+  color: rgba(13,13,13,0.45);
+  margin-bottom: 24px;
+  display: block;
+}
+
+.tm-about-divider {
+  width: 40px;
+  height: 2px;
+  background: #ff2a2a;
+  margin-bottom: 32px;
+}
+
+.tm-about-bio {
+  font-family: 'DM Sans', sans-serif;
+  font-size: 15px;
+  line-height: 1.9;
+  color: rgba(13,13,13,0.72);
+  margin-bottom: 20px;
+}
+
+.tm-about-bio strong {
+  color: #0d0d0d;
+  font-weight: 500;
+}
+
+/* Chip tags */
+.tm-about-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 32px 0 40px;
+}
+
+.tm-about-chip {
+  font-family: 'DM Sans', sans-serif;
+  font-size: 9px;
+  letter-spacing: 2.5px;
+  text-transform: uppercase;
+  border: 1px solid rgba(13,13,13,0.18);
+  padding: 8px 18px;
+  color: rgba(13,13,13,0.55);
+  transition: background 0.2s, color 0.2s, border-color 0.2s;
+}
+
+.tm-about-chip:hover {
+  background: #0d0d0d;
+  color: #f7f5f2;
+  border-color: #0d0d0d;
+}
+
+/* CTA Button — matches site style */
+.tm-about-cta {
+  display: inline-block;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 10px;
+  font-weight: 500;
+  letter-spacing: 3px;
+  text-transform: uppercase;
+  background: #ff2a2a;
+  color: #ffffff;
+  padding: 16px 36px;
+  text-decoration: none;
+  transition: background 0.25s, transform 0.2s;
+  position: relative;
+  overflow: hidden;
+}
+
+.tm-about-cta::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: rgba(255,255,255,0.08);
+  opacity: 0;
+  transition: opacity 0.2s;
+}
+
+.tm-about-cta:hover {
+  background: #a00d24;
+  transform: translateY(-1px);
+}
+
+.tm-about-cta:hover::after {
+  opacity: 1;
+}
+
+/* ── MOBILE ── */
+@media (max-width: 900px) {
+  #tm-about-brand {
+    padding: 72px 24px;
+  }
+
+  .tm-about-inner {
+    grid-template-columns: 1fr;
+    gap: 48px;
+  }
+
+  .tm-about-photo-primary {
+    aspect-ratio: 3 / 2;
+  }
+
+  .tm-about-heading {
+    font-size: clamp(44px, 12vw, 64px);
+  }
+}
+
+@media (max-width: 540px) {
+  #tm-about-brand {
+    padding: 56px 20px;
+  }
+
+  .tm-about-photos-secondary {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+</style>
+
+{%- comment -%} SEO-FRIENDLY STRUCTURED MARKUP — id="about" acts as anchor for /about links {%- endcomment -%}
+<section id="about" aria-label="About T Mafianie and Cabana Music Empire">
+  <div id="tm-about-brand">
+    <div class="tm-about-inner">
+
+      {%- comment -%} ── PHOTO COLUMN ── {%- endcomment -%}
+      <div class="tm-about-photos">
+
+        {%- if section.settings.photo_1 != blank -%}
+          <div class="tm-about-photo-primary">
+            {{
+              section.settings.photo_1
+              | image_url: width: 840
+              | image_tag:
+                alt: section.settings.photo_1_alt,
+                loading: 'lazy',
+                widths: '420, 630, 840',
+                sizes: '(max-width: 900px) 100vw, 420px'
+            }}
+          </div>
+        {%- else -%}
+          {%- comment -%} Placeholder when no image is set in customizer {%- endcomment -%}
+          <div class="tm-about-photo-primary" style="background:#e8e5e0; display:flex; align-items:center; justify-content:center;">
+            <span style="font-family:'DM Sans',sans-serif; font-size:10px; letter-spacing:3px; text-transform:uppercase; color:rgba(13,13,13,0.3);">Add Photo in Customizer</span>
+          </div>
+        {%- endif -%}
+
+        {%- if section.settings.photo_2 != blank or section.settings.photo_3 != blank -%}
+          <div class="tm-about-photos-secondary">
+            {%- if section.settings.photo_2 != blank -%}
+              <div class="tm-about-photo-secondary">
+                {{
+                  section.settings.photo_2
+                  | image_url: width: 420
+                  | image_tag:
+                    alt: section.settings.photo_2_alt,
+                    loading: 'lazy',
+                    widths: '200, 420',
+                    sizes: '(max-width: 900px) 50vw, 200px'
+                }}
+              </div>
+            {%- endif -%}
+            {%- if section.settings.photo_3 != blank -%}
+              <div class="tm-about-photo-secondary">
+                {{
+                  section.settings.photo_3
+                  | image_url: width: 420
+                  | image_tag:
+                    alt: section.settings.photo_3_alt,
+                    loading: 'lazy',
+                    widths: '200, 420',
+                    sizes: '(max-width: 900px) 50vw, 200px'
+                }}
+              </div>
+            {%- endif -%}
+          </div>
+        {%- endif -%}
+
+      </div>
+
+      {%- comment -%} ── BIO COLUMN ── {%- endcomment -%}
+      <div class="tm-about-content">
+
+        {%- if section.settings.overline != blank -%}
+          <span class="tm-about-overline">{{ section.settings.overline }}</span>
+        {%- endif -%}
+
+        {%- comment -%} H2 — main about heading. H1 lives in the hero above. {%- endcomment -%}
+        <h2 class="tm-about-heading">{{ section.settings.heading | newline_to_br }}</h2>
+
+        {%- if section.settings.subheading != blank -%}
+          <span class="tm-about-subheading">{{ section.settings.subheading }}</span>
+        {%- endif -%}
+
+        <div class="tm-about-divider" aria-hidden="true"></div>
+
+        {%- if section.settings.bio_p1 != blank -%}
+          <p class="tm-about-bio">{{ section.settings.bio_p1 }}</p>
+        {%- endif -%}
+
+        {%- if section.settings.bio_p2 != blank -%}
+          <p class="tm-about-bio">{{ section.settings.bio_p2 }}</p>
+        {%- endif -%}
+
+        {%- if section.settings.bio_p3 != blank -%}
+          <p class="tm-about-bio">{{ section.settings.bio_p3 }}</p>
+        {%- endif -%}
+
+        {%- if section.settings.tags != blank -%}
+          <div class="tm-about-chips" aria-label="Topics">
+            {%- assign chips = section.settings.tags | split: ',' -%}
+            {%- for chip in chips -%}
+              <span class="tm-about-chip">{{ chip | strip }}</span>
+            {%- endfor -%}
+          </div>
+        {%- endif -%}
+
+        {%- if section.settings.cta_text != blank and section.settings.cta_link != blank -%}
+          <a
+            href="{{ section.settings.cta_link }}"
+            class="tm-about-cta"
+            aria-label="{{ section.settings.cta_text }} — Cabana Music Empire"
+          >
+            {{ section.settings.cta_text }}
+          </a>
+        {%- endif -%}
+
+      </div>
+    </div>
+  </div>
+</section>
+
+{% schema %}
+{
+  "name": "TM About Brand",
+  "tag": "div",
+  "settings": [
+    {
+      "type": "header",
+      "content": "Text Content"
+    },
+    {
+      "type": "text",
+      "id": "overline",
+      "label": "Overline (small label above heading)",
+      "default": "The Brand Behind the Sound"
+    },
+    {
+      "type": "textarea",
+      "id": "heading",
+      "label": "Main Heading",
+      "default": "Built for\nCreators.\nMade to\nLast."
+    },
+    {
+      "type": "text",
+      "id": "subheading",
+      "label": "Subheading (optional)",
+      "default": "T Mafianie · Cabana Music Empire · CME Audio"
+    },
+    {
+      "type": "textarea",
+      "id": "bio_p1",
+      "label": "Bio Paragraph 1",
+      "default": "T Mafianie is the creator behind Cabana Music Empire — a music and media brand built for producers, artists, and creators who demand professional tools, original sound, and a strong creative identity. From independent releases to production software, CME is where craft meets culture."
+    },
+    {
+      "type": "textarea",
+      "id": "bio_p2",
+      "label": "Bio Paragraph 2",
+      "default": "Through CME Audio, Cabana Music Empire develops VST3 audio plugins and music production tools designed for modern makers. The current lineup includes Vibe EQ, Vibe Compressor, and Mafianie Space — with the Cabana Audio Tool coming soon. Every tool is engineered for the workflow of working producers, beatmakers, and mixing engineers."
+    },
+    {
+      "type": "textarea",
+      "id": "bio_p3",
+      "label": "Bio Paragraph 3 (optional)",
+      "default": "CME bridges music production, creator culture, media, and entrepreneurship with a premium independent identity. Whether you're building your first beat or mastering your fifth album, Cabana Music Empire has the tools, the sound, and the standard to match your ambition."
+    },
+    {
+      "type": "text",
+      "id": "tags",
+      "label": "Keyword Chips (comma separated)",
+      "default": "Music Production, VST3 Plugins, Beat Making, CME Audio, Mixing Tools, Creator Brand, Independent Music"
+    },
+    {
+      "type": "header",
+      "content": "Call to Action"
+    },
+    {
+      "type": "text",
+      "id": "cta_text",
+      "label": "Button Text",
+      "default": "Explore Plugins"
+    },
+    {
+      "type": "url",
+      "id": "cta_link",
+      "label": "Button Link"
+    },
+    {
+      "type": "header",
+      "content": "Photo 1 (Primary — tall portrait)"
+    },
+    {
+      "type": "image_picker",
+      "id": "photo_1",
+      "label": "Primary Photo"
+    },
+    {
+      "type": "text",
+      "id": "photo_1_alt",
+      "label": "Photo 1 Alt Text (SEO)",
+      "default": "T Mafianie, founder of Cabana Music Empire, music producer and creator"
+    },
+    {
+      "type": "header",
+      "content": "Photo 2 (Square — bottom left)"
+    },
+    {
+      "type": "image_picker",
+      "id": "photo_2",
+      "label": "Secondary Photo"
+    },
+    {
+      "type": "text",
+      "id": "photo_2_alt",
+      "label": "Photo 2 Alt Text (SEO)",
+      "default": "Cabana Music Empire CME Audio brand identity and music production tools"
+    },
+    {
+      "type": "header",
+      "content": "Photo 3 (Square — bottom right)"
+    },
+    {
+      "type": "image_picker",
+      "id": "photo_3",
+      "label": "Tertiary Photo"
+    },
+    {
+      "type": "text",
+      "id": "photo_3_alt",
+      "label": "Photo 3 Alt Text (SEO)",
+      "default": "T Mafianie VST3 audio plugins and beat production software for producers"
+    }
+  ],
+  "presets": [
+    {
+      "name": "TM About Brand"
+    }
+  ]
+}
+{% endschema %}

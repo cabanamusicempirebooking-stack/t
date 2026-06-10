@@ -1,0 +1,26 @@
+{% comment %}
+  SNIPPET: snippets/tm-dp-notify.liquid
+  ─────────────────────────────────────────────────────────────────
+  Hidden Shopify contact form used by tm-digital-products.liquid
+  to send store notification emails on Buy Now, Free Download,
+  and Custom Order submissions.
+
+  Lives in a snippet so it doesn't cause "schema must not be
+  nested" errors — Liquid form tags can't be in section files
+  that also contain a schema tag.
+
+  JS in tm-digital-products.liquid calls tmDpFireNotification()
+  which fills these hidden fields and submits via fetch.
+  Shopify processes it and emails your store notification address
+  exactly like the fan list contact form.
+  ─────────────────────────────────────────────────────────────────
+{% endcomment %}
+
+<div style="display:none;position:absolute;pointer-events:none;" aria-hidden="true">
+  {% form 'contact', id: 'tm-dp-notify-form' %}
+    <input type="hidden" name="contact[name]"    value="">
+    <input type="hidden" name="contact[email]"   value="">
+    <input type="hidden" name="contact[body]"    value="">
+    <input type="hidden" name="contact[subject]" value="">
+  {% endform %}
+</div>

@@ -1,0 +1,341 @@
+{% comment %}
+  SECTION: tm-vault-video.liquid
+  Music Vault — Latest video drop with YouTube Live auto-detection.
+  When the channel is live the embed swaps to the live stream automatically.
+  API key is restricted to tmafianie.com only.
+{% endcomment %}
+
+<style>
+.tm-vault-video {
+  background: #0d0d0d;
+  padding: 100px 64px;
+  position: relative;
+  overflow: hidden;
+}
+.tm-vault-video-bg {
+  position: absolute; inset: 0;
+  background-image: linear-gradient(rgba(255,42,42,0.03) 1px,transparent 1px),
+                    linear-gradient(90deg,rgba(255,42,42,0.03) 1px,transparent 1px);
+  background-size: 72px 72px;
+  pointer-events: none;
+}
+.tm-vault-video-inner {
+  max-width: 1100px; margin: 0 auto; position: relative; z-index: 1;
+}
+.tm-vault-video-header {
+  display: flex; align-items: flex-end; justify-content: space-between;
+  gap: 32px; margin-bottom: 52px;
+}
+.tm-vault-video-header-left { max-width: 600px; }
+.tm-vault-video-eyebrow {
+  font-family: 'DM Sans', sans-serif;
+  font-size: 9px; font-weight: 500; letter-spacing: 4px; text-transform: uppercase;
+  color: #ff2a2a; margin-bottom: 14px;
+  display: flex; align-items: center; gap: 12px;
+}
+.tm-vault-video-eyebrow::before { content: ''; display: block; width: 28px; height: 1px; background: #ff2a2a; }
+.tm-vault-video-title {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: clamp(40px, 6vw, 72px); line-height: 0.92; letter-spacing: -0.5px; color: #fff;
+}
+.tm-vault-video-title .tm-outline {
+  color: transparent; -webkit-text-stroke: 1.5px rgba(255,255,255,0.2); display: block;
+}
+.tm-vault-video-link {
+  font-family: 'DM Sans', sans-serif; font-size: 9px; font-weight: 500;
+  letter-spacing: 3px; text-transform: uppercase; color: rgba(255,255,255,0.45);
+  text-decoration: none; border-bottom: 1px solid rgba(255,255,255,0.12);
+  padding-bottom: 4px; transition: color 0.2s, border-color 0.2s;
+  white-space: nowrap; flex-shrink: 0;
+}
+.tm-vault-video-link:hover { color: #ff2a2a; border-color: #ff2a2a; }
+
+/* Live indicator badge */
+.tm-vault-live-badge {
+  display: none;
+  align-items: center; gap: 8px;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 8px; font-weight: 500; letter-spacing: 3px; text-transform: uppercase;
+  color: #ff2a2a; background: rgba(255,42,42,0.1);
+  border: 1px solid rgba(255,42,42,0.3);
+  padding: 7px 14px; flex-shrink: 0;
+}
+.tm-vault-live-badge.visible { display: flex; }
+.tm-vault-live-dot {
+  width: 7px; height: 7px; border-radius: 50%; background: #ff2a2a;
+  animation: tmVLivePulse 1.4s ease-in-out infinite;
+}
+@keyframes tmVLivePulse {
+  0%,100% { opacity: 1; box-shadow: 0 0 0 0 rgba(255,42,42,0.7); }
+  50%      { opacity: 0.8; box-shadow: 0 0 0 5px rgba(255,42,42,0); }
+}
+
+/* Video embed frame */
+.tm-vault-video-frame {
+  position: relative; width: 100%; padding-bottom: 56.25%;
+  background: #111; overflow: hidden;
+  border: 1px solid rgba(255,255,255,0.06);
+}
+.tm-vault-video-frame iframe,
+.tm-vault-video-frame video {
+  position: absolute; inset: 0; width: 100%; height: 100%;
+  border: none; display: block;
+}
+
+/* Click-to-play poster */
+.tm-vault-video-poster {
+  position: absolute; inset: 0; background: #0d0d0d;
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer; transition: opacity 0.3s; z-index: 2;
+}
+.tm-vault-video-poster img {
+  position: absolute; inset: 0; width: 100%; height: 100%;
+  object-fit: cover; opacity: 0.55;
+}
+.tm-vault-play-btn {
+  position: relative; z-index: 1; width: 72px; height: 72px;
+  border-radius: 50%; background: #ff2a2a;
+  display: flex; align-items: center; justify-content: center;
+  transition: transform 0.2s, background 0.2s;
+  box-shadow: 0 0 0 12px rgba(255,42,42,0.12);
+}
+.tm-vault-play-btn:hover { transform: scale(1.08); background: #e01f1f; }
+.tm-vault-play-btn svg { width: 28px; height: 28px; fill: #fff; margin-left: 4px; }
+#vaultYTHolder { position: absolute; inset: 0; display: none; }
+
+/* Caption */
+.tm-vault-video-caption {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 18px 0 0; border-top: 1px solid rgba(255,255,255,0.06);
+  gap: 24px;
+}
+.tm-vault-video-caption-left { display: flex; flex-direction: column; gap: 4px; }
+.tm-vault-video-caption-title {
+  font-family: 'DM Sans', sans-serif; font-size: 13px; font-weight: 500;
+  color: rgba(255,255,255,0.85); letter-spacing: 0.3px;
+}
+.tm-vault-video-caption-sub {
+  font-family: 'DM Sans', sans-serif; font-size: 9px; letter-spacing: 2px;
+  text-transform: uppercase; color: rgba(255,255,255,0.28);
+}
+#vaultLiveCaption { display: none; color: #ff2a2a; }
+.tm-vault-video-badge {
+  font-family: 'DM Sans', sans-serif; font-size: 8px; font-weight: 500;
+  letter-spacing: 2.5px; text-transform: uppercase;
+  color: #ff2a2a; border: 1px solid rgba(255,42,42,0.35); padding: 5px 12px;
+  white-space: nowrap;
+}
+
+/* Chat link (shown when live) */
+.tm-vault-live-chat-link {
+  display: none;
+  font-family: 'DM Sans', sans-serif; font-size: 9px; font-weight: 500;
+  letter-spacing: 2px; text-transform: uppercase;
+  color: rgba(255,255,255,0.5); border: 1px solid rgba(255,255,255,0.12);
+  padding: 8px 16px; text-decoration: none;
+  transition: border-color 0.2s, color 0.2s;
+}
+.tm-vault-live-chat-link.visible { display: inline-block; }
+.tm-vault-live-chat-link:hover { border-color: #ff2a2a; color: #ff2a2a; }
+
+@media (max-width: 767px) {
+  .tm-vault-video { padding: 64px 24px; }
+  .tm-vault-video-header { flex-direction: column; align-items: flex-start; gap: 20px; margin-bottom: 32px; }
+  .tm-vault-video-title { font-size: clamp(36px, 12vw, 56px); }
+  .tm-vault-video-caption { flex-direction: column; align-items: flex-start; gap: 12px; }
+}
+</style>
+
+<section class="tm-vault-video" id="vault-video">
+  <div class="tm-vault-video-bg"></div>
+  <div class="tm-vault-video-inner">
+
+    <div class="tm-vault-video-header">
+      <div class="tm-vault-video-header-left">
+        <div class="tm-vault-video-eyebrow" id="vaultVideoEyebrow">{{ section.settings.eyebrow | default: 'Vault Exclusive' }}</div>
+        <div class="tm-vault-video-title">
+          <span id="vaultVideoTitle1">{{ section.settings.title_line1 | default: 'Latest' }}</span>
+          <span class="tm-outline" id="vaultVideoTitle2">{{ section.settings.title_line2 | default: 'Drop' }}</span>
+        </div>
+      </div>
+      <div style="display:flex;align-items:center;gap:12px;flex-shrink:0;">
+        <div class="tm-vault-live-badge" id="vaultLiveBadge">
+          <div class="tm-vault-live-dot"></div>
+          Live Now
+        </div>
+        {% if section.settings.channel_link != blank %}
+          <a href="{{ section.settings.channel_link }}" target="_blank" rel="noopener" class="tm-vault-video-link">View Channel →</a>
+        {% endif %}
+      </div>
+    </div>
+
+    <div class="tm-vault-video-frame" id="vaultVideoFrame">
+
+      {% if section.settings.youtube_id != blank and section.settings.poster_image %}
+        <div class="tm-vault-video-poster" id="vaultPoster" onclick="tmPlayYT(this)">
+          <img src="{{ section.settings.poster_image | img_url: '1200x675', crop: 'center' }}" alt="{{ section.settings.video_title | default: 'Video' }}" loading="lazy">
+          <div class="tm-vault-play-btn" aria-label="Play video">
+            <svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+          </div>
+        </div>
+      {% elsif section.settings.youtube_id != blank %}
+        <iframe
+          id="vaultYTIframe"
+          src="https://www.youtube-nocookie.com/embed/{{ section.settings.youtube_id }}?rel=0&modestbranding=1"
+          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+          allowfullscreen loading="lazy"
+          title="{{ section.settings.video_title | default: 'T Mafianie Video' }}"
+        ></iframe>
+      {% else %}
+        <div id="vaultPlaceholder" style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;">
+          <span style="font-family:'DM Sans',sans-serif;font-size:10px;letter-spacing:3px;text-transform:uppercase;color:rgba(255,255,255,0.2);">Going live soon</span>
+        </div>
+      {% endif %}
+
+      <!-- Always present — live stream iframe injected here by JS -->
+      <div id="vaultYTHolder" style="position:absolute;inset:0;display:none;"></div>
+
+    </div>
+
+    <div class="tm-vault-video-caption">
+      <div class="tm-vault-video-caption-left">
+        <div class="tm-vault-video-caption-title" id="vaultCaptionTitle">{{ section.settings.video_title | default: 'New Visual' }}</div>
+        <div class="tm-vault-video-caption-sub">
+          <span id="vaultCaptionSub">{{ section.settings.video_subtitle | default: 'Official Music Video' }}</span>
+          <span id="vaultLiveCaption">Streaming Live on YouTube</span>
+        </div>
+      </div>
+      <div style="display:flex;align-items:center;gap:10px;">
+        <a href="https://www.youtube.com/channel/UCVefve_atEKEjZwIjs2qxrw/live" target="_blank" rel="noopener" class="tm-vault-live-chat-link" id="vaultLiveChatBtn">
+          Open Live Chat →
+        </a>
+        {% if section.settings.badge_text != blank %}
+          <div class="tm-vault-video-badge" id="vaultVideoBadge">{{ section.settings.badge_text }}</div>
+        {% endif %}
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<script>
+(function() {
+  var YT_API_KEY    = 'AIzaSyBqNHJiJlEnnv8xMNszkY23SP3dXtDmSsI';
+  var YT_CHANNEL_ID = 'UCVefve_atEKEjZwIjs2qxrw';
+  var CACHE_KEY     = 'tm_vault_live_v1';
+  var CACHE_TTL     = 5 * 60 * 1000; // 5 minutes
+
+  var fallbackYTId  = '{{ section.settings.youtube_id }}';
+  var hasPoster     = {{ section.settings.poster_image | default: false | json }};
+
+  function applyLiveState(videoId) {
+    var badge       = document.getElementById('vaultLiveBadge');
+    var chatBtn     = document.getElementById('vaultLiveChatBtn');
+    var capSub      = document.getElementById('vaultCaptionSub');
+    var liveCapt    = document.getElementById('vaultLiveCaption');
+    var vidBadge    = document.getElementById('vaultVideoBadge');
+    var poster      = document.getElementById('vaultPoster');
+    var ytHolder    = document.getElementById('vaultYTHolder');
+    var ytIframe    = document.getElementById('vaultYTIframe');
+    var placeholder = document.getElementById('vaultPlaceholder');
+    var liveTitle2  = document.getElementById('vaultVideoTitle2');
+
+    var liveEmbedSrc = 'https://www.youtube-nocookie.com/embed/' + videoId
+                     + '?rel=0&modestbranding=1&autoplay=0';
+
+    // Hide existing content, inject live iframe into always-present holder
+    if (poster)      poster.style.display      = 'none';
+    if (ytIframe)    ytIframe.style.display     = 'none';
+    if (placeholder) placeholder.style.display  = 'none';
+    if (ytHolder) {
+      ytHolder.innerHTML = '<iframe style="position:absolute;inset:0;width:100%;height:100%;border:none;"'
+        + ' src="' + liveEmbedSrc + '"'
+        + ' allow="accelerometer;autoplay;clipboard-write;encrypted-media;gyroscope;picture-in-picture"'
+        + ' allowfullscreen></iframe>';
+      ytHolder.style.display = 'block';
+    }
+
+    // UI updates
+    if (badge)      badge.classList.add('visible');
+    if (chatBtn)    chatBtn.classList.add('visible');
+    if (capSub)     capSub.style.display  = 'none';
+    if (liveCapt)   liveCapt.style.display = 'inline';
+    if (vidBadge)   vidBadge.textContent   = 'Live Now';
+    if (liveTitle2) liveTitle2.textContent  = 'Stream';
+  }
+
+  function checkLive() {
+    // Check sessionStorage cache
+    try {
+      var cached = sessionStorage.getItem(CACHE_KEY);
+      if (cached) {
+        var c = JSON.parse(cached);
+        if (Date.now() - c.ts < CACHE_TTL) {
+          if (c.live && c.vid) applyLiveState(c.vid);
+          return;
+        }
+      }
+    } catch(e) {}
+
+    // Call YouTube Data API
+    var url = 'https://www.googleapis.com/youtube/v3/search'
+            + '?part=id'
+            + '&channelId=' + YT_CHANNEL_ID
+            + '&eventType=live'
+            + '&type=video'
+            + '&maxResults=1'
+            + '&key=' + YT_API_KEY;
+
+    fetch(url)
+      .then(function(r) { return r.json(); })
+      .then(function(data) {
+        var isLive = !!(data.items && data.items.length > 0);
+        var vid    = isLive ? data.items[0].id.videoId : null;
+        try {
+          sessionStorage.setItem(CACHE_KEY, JSON.stringify({ ts: Date.now(), live: isLive, vid: vid }));
+        } catch(e) {}
+        if (isLive && vid) applyLiveState(vid);
+      })
+      .catch(function() {
+        // API failed silently — show regular video
+      });
+  }
+
+  // Run after DOM is ready
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', checkLive);
+  } else {
+    checkLive();
+  }
+
+  // Click-to-play for poster (fallback video)
+  window.tmPlayYT = function(poster) {
+    var holder = document.getElementById('vaultYTHolder');
+    if (!holder || !fallbackYTId) return;
+    holder.innerHTML = '<iframe style="position:absolute;inset:0;width:100%;height:100%;border:none;" src="https://www.youtube-nocookie.com/embed/' + fallbackYTId + '?autoplay=1&rel=0&modestbranding=1" allow="autoplay;encrypted-media" allowfullscreen></iframe>';
+    holder.style.display = 'block';
+    poster.style.display = 'none';
+  };
+})();
+</script>
+
+{% schema %}
+{
+  "name": "Vault Video",
+  "settings": [
+    { "type": "header", "content": "Labels" },
+    { "type": "text", "id": "eyebrow",      "label": "Eyebrow",              "default": "Vault Exclusive" },
+    { "type": "text", "id": "title_line1",  "label": "Title Line 1",         "default": "Latest" },
+    { "type": "text", "id": "title_line2",  "label": "Title Line 2 (outline)","default": "Drop" },
+    { "type": "header", "content": "Video" },
+    { "type": "text",         "id": "youtube_id",    "label": "YouTube Video ID",     "info": "e.g. 6Q3H7BJckIM" },
+    { "type": "image_picker", "id": "poster_image",  "label": "Poster / Thumbnail",   "info": "16:9 recommended. Shows before play." },
+    { "type": "header", "content": "Caption" },
+    { "type": "text", "id": "video_title",    "label": "Video Title",   "default": "New Visual" },
+    { "type": "text", "id": "video_subtitle", "label": "Video Subtitle","default": "Official Music Video" },
+    { "type": "text", "id": "badge_text",     "label": "Badge Text",    "default": "Now Streaming" },
+    { "type": "url",  "id": "channel_link",   "label": "Channel Link (optional)" }
+  ],
+  "presets": [{ "name": "Vault Video" }]
+}
+{% endschema %}

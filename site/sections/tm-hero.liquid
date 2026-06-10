@@ -1,0 +1,269 @@
+{% comment %}
+  SECTION: tm-hero.liquid
+  Full-screen hero — white/light theme.
+  Supports artist photos (img1 = primary right, img2 = secondary floating).
+{% endcomment %}
+
+<style>
+.tm-hero {
+  position: relative; height: 100vh; min-height: 720px;
+  display: flex; flex-direction: column; justify-content: flex-end;
+  padding: 0 64px 88px; overflow: hidden; background: #f7f5f2;
+}
+.tm-hero-grid {
+  position: absolute; inset: 0;
+  background-image: linear-gradient(rgba(13,13,13,0.04) 1px,transparent 1px),linear-gradient(90deg,rgba(13,13,13,0.04) 1px,transparent 1px);
+  background-size: 72px 72px;
+  mask-image: radial-gradient(ellipse 90% 90% at 50% 50%,black 20%,transparent 80%);
+  -webkit-mask-image: radial-gradient(ellipse 90% 90% at 50% 50%,black 20%,transparent 80%);
+}
+.tm-hero-accent-line {
+  position: absolute; top: 0; bottom: 0; right: 22%; width: 1px;
+  background: linear-gradient(to bottom,transparent,rgba(255,42,42,0.15) 30%,rgba(255,42,42,0.15) 70%,transparent);
+}
+
+/* ── ARTIST PHOTOS ── */
+.tm-hero-photo-main {
+  position: absolute;
+  right: 64px; bottom: 0;
+  width: clamp(280px, 28vw, 420px);
+  height: clamp(380px, 75vh, 620px);
+  overflow: hidden;
+  animation: tmFadeUp 1.2s cubic-bezier(0.22,1,0.36,1) both 0.3s;
+  z-index: 1;
+}
+.tm-hero-photo-main img {
+  width: 100%; height: 100%;
+  object-fit: cover; object-position: top center;
+  display: block;
+}
+/* Fade the bottom into the background */
+.tm-hero-photo-main::after {
+  content: '';
+  position: absolute; bottom: 0; left: 0; right: 0; height: 40%;
+  background: linear-gradient(to top, #f7f5f2 0%, transparent 100%);
+}
+
+.tm-hero-photo-secondary {
+  position: absolute;
+  right: clamp(310px, 30vw, 460px); top: 100px;
+  width: clamp(140px, 14vw, 200px);
+  height: clamp(140px, 14vw, 200px);
+  border-radius: 50%;
+  overflow: hidden;
+  border: 3px solid rgba(255,255,255,0.9);
+  box-shadow: 0 20px 60px rgba(0,0,0,0.12);
+  animation: tmFadeIn 1s cubic-bezier(0.22,1,0.36,1) both 1s;
+  z-index: 2;
+}
+.tm-hero-photo-secondary img {
+  width: 100%; height: 100%;
+  object-fit: cover; object-position: top center;
+}
+
+/* Red accent behind photo */
+.tm-hero-photo-accent {
+  position: absolute;
+  right: clamp(44px, 5vw, 80px); bottom: 0;
+  width: clamp(260px, 26vw, 390px);
+  height: clamp(300px, 60vh, 500px);
+  background: linear-gradient(to top, rgba(255,42,42,0.08), transparent);
+  z-index: 0;
+}
+
+.tm-hero-label {
+  position: absolute; top: 140px; left: 64px;
+  display: flex; flex-direction: column; align-items: flex-start; gap: 6px;
+  animation: tmFadeIn 1.2s cubic-bezier(0.22,1,0.36,1) both 1.2s;
+  z-index: 3;
+}
+.tm-hero-label span:first-child { font-family: 'DM Sans', sans-serif; font-size: 9px; letter-spacing: 3px; text-transform: uppercase; color: rgba(13,13,13,0.35); }
+.tm-hero-label span:last-child  { font-family: 'Bebas Neue', sans-serif; font-size: 11px; letter-spacing: 4px; color: #ff2a2a; }
+
+.tm-hero-content { position: relative; z-index: 3; max-width: 60%; }
+
+.tm-hero-eyebrow {
+  display: flex; align-items: center; gap: 14px;
+  font-family: 'DM Sans', sans-serif; font-size: 10px; font-weight: 500;
+  letter-spacing: 4px; text-transform: uppercase;
+  color: #ff2a2a; margin-bottom: 18px;
+  animation: tmFadeUp 1s cubic-bezier(0.22,1,0.36,1) both 0.1s;
+}
+.tm-hero-eyebrow::before { content: ''; display: block; width: 36px; height: 1px; background: #ff2a2a; }
+
+.tm-hero-title {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: clamp(80px,13vw,172px); line-height: 0.88; letter-spacing: -1px;
+  animation: tmFadeUp 1s cubic-bezier(0.22,1,0.36,1) both 0.25s;
+}
+.tm-hero-title .tm-solid   { color: #0d0d0d; display: block; }
+.tm-hero-title .tm-outline { color: transparent; -webkit-text-stroke: 2px rgba(13,13,13,0.2); display: block; }
+
+.tm-hero-byline {
+  display: flex; align-items: center; gap: 24px; margin-top: 28px;
+  animation: tmFadeUp 1s cubic-bezier(0.22,1,0.36,1) both 0.4s;
+}
+.tm-hero-byline-text { font-family: 'Cormorant Garamond', serif; font-style: italic; font-size: 19px; font-weight: 300; color: rgba(13,13,13,0.55); line-height: 1.5; }
+.tm-hero-byline-divider { width: 1px; height: 52px; background: linear-gradient(to bottom,transparent,rgba(13,13,13,0.15),transparent); flex-shrink: 0; }
+.tm-hero-stats-mini { display: flex; flex-direction: column; gap: 4px; }
+.tm-hero-stat { display: flex; align-items: center; gap: 8px; font-family: 'DM Sans', sans-serif; font-size: 9px; letter-spacing: 2px; text-transform: uppercase; color: rgba(13,13,13,0.38); }
+.tm-hero-stat strong { font-family: 'Bebas Neue', sans-serif; font-size: 20px; letter-spacing: 0; color: #0d0d0d; font-weight: 400; }
+
+.tm-hero-actions {
+  display: flex; gap: 14px; margin-top: 40px;
+  animation: tmFadeUp 1s cubic-bezier(0.22,1,0.36,1) both 0.55s;
+}
+.tm-btn-dark { font-family: 'DM Sans', sans-serif; font-size: 10px; font-weight: 500; letter-spacing: 2.5px; text-transform: uppercase; color: white; background: #0d0d0d; padding: 15px 34px; border: 1px solid #0d0d0d; text-decoration: none; display: inline-block; transition: background 0.25s,border-color 0.25s,transform 0.25s; }
+.tm-btn-dark:hover { background: #ff2a2a; border-color: #ff2a2a; transform: translateY(-2px); }
+.tm-btn-outline-dark { font-family: 'DM Sans', sans-serif; font-size: 10px; font-weight: 500; letter-spacing: 2.5px; text-transform: uppercase; color: #0d0d0d; border: 1px solid rgba(13,13,13,0.25); padding: 15px 34px; text-decoration: none; display: inline-flex; align-items: center; gap: 10px; transition: border-color 0.25s,transform 0.25s; }
+.tm-btn-outline-dark:hover { border-color: #0d0d0d; transform: translateY(-2px); }
+
+.tm-scroll-indicator { position: absolute; bottom: 40px; left: 64px; display: flex; flex-direction: column; align-items: center; gap: 10px; opacity: 0.3; animation: tmFadeIn 2s both 1.8s; z-index: 3; }
+.tm-scroll-track { width: 1px; height: 64px; background: linear-gradient(to bottom,transparent,#0d0d0d); }
+.tm-scroll-label { font-family: 'DM Sans', sans-serif; font-size: 8px; letter-spacing: 3px; text-transform: uppercase; writing-mode: vertical-rl; color: #0d0d0d; }
+
+@keyframes tmFadeUp { from{opacity:0;transform:translateY(32px)}to{opacity:1;transform:translateY(0)} }
+@keyframes tmFadeIn { from{opacity:0}to{opacity:1} }
+
+/* ── MOBILE ── */
+@media (max-width: 767px) {
+  .tm-hero {
+    padding: 0 24px 100px;
+    min-height: 100vh;                  /* universal fallback */
+    min-height: -webkit-fill-available; /* older iOS Safari ≤ 15.3 */
+    min-height: 100svh;                 /* iOS 15.4+ / modern browsers */
+    justify-content: flex-end;
+  }
+
+  /* Photo: narrower strip on the right, doesn't crowd text */
+  .tm-hero-photo-main {
+    width: clamp(160px, 42vw, 220px);
+    height: clamp(300px, 60vh, 480px);
+    right: 0;
+  }
+
+  /* Accent glow behind photo — match new width */
+  .tm-hero-photo-accent {
+    width: clamp(140px, 40vw, 200px);
+    right: 0;
+  }
+
+  /* Accent vertical line — move closer to text area */
+  .tm-hero-accent-line { right: 38%; }
+
+  /* Hide the secondary floating circle photo — too crowded on mobile */
+  .tm-hero-photo-secondary { display: none; }
+
+  /* Label — tuck under the top nav */
+  .tm-hero-label { top: 80px; left: 24px; }
+
+  /* Content — dynamic width: full width minus photo (clamp 160-220px) minus left padding + gap */
+  .tm-hero-content { max-width: calc(100% - clamp(160px, 42vw, 220px) - 32px); }
+
+  /* Title — scale down for mobile */
+  .tm-hero-title {
+    font-size: clamp(56px, 16vw, 96px);
+    letter-spacing: 0;
+  }
+
+  /* Byline — stack vertically */
+  .tm-hero-byline {
+    flex-direction: column;
+    gap: 12px;
+    margin-top: 16px;
+    align-items: flex-start;
+  }
+  .tm-hero-byline-text { font-size: 15px; }
+  .tm-hero-byline-divider { display: none; }
+
+  /* Buttons — full width, stacked */
+  .tm-hero-actions {
+    flex-direction: column;
+    gap: 10px;
+    margin-top: 24px;
+  }
+  .tm-btn-dark,
+  .tm-btn-outline-dark {
+    width: 100%;
+    justify-content: center;
+    text-align: center;
+    padding: 14px 20px;
+  }
+
+  /* Hide scroll indicator on mobile */
+  .tm-scroll-indicator { display: none; }
+}
+</style>
+
+<section class="tm-hero" id="home">
+  <div class="tm-hero-grid"></div>
+  <div class="tm-hero-accent-line"></div>
+
+  {% if section.settings.photo_main %}
+    <div class="tm-hero-photo-accent"></div>
+    <div class="tm-hero-photo-main">
+      <picture>
+        <source media="(max-width: 767px)" srcset="{{ section.settings.photo_main | img_url: '400x600', crop: 'top' }}">
+        <img src="{{ section.settings.photo_main | img_url: '800x1200', crop: 'top' }}" alt="T Mafianie" loading="eager" width="800" height="1200">
+      </picture>
+    </div>
+  {% endif %}
+
+  {% if section.settings.photo_secondary %}
+    <div class="tm-hero-photo-secondary">
+      <img src="{{ section.settings.photo_secondary | img_url: '400x400', crop: 'center' }}" alt="T Mafianie" loading="eager">
+    </div>
+  {% endif %}
+
+  <div class="tm-hero-label">
+    <span>Est. Cabana Music Empire</span>
+    <span>Independent Artist</span>
+  </div>
+
+  <div class="tm-hero-content">
+    <div class="tm-hero-eyebrow">{{ section.settings.eyebrow }}</div>
+    <h1 class="tm-hero-title">
+      <span class="tm-solid">{{ section.settings.title_line1 }}</span>
+      <span class="tm-outline">{{ section.settings.title_line2 }}</span>
+    </h1>
+    <div class="tm-hero-byline">
+      <p class="tm-hero-byline-text">{{ section.settings.tagline }}</p>
+      <div class="tm-hero-byline-divider"></div>
+      <div class="tm-hero-stats-mini">
+        <div class="tm-hero-stat"><strong>11</strong> Albums</div>
+        <div class="tm-hero-stat"><strong>CME</strong> Label</div>
+      </div>
+    </div>
+    <div class="tm-hero-actions">
+      <a href="{{ section.settings.cta1_link }}" class="tm-btn-dark">{{ section.settings.cta1_text }}</a>
+      <a href="{{ section.settings.cta2_link }}" class="tm-btn-outline-dark">{{ section.settings.cta2_text }} →</a>
+    </div>
+  </div>
+
+  <div class="tm-scroll-indicator">
+    <div class="tm-scroll-track"></div>
+    <span class="tm-scroll-label">Scroll</span>
+  </div>
+</section>
+
+{% schema %}
+{
+  "name": "TM Hero",
+  "settings": [
+    { "type": "header",       "content": "Content" },
+    { "type": "text",         "id": "eyebrow",       "label": "Eyebrow Text",       "default": "New Music Available Now"       },
+    { "type": "text",         "id": "title_line1",   "label": "Title Line 1",       "default": "T"                             },
+    { "type": "text",         "id": "title_line2",   "label": "Title Line 2 (Outline)", "default": "Mafianie"                  },
+    { "type": "text",         "id": "tagline",       "label": "Tagline",            "default": "Artist. Entrepreneur. Movement." },
+    { "type": "text",         "id": "cta1_text",     "label": "Button 1 Text",      "default": "Latest Music"                  },
+    { "type": "url",          "id": "cta1_link",     "label": "Button 1 Link"                                                  },
+    { "type": "text",         "id": "cta2_text",     "label": "Button 2 Text",      "default": "Browse Beats"                  },
+    { "type": "url",          "id": "cta2_link",     "label": "Button 2 Link"                                                  },
+    { "type": "header",       "content": "Artist Photos" },
+    { "type": "paragraph",    "content": "Upload your photos to Shopify Admin → Content → Files, then select them here." },
+    { "type": "image_picker", "id": "photo_main",      "label": "Main Photo (right side)",     "info": "Portrait orientation recommended — e.g. IMG_2625" },
+    { "type": "image_picker", "id": "photo_secondary", "label": "Secondary Photo (floating circle)", "info": "Square crop recommended — e.g. IMG_2624" }
+  ],
+  "presets": [{ "name": "TM Hero" }]
+}
+{% endschema %}

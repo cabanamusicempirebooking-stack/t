@@ -1,0 +1,189 @@
+{% comment %}
+  SECTION: tm-booking.liquid  (white theme)
+  Uses Shopify native contact form — no app needed.
+{% endcomment %}
+<style>
+.tm-booking { padding: 112px 64px; background: #f7f5f2; }
+.tm-booking-wrap { display: grid; grid-template-columns: 1fr 1.1fr; gap: 88px; align-items: start; }
+.tm-eyebrow { display: flex; align-items: center; gap: 12px; font-family: 'DM Sans', sans-serif; font-size: 9px; font-weight: 500; letter-spacing: 4px; text-transform: uppercase; color: #c8102e; margin-bottom: 14px; }
+.tm-eyebrow::before { content: ''; display: block; width: 24px; height: 1px; background: #c8102e; }
+.tm-section-title { font-family: 'Bebas Neue', sans-serif; font-size: clamp(52px,6.5vw,88px); letter-spacing: 1px; line-height: 0.95; color: #0d0d0d; margin-bottom: 64px; }
+.tm-section-title .ghost { color: transparent; -webkit-text-stroke: 1.5px rgba(13,13,13,0.18); }
+
+.tm-booking-desc { font-family: 'Cormorant Garamond', serif; font-style: italic; font-size: 20px; font-weight: 300; color: rgba(13,13,13,0.55); line-height: 1.75; margin-bottom: 48px; }
+.tm-booking-types { display: flex; flex-direction: column; }
+.tm-booking-type { display: flex; align-items: center; gap: 20px; padding: 20px 0; border-bottom: 1px solid rgba(13,13,13,0.08); transition: padding-left 0.3s cubic-bezier(0.22,1,0.36,1); }
+.tm-booking-type:first-child { border-top: 1px solid rgba(13,13,13,0.08); }
+.tm-booking-type:hover { padding-left: 8px; }
+.tm-booking-type-bar { width: 3px; height: 44px; background: linear-gradient(to bottom, #c8102e, rgba(200,16,46,0.1)); flex-shrink: 0; transition: height 0.3s; }
+.tm-booking-type:hover .tm-booking-type-bar { height: 60px; }
+.tm-booking-type-name { font-family: 'DM Sans', sans-serif; font-size: 14px; font-weight: 500; color: #0d0d0d; margin-bottom: 3px; }
+.tm-booking-type-desc { font-family: 'DM Sans', sans-serif; font-size: 12px; color: rgba(13,13,13,0.45); }
+
+.tm-booking-form { background: #ffffff; border: 1px solid rgba(13,13,13,0.08); padding: 44px 40px; display: flex; flex-direction: column; gap: 18px; box-shadow: 0 8px 48px rgba(0,0,0,0.06); }
+.tm-form-title { font-family: 'Bebas Neue', sans-serif; font-size: 28px; letter-spacing: 2px; color: #0d0d0d; margin-bottom: 4px; }
+.tm-form-subtitle { font-family: 'DM Sans', sans-serif; font-size: 13px; color: rgba(13,13,13,0.45); }
+.tm-form-divider { height: 1px; background: rgba(13,13,13,0.08); }
+
+.tm-form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+.tm-form-group { display: flex; flex-direction: column; gap: 8px; }
+.tm-form-label { font-family: 'DM Sans', sans-serif; font-size: 8px; letter-spacing: 3px; text-transform: uppercase; color: rgba(13,13,13,0.45); }
+.tm-form-input, .tm-form-select, .tm-form-textarea {
+  background: #fafaf9; border: 1px solid rgba(13,13,13,0.12);
+  color: #0d0d0d; font-family: 'DM Sans', sans-serif;
+  font-size: 14px; font-weight: 300; padding: 13px 16px;
+  outline: none; width: 100%; transition: border-color 0.2s;
+  -webkit-appearance: none; appearance: none;
+}
+.tm-form-input::placeholder, .tm-form-textarea::placeholder { color: rgba(13,13,13,0.3); }
+.tm-form-input:focus, .tm-form-select:focus, .tm-form-textarea:focus { border-color: rgba(13,13,13,0.35); }
+.tm-form-select { cursor: pointer; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='rgba(13,13,13,0.4)'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 14px center; background-color: #fafaf9; padding-right: 36px; }
+.tm-form-textarea { resize: vertical; min-height: 110px; }
+.tm-form-submit { font-family: 'DM Sans', sans-serif; font-size: 10px; font-weight: 500; letter-spacing: 2.5px; text-transform: uppercase; color: white; background: #0d0d0d; padding: 17px 36px; border: 1px solid #0d0d0d; align-self: flex-start; cursor: pointer; transition: background 0.2s, border-color 0.2s; }
+.tm-form-submit:hover { background: #c8102e; border-color: #c8102e; }
+.tm-form-success { display: none; padding: 16px 20px; background: rgba(200,16,46,0.06); border: 1px solid rgba(200,16,46,0.2); color: #c8102e; font-family: 'DM Sans', sans-serif; font-size: 13px; }
+
+@media (max-width: 767px) {
+  .tm-booking { padding: 64px 20px 80px; }
+  .tm-booking-wrap { grid-template-columns: 1fr; gap: 40px; }
+  .tm-section-title { margin-bottom: 24px; }
+  .tm-booking-desc { font-size: 17px; margin-bottom: 28px; }
+  .tm-booking-form { padding: 28px 20px; }
+  .tm-form-grid { grid-template-columns: 1fr; }
+  .tm-form-submit { width: 100%; text-align: center; align-self: stretch; }
+}
+</style>
+
+<section class="tm-booking" id="booking">
+  <div>
+    <div class="tm-eyebrow">{{ section.settings.eyebrow }}</div>
+    <h2 class="tm-section-title">{{ section.settings.title }}<br><span class="ghost">{{ section.settings.title_ghost }}</span></h2>
+  </div>
+  <div class="tm-booking-wrap">
+    <div>
+      <p class="tm-booking-desc">{{ section.settings.description }}</p>
+      <div class="tm-booking-types">
+        {% for block in section.blocks %}{% if block.type == 'booking_type' %}
+          <div class="tm-booking-type" {{ block.shopify_attributes }}>
+            <div class="tm-booking-type-bar"></div>
+            <div>
+              <div class="tm-booking-type-name">{{ block.settings.name }}</div>
+              <div class="tm-booking-type-desc">{{ block.settings.desc }}</div>
+            </div>
+          </div>
+        {% endif %}{% endfor %}
+      </div>
+    </div>
+    <div class="tm-booking-form">
+      <div class="tm-form-title">Send Inquiry</div>
+      <div class="tm-form-subtitle">{{ section.settings.form_subtitle }}</div>
+      <div class="tm-form-divider"></div>
+      {% form 'contact', id: 'tm-bk-form' %}
+        {% if form.posted_successfully? %}
+          <div class="tm-form-success" style="display:block;">✓ Message received. We'll respond within 48 hours.</div>
+        {% else %}
+          <div class="tm-form-grid">
+            <div class="tm-form-group">
+              <label class="tm-form-label" for="BkFirstName">First Name</label>
+              <input type="text" id="BkFirstName" name="contact[First Name]" class="tm-form-input" placeholder="John" required>
+            </div>
+            <div class="tm-form-group">
+              <label class="tm-form-label" for="BkLastName">Last Name</label>
+              <input type="text" id="BkLastName" name="contact[Last Name]" class="tm-form-input" placeholder="Doe" required>
+            </div>
+          </div>
+          <div class="tm-form-group">
+            <label class="tm-form-label" for="BkEmail">Email Address</label>
+            <input type="email" id="BkEmail" name="contact[email]" class="tm-form-input" placeholder="you@example.com" required>
+          </div>
+          <div class="tm-form-group">
+            <label class="tm-form-label" for="BkPhone">Phone (optional)</label>
+            <input type="tel" id="BkPhone" name="contact[Phone]" class="tm-form-input" placeholder="+1 (000) 000-0000">
+          </div>
+          <div class="tm-form-group">
+            <label class="tm-form-label" for="BkType">Inquiry Type</label>
+            <select id="BkType" name="contact[Inquiry Type]" class="tm-form-select" required>
+              <option value="">Select type…</option>
+              <option>Live Performance</option>
+              <option>Custom Feature</option>
+              <option>Beat License</option>
+              <option>Brand Partnership</option>
+              <option>Other</option>
+            </select>
+          </div>
+          <div class="tm-form-group">
+            <label class="tm-form-label" for="BkDate">Event / Project Date</label>
+            <input type="date" id="BkDate" name="contact[Event Date]" class="tm-form-input">
+          </div>
+          <div class="tm-form-group">
+            <label class="tm-form-label" for="BkMsg">Details</label>
+            <textarea id="BkMsg" name="contact[body]" class="tm-form-textarea" placeholder="Tell us about your event, project, or inquiry…" required></textarea>
+          </div>
+          <div id="tm-bk-err" class="tm-form-success" style="display:none;background:rgba(200,16,46,0.04);color:rgba(13,13,13,0.6);"></div>
+          <button type="submit" class="tm-form-submit" id="tm-bk-btn">Submit Inquiry →</button>
+        {% endif %}
+      {% endform %}
+    </div>
+  </div>
+</section>
+
+<script>
+(function(){
+  var form = document.getElementById('tm-bk-form');
+  if (!form) return;
+  var active = true;
+  form.addEventListener('submit', function(e) {
+    if (!active) return;
+    e.preventDefault();
+    var btn = document.getElementById('tm-bk-btn');
+    var err = document.getElementById('tm-bk-err');
+    var orig = btn ? btn.textContent : '';
+    if (btn) { btn.textContent = 'Sending…'; btn.disabled = true; btn.style.opacity = '0.6'; }
+    if (err) err.style.display = 'none';
+    fetch(form.action, { method: ‘POST’, body: new FormData(form) })
+      .then(function(r) {
+        if (r.url.indexOf(‘posted_successfully’) > -1) {
+          form.innerHTML = ‘<div class="tm-form-success" style="display:block;">✓ Message received. We\’ll respond within 48 hours.</div>’;
+        } else {
+          if (btn) { btn.textContent = orig; btn.disabled = false; btn.style.opacity = ''; }
+          active = false;
+          form.submit();
+        }
+      })
+      .catch(function() {
+        if (btn) { btn.textContent = orig; btn.disabled = false; btn.style.opacity = ‘’; }
+        active = false;
+        form.submit();
+      });
+  });
+})();
+</script>
+
+{% schema %}
+{
+  "name": "TM Booking",
+  "settings": [
+    { "type": "text",     "id": "eyebrow",       "label": "Eyebrow",         "default": "Inquiries" },
+    { "type": "text",     "id": "title",         "label": "Title Line 1",    "default": "Book T" },
+    { "type": "text",     "id": "title_ghost",   "label": "Title Line 2",    "default": "Mafianie" },
+    { "type": "textarea", "id": "description",   "label": "Description",     "default": "Ready to bring the energy to your event or collaboration? The team responds within 48 hours." },
+    { "type": "text",     "id": "form_subtitle", "label": "Form Subtitle",   "default": "We respond within 48 hours." }
+  ],
+  "blocks": [{
+    "type": "booking_type", "name": "Booking Type",
+    "settings": [
+      { "type": "text", "id": "name", "label": "Name", "default": "Live Performances" },
+      { "type": "text", "id": "desc", "label": "Description", "default": "Clubs, concerts, festivals, private events" }
+    ]
+  }],
+  "presets": [{
+    "name": "TM Booking",
+    "blocks": [
+      { "type": "booking_type", "settings": { "name": "Live Performances",  "desc": "Clubs, concerts, festivals, private events" } },
+      { "type": "booking_type", "settings": { "name": "Custom Features",    "desc": "Get T Mafianie on your track" } },
+      { "type": "booking_type", "settings": { "name": "Beat Licensing",     "desc": "Exclusive & non-exclusive licenses" } },
+      { "type": "booking_type", "settings": { "name": "Brand Partnerships", "desc": "Collaborations & endorsements" } }
+    ]
+  }]
+}
+{% endschema %}

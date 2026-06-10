@@ -1,0 +1,1185 @@
+{% comment %}
+  SECTION: tm-digital-products.liquid
+  ─────────────────────────────────────────────────────────────────
+  Block-based digital product store with:
+  • File attachment per product (downloadable after purchase/lead capture)
+  • Checkout modal: Name, Email, optional SMS → payment redirect
+  • Free products: file delivered directly after lead form submit
+  • Paid products: lead captured → redirect to buy_link (Gumroad/Stripe/etc.)
+  ─────────────────────────────────────────────────────────────────
+{% endcomment %}
+
+<style>
+/* ── TOKENS ── */
+.tm-dp {
+  --red: #ff2a2a;
+  --gold: #c9a84c;
+  --k: #0d0d0d;
+  --off: #f7f5f2;
+  --soft: #eeebe6;
+  --mu: rgba(13,13,13,.38);
+  --mu2: rgba(13,13,13,.55);
+  --b: rgba(13,13,13,.08);
+  --b2: rgba(13,13,13,.15);
+  --ease: cubic-bezier(.22,1,.36,1);
+  font-family: 'DM Sans', sans-serif;
+}
+
+/* ── SECTION WRAPPER ── */
+.tm-dp-section { padding: 112px 64px; }
+.tm-dp-section.dark-bg { background: var(--k); }
+.tm-dp-section.light-bg { background: #fff; }
+
+/* ── HEADER ── */
+.tm-dp-header {
+  margin-bottom: 64px;
+  display: flex; align-items: flex-end; justify-content: space-between;
+  gap: 24px;
+}
+.tm-dp-eye {
+  display: flex; align-items: center; gap: 12px;
+  font-size: 9px; font-weight: 500; letter-spacing: 4px; text-transform: uppercase;
+  margin-bottom: 14px;
+}
+.tm-dp-section.light-bg .tm-dp-eye { color: var(--red); }
+.tm-dp-section.dark-bg  .tm-dp-eye { color: rgba(255,42,42,.85); }
+.tm-dp-eye::before { content: ''; display: block; width: 24px; height: 1px; background: var(--red); }
+
+.tm-dp-title {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: clamp(52px, 6.5vw, 88px); letter-spacing: 1px; line-height: .95;
+}
+.tm-dp-section.light-bg .tm-dp-title { color: var(--k); }
+.tm-dp-section.dark-bg  .tm-dp-title { color: #f0ede8; }
+.tm-dp-title .gh { color: transparent; }
+.tm-dp-section.light-bg .tm-dp-title .gh { -webkit-text-stroke: 1.5px rgba(13,13,13,.18); }
+.tm-dp-section.dark-bg  .tm-dp-title .gh { -webkit-text-stroke: 1.5px rgba(240,237,232,.12); }
+
+.tm-dp-desc {
+  font-size: 13px; line-height: 1.7; margin-top: 14px; max-width: 480px;
+}
+.tm-dp-section.light-bg .tm-dp-desc { color: var(--mu2); }
+.tm-dp-section.dark-bg  .tm-dp-desc { color: rgba(240,237,232,.45); }
+
+.tm-dp-va {
+  font-size: 10px; font-weight: 500; letter-spacing: 2.5px; text-transform: uppercase;
+  text-decoration: none; border-bottom: 1px solid; padding-bottom: 2px;
+  display: inline-block; transition: color .2s, border-color .2s; white-space: nowrap;
+}
+.tm-dp-section.light-bg .tm-dp-va { color: var(--k); border-color: var(--b2); }
+.tm-dp-section.light-bg .tm-dp-va:hover { color: var(--red); border-color: var(--red); }
+.tm-dp-section.dark-bg  .tm-dp-va { color: rgba(240,237,232,.6); border-color: rgba(240,237,232,.2); }
+.tm-dp-section.dark-bg  .tm-dp-va:hover { color: var(--red); border-color: var(--red); }
+
+/* ── FILTER TABS ── */
+.tm-dp-filters {
+  display: flex; gap: 0; margin-bottom: 40px; border-bottom: 1px solid;
+  overflow-x: auto; -webkit-overflow-scrolling: touch;
+}
+.tm-dp-section.light-bg .tm-dp-filters { border-color: var(--b); }
+.tm-dp-section.dark-bg  .tm-dp-filters { border-color: rgba(255,255,255,.08); }
+
+.tm-dp-filter {
+  padding: 12px 22px; font-size: 9px; font-weight: 500; letter-spacing: 2.5px;
+  text-transform: uppercase; background: transparent; border: none;
+  cursor: pointer; white-space: nowrap; position: relative;
+  font-family: 'DM Sans', sans-serif; transition: color .2s;
+}
+.tm-dp-filter::after {
+  content: ''; position: absolute; bottom: -1px; left: 0; right: 0; height: 2px;
+  background: var(--red); transform: scaleX(0); transform-origin: left;
+  transition: transform .3s var(--ease);
+}
+.tm-dp-filter.active::after,
+.tm-dp-filter:hover::after { transform: scaleX(1); }
+
+.tm-dp-section.light-bg .tm-dp-filter { color: var(--mu); }
+.tm-dp-section.light-bg .tm-dp-filter.active,
+.tm-dp-section.light-bg .tm-dp-filter:hover { color: var(--k); }
+.tm-dp-section.dark-bg  .tm-dp-filter { color: rgba(240,237,232,.3); }
+.tm-dp-section.dark-bg  .tm-dp-filter.active,
+.tm-dp-section.dark-bg  .tm-dp-filter:hover { color: #f0ede8; }
+
+/* ── GRID ── */
+.tm-dp-grid {
+  display: grid;
+  grid-template-columns: repeat(var(--tm-dp-cols, 3), 1fr);
+  gap: 24px;
+  margin-bottom: 52px;
+}
+
+/* ── CARD ── */
+.tm-dp-card {
+  position: relative; overflow: hidden;
+  transition: transform .4s var(--ease), box-shadow .4s;
+  display: flex; flex-direction: column;
+}
+.tm-dp-section.light-bg .tm-dp-card { background: var(--off); border: 1px solid var(--b); }
+.tm-dp-section.dark-bg  .tm-dp-card { background: rgba(255,255,255,.04); border: 1px solid rgba(255,255,255,.07); }
+.tm-dp-card:hover { transform: translateY(-6px); }
+.tm-dp-section.light-bg .tm-dp-card:hover { box-shadow: 0 24px 64px rgba(0,0,0,.1); }
+.tm-dp-section.dark-bg  .tm-dp-card:hover { box-shadow: 0 24px 64px rgba(0,0,0,.4); }
+
+.tm-dp-card::before {
+  content: ''; position: absolute; bottom: 0; left: 0; right: 0; height: 3px;
+  background: var(--red); transform: scaleX(0); transform-origin: left;
+  transition: transform .4s var(--ease); z-index: 2;
+}
+.tm-dp-card:hover::before { transform: scaleX(1); }
+
+/* ── COVER ── */
+.tm-dp-cover {
+  aspect-ratio: 4/3; position: relative; overflow: hidden;
+  display: flex; align-items: center; justify-content: center;
+}
+.tm-dp-section.light-bg .tm-dp-cover { background: var(--soft); }
+.tm-dp-section.dark-bg  .tm-dp-cover { background: rgba(255,255,255,.06); }
+
+.tm-dp-cover img {
+  width: 100%; height: 100%; object-fit: cover;
+  transition: transform .6s var(--ease);
+}
+.tm-dp-card:hover .tm-dp-cover img { transform: scale(1.04); }
+
+.tm-dp-cover-placeholder {
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  gap: 12px; width: 100%; height: 100%;
+}
+.tm-dp-cover-placeholder-icon { font-size: 48px; opacity: .25; }
+.tm-dp-cover-placeholder-text {
+  font-family: 'Bebas Neue', sans-serif; font-size: 13px; letter-spacing: 4px;
+  text-transform: uppercase; opacity: .2;
+}
+.tm-dp-section.light-bg .tm-dp-cover-placeholder-text { color: var(--k); }
+.tm-dp-section.dark-bg  .tm-dp-cover-placeholder-text { color: #f0ede8; }
+
+.tm-dp-cover-overlay {
+  position: absolute; inset: 0;
+  background: rgba(13,13,13,.55);
+  display: flex; align-items: center; justify-content: center;
+  opacity: 0; transition: opacity .3s;
+}
+.tm-dp-card:hover .tm-dp-cover-overlay { opacity: 1; }
+.tm-dp-overlay-btns { display: flex; flex-direction: column; gap: 10px; padding: 20px; width: 100%; }
+.tm-dp-overlay-btn {
+  font-family: 'DM Sans', sans-serif; font-size: 9px; font-weight: 500;
+  letter-spacing: 2.5px; text-transform: uppercase; padding: 13px 20px;
+  text-align: center; text-decoration: none; cursor: pointer; border: none;
+  transition: background .2s, color .2s;
+}
+.tm-dp-overlay-btn.primary { background: var(--red); color: #fff; }
+.tm-dp-overlay-btn.primary:hover { background: #a50d24; }
+.tm-dp-overlay-btn.secondary { background: rgba(255,255,255,.12); color: #f0ede8; border: 1px solid rgba(255,255,255,.25); }
+.tm-dp-overlay-btn.secondary:hover { background: rgba(255,255,255,.2); }
+
+/* ── BADGE ── */
+.tm-dp-badge {
+  position: absolute; top: 12px; left: 12px; z-index: 3;
+  font-family: 'DM Sans', sans-serif; font-size: 8px; font-weight: 500;
+  letter-spacing: 2.5px; text-transform: uppercase; padding: 4px 10px;
+}
+.tm-dp-badge.ebook       { background: #0d0d0d; color: #fff; }
+.tm-dp-badge.template    { background: #1a3a6e; color: #fff; }
+.tm-dp-badge.sample-pack { background: #3d1a6e; color: #fff; }
+.tm-dp-badge.course      { background: #6e3d1a; color: #fff; }
+.tm-dp-badge.preset      { background: #1a6e3d; color: #fff; }
+.tm-dp-badge.bundle      { background: var(--red); color: #fff; }
+.tm-dp-badge.free        { background: var(--gold); color: #0d0d0d; }
+.tm-dp-badge.new         { background: var(--k); color: #fff; }
+.tm-dp-badge.sale        { background: var(--red); color: #fff; }
+
+/* ── CARD BODY ── */
+.tm-dp-body { padding: 20px 22px 24px; flex: 1; display: flex; flex-direction: column; }
+.tm-dp-type {
+  font-size: 8px; font-weight: 500; letter-spacing: 3px; text-transform: uppercase;
+  margin-bottom: 8px;
+}
+.tm-dp-section.light-bg .tm-dp-type { color: var(--mu); }
+.tm-dp-section.dark-bg  .tm-dp-type { color: rgba(240,237,232,.3); }
+
+.tm-dp-name {
+  font-family: 'DM Sans', sans-serif; font-size: 16px; font-weight: 500;
+  line-height: 1.35; margin-bottom: 10px;
+}
+.tm-dp-section.light-bg .tm-dp-name { color: var(--k); }
+.tm-dp-section.dark-bg  .tm-dp-name { color: #f0ede8; }
+
+.tm-dp-blurb {
+  font-size: 12px; line-height: 1.65; margin-bottom: 18px; flex: 1;
+}
+.tm-dp-section.light-bg .tm-dp-blurb { color: var(--mu2); }
+.tm-dp-section.dark-bg  .tm-dp-blurb { color: rgba(240,237,232,.4); }
+
+.tm-dp-features { display: flex; flex-direction: column; gap: 5px; margin-bottom: 18px; }
+.tm-dp-feature {
+  display: flex; align-items: flex-start; gap: 8px;
+  font-size: 11px; line-height: 1.5;
+}
+.tm-dp-feature-dot {
+  width: 5px; height: 5px; background: var(--red); border-radius: 50%;
+  flex-shrink: 0; margin-top: 5px;
+}
+.tm-dp-section.light-bg .tm-dp-feature { color: var(--mu2); }
+.tm-dp-section.dark-bg  .tm-dp-feature { color: rgba(240,237,232,.4); }
+
+/* ── FILE INDICATOR ── */
+.tm-dp-file-tag {
+  display: inline-flex; align-items: center; gap: 6px;
+  font-size: 9px; font-weight: 500; letter-spacing: 1.5px; text-transform: uppercase;
+  padding: 4px 10px; margin-bottom: 14px; width: fit-content;
+}
+.tm-dp-section.light-bg .tm-dp-file-tag { background: rgba(13,13,13,.05); color: var(--mu2); border: 1px solid var(--b); }
+.tm-dp-section.dark-bg  .tm-dp-file-tag { background: rgba(255,255,255,.05); color: rgba(240,237,232,.4); border: 1px solid rgba(255,255,255,.08); }
+.tm-dp-file-tag svg { width: 11px; height: 11px; flex-shrink: 0; opacity: .6; }
+
+/* ── CARD FOOTER ── */
+.tm-dp-card-footer {
+  display: flex; align-items: center; justify-content: space-between;
+  padding-top: 16px; gap: 12px; border-top: 1px solid;
+}
+.tm-dp-section.light-bg .tm-dp-card-footer { border-color: var(--b); }
+.tm-dp-section.dark-bg  .tm-dp-card-footer { border-color: rgba(255,255,255,.06); }
+
+.tm-dp-pricing { display: flex; align-items: baseline; gap: 8px; }
+.tm-dp-price {
+  font-family: 'Bebas Neue', sans-serif; font-size: 26px; letter-spacing: 1px;
+}
+.tm-dp-section.light-bg .tm-dp-price { color: var(--k); }
+.tm-dp-section.dark-bg  .tm-dp-price { color: #f0ede8; }
+.tm-dp-price.sale-price { color: var(--red) !important; }
+.tm-dp-price.free-price { color: var(--gold) !important; }
+
+.tm-dp-compare { font-size: 12px; text-decoration: line-through; }
+.tm-dp-section.light-bg .tm-dp-compare { color: var(--mu); }
+.tm-dp-section.dark-bg  .tm-dp-compare { color: rgba(240,237,232,.25); }
+
+.tm-dp-cta {
+  font-family: 'DM Sans', sans-serif; font-size: 9px; font-weight: 500;
+  letter-spacing: 2px; text-transform: uppercase; padding: 10px 18px;
+  text-decoration: none; white-space: nowrap; transition: background .2s, color .2s, border-color .2s;
+  flex-shrink: 0; cursor: pointer; border: none;
+}
+.tm-dp-section.light-bg .tm-dp-cta { background: var(--k); color: #fff; border: 1px solid var(--k); }
+.tm-dp-section.light-bg .tm-dp-cta:hover { background: var(--red); border-color: var(--red); }
+.tm-dp-section.dark-bg  .tm-dp-cta { background: transparent; color: #f0ede8; border: 1px solid rgba(255,255,255,.2); }
+.tm-dp-section.dark-bg  .tm-dp-cta:hover { background: var(--red); border-color: var(--red); }
+.tm-dp-cta.free-cta { background: var(--gold) !important; color: #0d0d0d !important; border-color: var(--gold) !important; }
+
+/* ── EMPTY ── */
+.tm-dp-empty {
+  grid-column: 1 / -1; padding: 80px; text-align: center;
+  border: 1px dashed; font-size: 13px;
+}
+.tm-dp-section.light-bg .tm-dp-empty { border-color: rgba(13,13,13,.12); color: var(--mu); }
+.tm-dp-section.dark-bg  .tm-dp-empty { border-color: rgba(255,255,255,.1); color: rgba(240,237,232,.3); }
+
+/* ── FOOTER BTNS ── */
+.tm-dp-footer { display: flex; gap: 14px; flex-wrap: wrap; }
+.tm-dp-btn-dark { font-family:'DM Sans',sans-serif;font-size:10px;font-weight:500;letter-spacing:2.5px;text-transform:uppercase;color:#fff;background:var(--k);padding:15px 34px;border:1px solid var(--k);text-decoration:none;display:inline-block;transition:background .25s,border-color .25s,transform .25s; }
+.tm-dp-btn-dark:hover{background:var(--red);border-color:var(--red);transform:translateY(-2px)}
+.tm-dp-btn-outline-light{font-family:'DM Sans',sans-serif;font-size:10px;font-weight:500;letter-spacing:2.5px;text-transform:uppercase;color:var(--k);border:1px solid var(--b2);padding:15px 34px;text-decoration:none;display:inline-flex;align-items:center;gap:8px;transition:border-color .25s,transform .25s}
+.tm-dp-btn-outline-light:hover{border-color:var(--k);transform:translateY(-2px)}
+.tm-dp-btn-outline-dark{font-family:'DM Sans',sans-serif;font-size:10px;font-weight:500;letter-spacing:2.5px;text-transform:uppercase;color:rgba(240,237,232,.7);border:1px solid rgba(255,255,255,.15);padding:15px 34px;text-decoration:none;display:inline-flex;align-items:center;gap:8px;transition:border-color .25s,color .25s,transform .25s}
+.tm-dp-btn-outline-dark:hover{border-color:var(--red);color:var(--red);transform:translateY(-2px)}
+
+/* ── SCROLL REVEAL ── */
+.tm-dp-rv { opacity:0; transform:translateY(20px); transition:opacity .8s var(--ease),transform .8s var(--ease); }
+.tm-dp-rv.on { opacity:1; transform:translateY(0); }
+
+/* ─────────────────────────────────────────────────────────────
+   CHECKOUT MODAL
+───────────────────────────────────────────────────────────────*/
+.tm-checkout-backdrop {
+  position: fixed; inset: 0; z-index: 9000;
+  background: rgba(0,0,0,.72); backdrop-filter: blur(6px);
+  display: flex; align-items: center; justify-content: center;
+  padding: 24px;
+  opacity: 0; pointer-events: none;
+  transition: opacity .3s var(--ease);
+}
+.tm-checkout-backdrop.open {
+  opacity: 1; pointer-events: all;
+}
+
+.tm-checkout-modal {
+  background: #0d0d0d; color: #f0ede8;
+  width: 100%; max-width: 480px; position: relative;
+  border: 1px solid rgba(255,255,255,.1);
+  transform: translateY(24px) scale(.97);
+  transition: transform .35s var(--ease);
+  max-height: 92vh; overflow-y: auto;
+}
+.tm-checkout-backdrop.open .tm-checkout-modal {
+  transform: translateY(0) scale(1);
+}
+
+/* modal top bar */
+.tm-checkout-topbar {
+  padding: 22px 26px 0;
+  display: flex; align-items: flex-start; justify-content: space-between; gap: 16px;
+}
+.tm-checkout-label {
+  font-size: 8px; font-weight: 500; letter-spacing: 3.5px; text-transform: uppercase;
+  color: var(--red); display: flex; align-items: center; gap: 8px;
+}
+.tm-checkout-label::before { content: ''; width: 18px; height: 1px; background: var(--red); }
+.tm-checkout-close {
+  background: none; border: none; color: rgba(240,237,232,.4); cursor: pointer;
+  font-size: 22px; line-height: 1; padding: 0; transition: color .2s; flex-shrink: 0;
+}
+.tm-checkout-close:hover { color: #f0ede8; }
+
+/* product summary inside modal */
+.tm-checkout-summary {
+  padding: 18px 26px 0;
+  display: flex; align-items: center; gap: 16px;
+}
+.tm-checkout-thumb {
+  width: 64px; height: 64px; object-fit: cover; flex-shrink: 0;
+  border: 1px solid rgba(255,255,255,.1);
+}
+.tm-checkout-thumb-ph {
+  width: 64px; height: 64px; background: rgba(255,255,255,.06); flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 24px; border: 1px solid rgba(255,255,255,.08);
+}
+.tm-checkout-summary-info {}
+.tm-checkout-summary-type {
+  font-size: 8px; letter-spacing: 2.5px; text-transform: uppercase;
+  color: rgba(240,237,232,.35); margin-bottom: 4px;
+}
+.tm-checkout-summary-name {
+  font-family: 'DM Sans', sans-serif; font-size: 15px; font-weight: 500;
+  color: #f0ede8; line-height: 1.3; margin-bottom: 6px;
+}
+.tm-checkout-summary-price {
+  font-family: 'Bebas Neue', sans-serif; font-size: 22px; letter-spacing: 1px;
+  color: var(--red);
+}
+.tm-checkout-summary-price.is-free { color: var(--gold); }
+
+/* divider */
+.tm-checkout-div {
+  height: 1px; background: rgba(255,255,255,.08); margin: 22px 26px 0;
+}
+
+/* form */
+.tm-checkout-form { padding: 22px 26px 28px; display: flex; flex-direction: column; gap: 16px; }
+
+.tm-checkout-field { display: flex; flex-direction: column; gap: 7px; }
+.tm-checkout-field label {
+  font-size: 9px; font-weight: 500; letter-spacing: 2.5px; text-transform: uppercase;
+  color: rgba(240,237,232,.45);
+}
+.tm-checkout-field label span.optional {
+  font-size: 8px; letter-spacing: 1px; color: rgba(240,237,232,.25); text-transform: none; font-weight: 400;
+}
+.tm-checkout-input {
+  background: rgba(255,255,255,.05); border: 1px solid rgba(255,255,255,.12);
+  color: #f0ede8; font-family: 'DM Sans', sans-serif; font-size: 14px;
+  padding: 13px 16px; outline: none; transition: border-color .2s, background .2s;
+  width: 100%; box-sizing: border-box;
+}
+.tm-checkout-input::placeholder { color: rgba(240,237,232,.2); }
+.tm-checkout-input:focus { border-color: rgba(255,42,42,.6); background: rgba(255,255,255,.07); }
+.tm-checkout-input.error { border-color: #ff2a2a; }
+
+.tm-checkout-sms-row { display: flex; gap: 10px; }
+.tm-checkout-sms-row .tm-checkout-input:first-child { flex: 0 0 88px; }
+.tm-checkout-sms-row .tm-checkout-input:last-child { flex: 1; }
+
+/* SMS consent note */
+.tm-checkout-consent {
+  font-size: 10px; color: rgba(240,237,232,.25); line-height: 1.6; margin-top: -4px;
+}
+
+/* file info row */
+.tm-checkout-file-info {
+  display: flex; align-items: center; gap: 10px; padding: 12px 16px;
+  background: rgba(201,168,76,.06); border: 1px solid rgba(201,168,76,.18);
+}
+.tm-checkout-file-info svg { flex-shrink: 0; color: var(--gold); }
+.tm-checkout-file-info-text { font-size: 11px; color: rgba(240,237,232,.5); line-height: 1.5; }
+.tm-checkout-file-info-text strong { color: rgba(201,168,76,.8); font-weight: 500; }
+
+/* submit */
+.tm-checkout-submit {
+  font-family: 'DM Sans', sans-serif; font-size: 10px; font-weight: 600;
+  letter-spacing: 3px; text-transform: uppercase; padding: 17px 24px;
+  background: var(--red); color: #fff; border: none; cursor: pointer;
+  transition: background .2s, transform .2s; width: 100%; margin-top: 4px;
+}
+.tm-checkout-submit:hover { background: #a50d24; transform: translateY(-1px); }
+.tm-checkout-submit:active { transform: translateY(0); }
+.tm-checkout-submit.free-submit { background: var(--gold); color: #0d0d0d; }
+.tm-checkout-submit.free-submit:hover { background: #b8963e; }
+.tm-checkout-submit:disabled { opacity: .5; cursor: not-allowed; transform: none; }
+
+/* error message */
+.tm-checkout-error {
+  font-size: 11px; color: #e05555; padding: 10px 14px;
+  background: rgba(255,42,42,.08); border: 1px solid rgba(255,42,42,.2);
+  display: none;
+}
+.tm-checkout-error.show { display: block; }
+
+/* success state */
+.tm-checkout-success {
+  padding: 40px 26px 36px; text-align: center;
+  display: none; flex-direction: column; align-items: center; gap: 16px;
+}
+.tm-checkout-success.show { display: flex; }
+.tm-checkout-success-icon {
+  width: 56px; height: 56px; background: rgba(201,168,76,.12);
+  border: 1px solid rgba(201,168,76,.3);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 26px;
+}
+.tm-checkout-success-title {
+  font-family: 'Bebas Neue', sans-serif; font-size: 28px; letter-spacing: 2px;
+  color: #f0ede8;
+}
+.tm-checkout-success-msg {
+  font-size: 13px; color: rgba(240,237,232,.45); line-height: 1.7; max-width: 320px;
+}
+.tm-checkout-download-btn {
+  font-family: 'DM Sans', sans-serif; font-size: 10px; font-weight: 600;
+  letter-spacing: 2.5px; text-transform: uppercase; padding: 15px 28px;
+  background: var(--gold); color: #0d0d0d; text-decoration: none;
+  display: inline-flex; align-items: center; gap: 10px;
+  transition: background .2s, transform .2s; cursor: pointer; border: none;
+  margin-top: 8px;
+}
+.tm-checkout-download-btn:hover { background: #b8963e; transform: translateY(-2px); }
+.tm-checkout-download-btn svg { width: 14px; height: 14px; }
+
+/* ── RESPONSIVE ── */
+@media(max-width:1100px){.tm-dp-grid{grid-template-columns:repeat(2,1fr)}}
+@media(max-width:680px){
+  .tm-dp-section{padding:64px 24px}
+  .tm-dp-grid{grid-template-columns:1fr}
+  .tm-dp-header{flex-direction:column;align-items:flex-start}
+  .tm-checkout-modal{max-height:100vh}
+}
+</style>
+
+{%- assign bg_class = 'light-bg' -%}
+{%- if section.settings.dark_bg -%}{%- assign bg_class = 'dark-bg' -%}{%- endif -%}
+
+{%- assign all_types = '' -%}
+{%- for block in section.blocks -%}
+  {%- if block.type == 'product' -%}
+    {%- unless all_types contains block.settings.product_type -%}
+      {%- assign all_types = all_types | append: block.settings.product_type | append: '|' -%}
+    {%- endunless -%}
+  {%- endif -%}
+{%- endfor -%}
+{%- assign type_list = all_types | split: '|' | uniq -%}
+
+<div class="tm-dp">
+<section class="tm-dp-section {{ bg_class }}" id="{{ section.settings.section_id | default: 'digital-products' }}" style="--tm-dp-cols:{{ section.settings.columns | default: 3 }}">
+
+  {%- comment -%} HEADER {%- endcomment -%}
+  <div class="tm-dp-header tm-dp-rv">
+    <div class="tm-dp-header-left">
+      <div class="tm-dp-eye">{{ section.settings.eyebrow | default: 'Digital Products' }}</div>
+      <h2 class="tm-dp-title">{{ section.settings.title | default: 'Creator' }} <span class="gh">{{ section.settings.title_ghost | default: 'Tools' }}</span></h2>
+      {% if section.settings.description != blank %}
+        <p class="tm-dp-desc">{{ section.settings.description }}</p>
+      {% endif %}
+    </div>
+    {% if section.settings.va_link != blank %}
+      <a href="{{ section.settings.va_link }}" class="tm-dp-va">{{ section.settings.va_text | default: 'View All' }} →</a>
+    {% endif %}
+  </div>
+
+  {%- comment -%} FILTER TABS {%- endcomment -%}
+  {%- if type_list.size > 1 and section.settings.show_filters -%}
+  <div class="tm-dp-filters tm-dp-rv" id="tm-dp-filters-{{ section.id }}">
+    <button class="tm-dp-filter active" onclick="tmDpFilter(this,'all','{{ section.id }}')">All</button>
+    {%- for t in type_list -%}
+      {%- if t != blank -%}
+      <button class="tm-dp-filter" onclick="tmDpFilter(this,'{{ t | downcase | replace: ' ','-' }}','{{ section.id }}')">{{ t }}</button>
+      {%- endif -%}
+    {%- endfor -%}
+  </div>
+  {%- endif -%}
+
+  {%- comment -%} GRID {%- endcomment -%}
+  <div class="tm-dp-grid" id="tm-dp-grid-{{ section.id }}">
+
+    {%- assign product_blocks = section.blocks | where: 'type', 'product' -%}
+    {%- if product_blocks.size > 0 -%}
+
+      {%- for block in product_blocks -%}
+        {%- assign is_free = false -%}
+        {%- if block.settings.price == blank or block.settings.price == '0' or block.settings.price == 'Free' -%}
+          {%- assign is_free = true -%}
+        {%- endif -%}
+        {%- assign has_sale = false -%}
+        {%- if block.settings.compare_price != blank -%}
+          {%- assign has_sale = true -%}
+        {%- endif -%}
+        {%- assign type_slug = block.settings.product_type | downcase | replace: ' ', '-' -%}
+        {%- assign features = block.settings.features | split: '|' -%}
+        {%- assign has_file = false -%}
+        {%- if block.settings.file_url != blank -%}{%- assign has_file = true -%}{%- endif -%}
+
+        {%- comment -%} Determine file extension label {%- endcomment -%}
+        {%- assign file_ext = '' -%}
+        {%- if has_file -%}
+          {%- assign file_parts = block.settings.file_url | split: '.' -%}
+          {%- assign file_ext = file_parts | last | upcase | truncate: 5, '' -%}
+        {%- endif -%}
+
+        <div class="tm-dp-card tm-dp-rv"
+          data-type="{{ type_slug }}"
+          {{ block.shopify_attributes }}>
+
+          {%- comment -%} COVER {%- endcomment -%}
+          <div class="tm-dp-cover">
+            {%- if block.settings.cover_image != blank -%}
+              <img
+                src="{{ block.settings.cover_image | img_url: '600x450', crop: 'center' }}"
+                alt="{{ block.settings.title | escape }}"
+                loading="{% if forloop.index <= 3 %}eager{% else %}lazy{% endif %}"
+                width="600" height="450">
+            {%- else -%}
+              <div class="tm-dp-cover-placeholder">
+                <div class="tm-dp-cover-placeholder-icon">
+                  {%- case block.settings.product_type -%}
+                    {%- when 'Ebook' -%}📖
+                    {%- when 'Template' -%}📋
+                    {%- when 'Sample Pack' -%}🎛
+                    {%- when 'Course' -%}🎓
+                    {%- when 'Preset' -%}🎚
+                    {%- when 'Bundle' -%}📦
+                    {%- else -%}💾
+                  {%- endcase -%}
+                </div>
+                <div class="tm-dp-cover-placeholder-text">{{ block.settings.product_type | default: 'Digital' }}</div>
+              </div>
+            {%- endif -%}
+
+            {%- assign badge_text = block.settings.badge -%}
+            {%- assign badge_class = block.settings.product_type | downcase | replace: ' ', '-' -%}
+            {%- if badge_text != blank -%}
+              {%- if badge_text == 'Sale' or badge_text == 'SALE' -%}{%- assign badge_class = 'sale' -%}
+              {%- elsif badge_text == 'New' or badge_text == 'NEW' -%}{%- assign badge_class = 'new' -%}
+              {%- elsif badge_text == 'Free' or badge_text == 'FREE' -%}{%- assign badge_class = 'free' -%}
+              {%- endif -%}
+              <div class="tm-dp-badge {{ badge_class }}">{{ badge_text }}</div>
+            {%- elsif is_free -%}
+              <div class="tm-dp-badge free">Free</div>
+            {%- elsif has_sale -%}
+              <div class="tm-dp-badge sale">Sale</div>
+            {%- endif -%}
+
+            {%- comment -%} Hover overlay {%- endcomment -%}
+            <div class="tm-dp-cover-overlay">
+              <div class="tm-dp-overlay-btns">
+                {%- if is_free -%}
+                  <button class="tm-dp-overlay-btn primary"
+                    onclick="tmDpOpenCheckout(this)"
+                    data-title="{{ block.settings.title | escape }}"
+                    data-type="{{ block.settings.product_type | escape }}"
+                    data-price="{{ block.settings.price | escape }}"
+                    data-is-free="true"
+                    data-buy-link="{{ block.settings.buy_link }}"
+                    data-file-url="{{ block.settings.file_url }}"
+                    data-file-label="{{ block.settings.file_label | default: 'Download' | escape }}"
+                    data-file-ext="{{ file_ext }}"
+                    {%- if block.settings.cover_image != blank %}
+                    data-thumb="{{ block.settings.cover_image | img_url: '120x120', crop: 'center' }}"
+                    {%- endif -%}>
+                    Download Free
+                  </button>
+                {%- elsif block.settings.buy_link != blank -%}
+                  <a href="{{ block.settings.buy_link }}" class="tm-dp-overlay-btn primary">Get It Now →</a>
+                {%- endif -%}
+                {%- if block.settings.preview_link != blank -%}
+                  <a href="{{ block.settings.preview_link }}" class="tm-dp-overlay-btn secondary" target="_blank">Preview Sample</a>
+                {%- endif -%}
+              </div>
+            </div>
+          </div>
+
+          {%- comment -%} BODY {%- endcomment -%}
+          <div class="tm-dp-body">
+            <div class="tm-dp-type">{{ block.settings.product_type | default: 'Digital' }}</div>
+            <div class="tm-dp-name">{{ block.settings.title | default: 'Product Name' }}</div>
+
+            {%- if block.settings.blurb != blank -%}
+              <p class="tm-dp-blurb">{{ block.settings.blurb }}</p>
+            {%- endif -%}
+
+            {%- if features.size > 0 and block.settings.features != blank -%}
+              <ul class="tm-dp-features">
+                {%- for feat in features -%}
+                  {%- if feat != blank -%}
+                  <li class="tm-dp-feature">
+                    <div class="tm-dp-feature-dot"></div>
+                    <span>{{ feat | strip }}</span>
+                  </li>
+                  {%- endif -%}
+                {%- endfor -%}
+              </ul>
+            {%- endif -%}
+
+            {%- comment -%} FILE INDICATOR {%- endcomment -%}
+            {%- if has_file -%}
+            <div class="tm-dp-file-tag">
+              <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5">
+                <path d="M9 1H3a1 1 0 0 0-1 1v12a1 1 0 0 0 1 1h10a1 1 0 0 0 1-1V5L9 1z"/>
+                <polyline points="9 1 9 5 13 5"/>
+                <line x1="8" y1="8" x2="8" y2="12"/>
+                <polyline points="6 10 8 12 10 10"/>
+              </svg>
+              {% if file_ext != blank %}{{ file_ext }} · {% endif %}{{ block.settings.file_label | default: 'Instant Download' }}
+            </div>
+            {%- endif -%}
+
+            {%- comment -%} FOOTER {%- endcomment -%}
+            <div class="tm-dp-card-footer">
+              <div class="tm-dp-pricing">
+                {%- if is_free -%}
+                  <span class="tm-dp-price free-price">Free</span>
+                {%- elsif has_sale -%}
+                  <span class="tm-dp-price sale-price">{{ block.settings.price }}</span>
+                  <span class="tm-dp-compare">{{ block.settings.compare_price }}</span>
+                {%- else -%}
+                  <span class="tm-dp-price">{{ block.settings.price | default: '$—' }}</span>
+                {%- endif -%}
+              </div>
+              {%- if is_free -%}
+                <button class="tm-dp-cta free-cta"
+                  onclick="tmDpOpenCheckout(this)"
+                  data-title="{{ block.settings.title | escape }}"
+                  data-type="{{ block.settings.product_type | escape }}"
+                  data-price="{{ block.settings.price | escape }}"
+                  data-is-free="true"
+                  data-buy-link="{{ block.settings.buy_link }}"
+                  data-file-url="{{ block.settings.file_url }}"
+                  data-file-label="{{ block.settings.file_label | default: 'Download' | escape }}"
+                  data-file-ext="{{ file_ext }}"
+                  {%- if block.settings.cover_image != blank %}
+                  data-thumb="{{ block.settings.cover_image | img_url: '120x120', crop: 'center' }}"
+                  {%- endif -%}>
+                  Download
+                </button>
+              {%- elsif block.settings.buy_link != blank -%}
+                <a href="{{ block.settings.buy_link }}" class="tm-dp-cta">Buy Now</a>
+              {%- else -%}
+                <button class="tm-dp-cta" disabled style="opacity:.4;cursor:not-allowed;">Buy Now</button>
+              {%- endif -%}
+            </div>
+          </div>
+
+        </div>
+      {%- endfor -%}
+
+    {%- else -%}
+      <div class="tm-dp-empty">
+        No products added yet — click <strong>"Add block → Digital Product"</strong> in the Theme Editor.
+      </div>
+    {%- endif -%}
+
+  </div>
+
+  {%- comment -%} SECTION FOOTER BTNS {%- endcomment -%}
+  <div class="tm-dp-footer">
+    {%- if section.settings.cta1_text != blank -%}
+      <button
+        class="tm-dp-btn-dark"
+        onclick="tmDpOpenCustomOrder()"
+        data-inquiry-title="{{ section.settings.cta1_text | escape }}"
+        data-custom-order-link="{{ section.settings.cta1_link }}">
+        {{ section.settings.cta1_text }}
+      </button>
+    {%- endif -%}
+  </div>
+
+</section>
+</div>
+
+{%- comment -%} ─── CHECKOUT MODAL (shared, one instance) ─── {%- endcomment -%}
+<div class="tm-dp tm-checkout-backdrop" id="tm-checkout-backdrop" role="dialog" aria-modal="true" aria-label="Checkout">
+  <div class="tm-checkout-modal" id="tm-checkout-modal">
+
+    <!-- TOP BAR -->
+    <div class="tm-checkout-topbar">
+      <div class="tm-checkout-label" id="tm-checkout-mode-label">Secure Checkout</div>
+      <button class="tm-checkout-close" onclick="tmDpCloseCheckout()" aria-label="Close">✕</button>
+    </div>
+
+    <!-- PRODUCT SUMMARY -->
+    <div class="tm-checkout-summary">
+      <div id="tm-checkout-thumb-wrap"></div>
+      <div class="tm-checkout-summary-info">
+        <div class="tm-checkout-summary-type" id="tm-checkout-ptype"></div>
+        <div class="tm-checkout-summary-name" id="tm-checkout-pname"></div>
+        <div class="tm-checkout-summary-price" id="tm-checkout-pprice"></div>
+      </div>
+    </div>
+
+    <div class="tm-checkout-div"></div>
+
+    <!-- FORM BODY -->
+    <div class="tm-checkout-form" id="tm-checkout-form-wrap">
+
+      <!-- Name -->
+      <div class="tm-checkout-field">
+        <label for="tm-co-name">Full Name</label>
+        <input class="tm-checkout-input" type="text" id="tm-co-name" name="name" placeholder="Your name" autocomplete="name">
+      </div>
+
+      <!-- Email -->
+      <div class="tm-checkout-field">
+        <label for="tm-co-email">Email Address</label>
+        <input class="tm-checkout-input" type="email" id="tm-co-email" name="email" placeholder="your@email.com" autocomplete="email">
+      </div>
+
+      <!-- SMS (optional) -->
+      <div class="tm-checkout-field">
+        <label>Phone <span class="optional">(optional — for SMS updates)</span></label>
+        <div class="tm-checkout-sms-row">
+          <input class="tm-checkout-input" type="text" id="tm-co-country" name="country_code" placeholder="+1" value="+1" maxlength="5">
+          <input class="tm-checkout-input" type="tel" id="tm-co-phone" name="phone" placeholder="(555) 000-0000" autocomplete="tel">
+        </div>
+        <p class="tm-checkout-consent">By entering your number you agree to receive occasional SMS updates. Msg &amp; data rates may apply. Reply STOP to unsubscribe.</p>
+      </div>
+
+      <!-- File info row (shown for free products) -->
+      <div class="tm-checkout-file-info" id="tm-checkout-file-info" style="display:none">
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5">
+          <path d="M9 1H3a1 1 0 0 0-1 1v12a1 1 0 0 0 1 1h10a1 1 0 0 0 1-1V5L9 1z"/>
+          <polyline points="9 1 9 5 13 5"/>
+          <line x1="8" y1="8" x2="8" y2="12"/>
+          <polyline points="6 10 8 12 10 10"/>
+        </svg>
+        <div class="tm-checkout-file-info-text">
+          Your file — <strong id="tm-checkout-file-name">Download</strong> — will be available immediately after you submit.
+        </div>
+      </div>
+
+      <!-- Error -->
+      <div class="tm-checkout-error" id="tm-checkout-error"></div>
+
+      <!-- Submit -->
+      <button class="tm-checkout-submit" id="tm-checkout-submit" onclick="tmDpSubmitCheckout()">
+        <span id="tm-checkout-submit-label">Proceed to Payment →</span>
+      </button>
+
+    </div>
+
+    <!-- SUCCESS STATE -->
+    <div class="tm-checkout-success" id="tm-checkout-success">
+      <div class="tm-checkout-success-icon">✓</div>
+      <div class="tm-checkout-success-title">You're In</div>
+      <p class="tm-checkout-success-msg" id="tm-checkout-success-msg">
+        Your download is ready. Check your email for a copy of the link.
+      </p>
+      <a class="tm-checkout-download-btn" id="tm-checkout-dl-btn" href="#" target="_blank" rel="noopener">
+        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8">
+          <line x1="8" y1="2" x2="8" y2="11"/>
+          <polyline points="5 8 8 11 11 8"/>
+          <rect x="2" y="12" width="12" height="2" rx="1"/>
+        </svg>
+        Download File
+      </a>
+    </div>
+
+  </div>
+</div>
+
+{%- comment -%} Hidden contact form — same pattern as fan list. Submits via JS to fire store notification email. {%- endcomment -%}
+<div style="display:none;position:absolute;" aria-hidden="true">
+  {% form 'contact', id: 'tm-dp-notify-form' %}
+    <input type="hidden" name="contact[name]"    id="tm-dp-nf-name"    value="">
+    <input type="hidden" name="contact[email]"   id="tm-dp-nf-email"   value="">
+    <input type="hidden" name="contact[body]"    id="tm-dp-nf-body"    value="">
+    <input type="hidden" name="contact[subject]" id="tm-dp-nf-subject" value="">
+  {% endform %}
+</div>
+
+<script>
+(function(){
+
+  /* ── Scroll reveal ── */
+  var io = new IntersectionObserver(function(e){
+    e.forEach(function(x){ if(x.isIntersecting){ x.target.classList.add('on'); io.unobserve(x.target); } });
+  },{threshold:.07});
+  document.querySelectorAll('.tm-dp-rv').forEach(function(el){ io.observe(el); });
+
+  /* ── Filter ── */
+  window.tmDpFilter = function(btn, type, sid){
+    document.querySelectorAll('#tm-dp-filters-'+sid+' .tm-dp-filter').forEach(function(b){ b.classList.remove('active'); });
+    btn.classList.add('active');
+    document.querySelectorAll('#tm-dp-grid-'+sid+' .tm-dp-card').forEach(function(c){
+      if(type==='all'||c.dataset.type===type){ c.style.display=''; c.classList.add('on'); }
+      else { c.style.display='none'; }
+    });
+  };
+
+  /* ── Current product state ── */
+  var _current = {};
+
+  /* ── Open checkout modal ── */
+  window.tmDpOpenCheckout = function(el){
+    _current = {
+      title:     el.dataset.title    || 'Digital Product',
+      type:      el.dataset.type     || '',
+      price:     el.dataset.price    || '',
+      isFree:    el.dataset.isFree   === 'true',
+      buyLink:   el.dataset.buyLink  || '',
+      fileUrl:   el.dataset.fileUrl  || '',
+      fileLabel: el.dataset.fileLabel|| 'Download',
+      fileExt:   el.dataset.fileExt  || '',
+      thumb:     el.dataset.thumb    || ''
+    };
+
+    /* populate summary */
+    document.getElementById('tm-checkout-ptype').textContent  = _current.type;
+    document.getElementById('tm-checkout-pname').textContent  = _current.title;
+
+    var priceEl = document.getElementById('tm-checkout-pprice');
+    priceEl.textContent = _current.isFree ? 'Free' : (_current.price || '—');
+    priceEl.className = 'tm-checkout-summary-price' + (_current.isFree ? ' is-free' : '');
+
+    /* thumbnail */
+    var thumbWrap = document.getElementById('tm-checkout-thumb-wrap');
+    if(_current.thumb){
+      thumbWrap.innerHTML = '<img class="tm-checkout-thumb" src="'+_current.thumb+'" alt="'+_current.title+'">';
+    } else {
+      var icon = {
+        'Ebook':'📖','Template':'📋','Sample Pack':'🎛','Course':'🎓','Preset':'🎚','Bundle':'📦'
+      }[_current.type] || '💾';
+      thumbWrap.innerHTML = '<div class="tm-checkout-thumb-ph">'+icon+'</div>';
+    }
+
+    /* mode label + submit button */
+    var modeLabel  = document.getElementById('tm-checkout-mode-label');
+    var submitLabel = document.getElementById('tm-checkout-submit-label');
+    var submitBtn   = document.getElementById('tm-checkout-submit');
+
+    if(_current.isInquiry){
+      modeLabel.textContent   = 'Custom Order';
+      submitLabel.textContent = 'Send My Info →';
+      submitBtn.className     = 'tm-checkout-submit';
+    } else {
+      modeLabel.textContent   = 'Free Download';
+      submitLabel.textContent = 'Get Free Download →';
+      submitBtn.className     = 'tm-checkout-submit free-submit';
+    }
+
+    /* file info row */
+    var fileInfo = document.getElementById('tm-checkout-file-info');
+    if(_current.isFree && _current.fileUrl){
+      document.getElementById('tm-checkout-file-name').textContent =
+        (_current.fileExt ? _current.fileExt + ' · ' : '') + _current.fileLabel;
+      fileInfo.style.display = 'flex';
+    } else {
+      fileInfo.style.display = 'none';
+    }
+
+    /* reset states */
+    document.getElementById('tm-checkout-form-wrap').style.display = '';
+    document.getElementById('tm-checkout-success').classList.remove('show');
+    document.getElementById('tm-checkout-error').classList.remove('show');
+    document.getElementById('tm-checkout-error').textContent = '';
+    document.getElementById('tm-co-name').classList.remove('error');
+    document.getElementById('tm-co-email').classList.remove('error');
+    submitBtn.disabled = false;
+
+    /* open */
+    document.getElementById('tm-checkout-backdrop').classList.add('open');
+    document.body.style.overflow = 'hidden';
+    document.getElementById('tm-co-name').focus();
+  };
+
+  /* ── Close ── */
+  window.tmDpCloseCheckout = function(){
+    document.getElementById('tm-checkout-backdrop').classList.remove('open');
+    document.body.style.overflow = '';
+  };
+
+  /* close on backdrop click */
+  document.getElementById('tm-checkout-backdrop').addEventListener('click', function(e){
+    if(e.target === this) tmDpCloseCheckout();
+  });
+  /* close on Escape */
+  document.addEventListener('keydown', function(e){
+    if(e.key === 'Escape') tmDpCloseCheckout();
+  });
+
+  /* ── Open Custom Order modal ── */
+  window.tmDpOpenCustomOrder = function(){
+    _current = {
+      title:      'Custom Order Inquiry',
+      type:       'Custom Order',
+      price:      '',
+      isFree:     false,
+      isInquiry:  true,
+      buyLink:    '',
+      fileUrl:    '',
+      fileLabel:  '',
+      fileExt:    '',
+      thumb:      ''
+    };
+
+    document.getElementById('tm-checkout-ptype').textContent = 'Custom Order';
+    document.getElementById('tm-checkout-pname').textContent = 'Tell us what you need';
+    var priceEl = document.getElementById('tm-checkout-pprice');
+    priceEl.textContent = "Let's Talk";
+    priceEl.className = 'tm-checkout-summary-price';
+
+    var thumbWrap = document.getElementById('tm-checkout-thumb-wrap');
+    thumbWrap.innerHTML = '<div class="tm-checkout-thumb-ph">✍️</div>';
+
+    document.getElementById('tm-checkout-mode-label').textContent = 'Custom Order';
+    document.getElementById('tm-checkout-submit-label').textContent = 'Send My Info →';
+    document.getElementById('tm-checkout-submit').className = 'tm-checkout-submit';
+    document.getElementById('tm-checkout-file-info').style.display = 'none';
+
+    /* reset */
+    document.getElementById('tm-checkout-form-wrap').style.display = '';
+    document.getElementById('tm-checkout-success').classList.remove('show');
+    document.getElementById('tm-checkout-error').classList.remove('show');
+    document.getElementById('tm-checkout-error').textContent = '';
+    document.getElementById('tm-co-name').classList.remove('error');
+    document.getElementById('tm-co-email').classList.remove('error');
+    document.getElementById('tm-checkout-submit').disabled = false;
+
+    document.getElementById('tm-checkout-backdrop').classList.add('open');
+    document.body.style.overflow = 'hidden';
+    document.getElementById('tm-co-name').focus();
+  };
+
+  /* ── Submit ── */
+
+  /* Fill hidden contact form and submit natively — identical to fan list order modal */
+  function tmDpNotify(name, email, subject, body) {
+    document.getElementById('tm-dp-nf-name').value    = name    || 'Customer';
+    document.getElementById('tm-dp-nf-email').value   = email   || 'noemail@tmdigital.com';
+    document.getElementById('tm-dp-nf-subject').value = subject;
+    document.getElementById('tm-dp-nf-body').value    = body;
+    document.getElementById('tm-dp-notify-form').submit();
+  }
+
+  window.tmDpSubmitCheckout = function(){
+    var name     = document.getElementById('tm-co-name').value.trim();
+    var email    = document.getElementById('tm-co-email').value.trim();
+    var phone    = document.getElementById('tm-co-phone').value.trim();
+    var cc       = document.getElementById('tm-co-country').value.trim();
+    var errorEl  = document.getElementById('tm-checkout-error');
+    var submitBtn = document.getElementById('tm-checkout-submit');
+
+    /* clear errors */
+    errorEl.classList.remove('show');
+    document.getElementById('tm-co-name').classList.remove('error');
+    document.getElementById('tm-co-email').classList.remove('error');
+
+    /* validate */
+    var errors = [];
+    if(!name){ errors.push('Please enter your name.'); document.getElementById('tm-co-name').classList.add('error'); }
+    if(!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)){
+      errors.push('Please enter a valid email address.');
+      document.getElementById('tm-co-email').classList.add('error');
+    }
+    if(errors.length){
+      errorEl.textContent = errors.join(' ');
+      errorEl.classList.add('show');
+      return;
+    }
+
+    submitBtn.disabled = true;
+    document.getElementById('tm-checkout-submit-label').textContent = 'Sending…';
+
+    var fullPhone = phone ? (cc + ' ' + phone) : 'not provided';
+    var timestamp = new Date().toLocaleString();
+
+    if(_current.isInquiry){
+      /* ── CUSTOM ORDER ── show success in modal then notify */
+      document.getElementById('tm-checkout-form-wrap').style.display = 'none';
+      document.getElementById('tm-checkout-success-msg').textContent =
+        'Got it, ' + name.split(' ')[0] + '. We\'ll hit you back at ' + email + ' to talk details. Stay ready.';
+      document.getElementById('tm-checkout-dl-btn').style.display = 'none';
+      document.getElementById('tm-checkout-success').classList.add('show');
+
+      tmDpNotify(
+        name, email,
+        'Custom Order Inquiry: ' + name + ' | T Mafianie Digital',
+        '=== CUSTOM ORDER INQUIRY ===\n' +
+        'Name:  ' + name + '\n' +
+        'Email: ' + email + '\n' +
+        'Phone: ' + fullPhone + '\n' +
+        'Time:  ' + timestamp
+      );
+
+    } else if(_current.isFree){
+      /* ── FREE DOWNLOAD ── show download then notify */
+      document.getElementById('tm-checkout-form-wrap').style.display = 'none';
+      var dlBtn = document.getElementById('tm-checkout-dl-btn');
+      if(_current.fileUrl){
+        document.getElementById('tm-checkout-success-msg').textContent = 'Your download is ready. Click below.';
+        dlBtn.href = _current.fileUrl;
+        dlBtn.innerHTML = '<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8"><line x1="8" y1="2" x2="8" y2="11"/><polyline points="5 8 8 11 11 8"/><rect x="2" y="12" width="12" height="2" rx="1"/></svg> Download ' + (_current.fileLabel || 'File');
+        dlBtn.style.display = '';
+      } else {
+        document.getElementById('tm-checkout-success-msg').textContent = 'All set! Check your email at ' + email + '.';
+        dlBtn.style.display = 'none';
+      }
+      document.getElementById('tm-checkout-success').classList.add('show');
+
+      tmDpNotify(
+        name, email,
+        'Free Download: ' + _current.title + ' | ' + name,
+        '=== FREE DOWNLOAD CLAIM ===\n' +
+        'Product: ' + _current.title + '\n' +
+        'Type:    ' + (_current.type || 'Digital') + '\n' +
+        'Name:    ' + name + '\n' +
+        'Email:   ' + email + '\n' +
+        'Phone:   ' + fullPhone + '\n' +
+        'Time:    ' + timestamp
+      );
+    }
+  };
+
+})();
+</script>
+
+{% schema %}
+{
+  "name": "TM Digital Products",
+  "settings": [
+    { "type": "header", "content": "Layout" },
+    { "type": "checkbox", "id": "dark_bg", "label": "Dark background", "default": false },
+    { "type": "range", "id": "columns", "min": 2, "max": 4, "step": 1, "label": "Columns (desktop)", "default": 3 },
+    { "type": "checkbox", "id": "show_filters", "label": "Show category filter tabs", "default": true },
+    { "type": "text", "id": "section_id", "label": "Section anchor ID", "default": "digital-products" },
+
+    { "type": "header", "content": "Header" },
+    { "type": "text", "id": "eyebrow", "label": "Eyebrow", "default": "Digital Products" },
+    { "type": "text", "id": "title", "label": "Title", "default": "Creator" },
+    { "type": "text", "id": "title_ghost", "label": "Ghost Title", "default": "Tools" },
+    { "type": "textarea", "id": "description", "label": "Description", "default": "Templates, ebooks, and tools built for artists, producers, and creators in the game." },
+    { "type": "text", "id": "va_text", "label": "View All Text", "default": "View All Products" },
+    { "type": "url", "id": "va_link", "label": "View All Link" },
+
+    { "type": "header", "content": "Footer Buttons" },
+    { "type": "text", "id": "cta1_text", "label": "Custom Orders Button Text", "default": "Custom Orders", "info": "Opens the lead capture modal for custom order inquiries" },
+    { "type": "url",  "id": "cta1_link", "label": "Custom Orders Fallback Link", "info": "Only used if JavaScript is disabled" }
+  ],
+  "blocks": [
+    {
+      "type": "product",
+      "name": "Digital Product",
+      "settings": [
+        { "type": "header", "content": "Product Info" },
+        { "type": "text", "id": "title", "label": "Product Name", "default": "Recording Session Template" },
+        {
+          "type": "select", "id": "product_type", "label": "Product Type",
+          "options": [
+            { "value": "Ebook",       "label": "📖 Ebook" },
+            { "value": "Template",    "label": "📋 Recording Template" },
+            { "value": "Sample Pack", "label": "🎛 Sample Pack" },
+            { "value": "Course",      "label": "🎓 Course / Workshop" },
+            { "value": "Preset",      "label": "🎚 Preset Pack" },
+            { "value": "Bundle",      "label": "📦 Bundle" },
+            { "value": "Other",       "label": "💾 Other" }
+          ],
+          "default": "Template"
+        },
+        { "type": "textarea", "id": "blurb", "label": "Short Description", "default": "A professional session template built for independent artists. Plug in, record, and go." },
+        { "type": "textarea", "id": "features", "label": "Feature Bullets (separate with |)", "info": "Example: Pro Tools session file|Track labels and color-coded|Mix-ready routing|Vocal chain included", "default": "Pro Tools session file|Track labels and color-coded|Mix-ready routing|Vocal chain included" },
+
+        { "type": "header", "content": "Pricing" },
+        { "type": "text", "id": "price", "label": "Price", "default": "$49", "info": "Use 'Free' or leave blank for free products" },
+        { "type": "text", "id": "compare_price", "label": "Compare-at Price (optional)" },
+        { "type": "text", "id": "badge", "label": "Badge (optional)", "info": "e.g. New, Sale, Free, Hot, Limited. Leave blank to auto-badge." },
+
+        { "type": "header", "content": "Cover Image" },
+        { "type": "image_picker", "id": "cover_image", "label": "Cover Image", "info": "Recommended: 600×450px." },
+
+        { "type": "header", "content": "File & Links" },
+        {
+          "type": "text",
+          "id": "file_url",
+          "label": "Downloadable File URL",
+          "info": "Upload your file via Shopify Admin → Content → Files, then paste the URL here. Also accepts Google Drive, Dropbox, or any direct download link. Free products: file is delivered immediately. Paid products: file is delivered via your payment platform."
+        },
+        {
+          "type": "text",
+          "id": "file_label",
+          "label": "File Label",
+          "default": "Instant Download",
+          "info": "Shown on the card and in the checkout modal, e.g. 'WAV Pack', 'PDF Guide', 'ZIP Bundle'"
+        },
+        {
+          "type": "url",
+          "id": "buy_link",
+          "label": "Payment / Buy Link",
+          "info": "Gumroad, Stripe Payment Link, PayPal, or your Shopify product URL. Lead info (name + email) is appended as URL params so your platform can auto-fill them."
+        },
+        { "type": "url", "id": "preview_link", "label": "Preview / Sample Link (optional)", "info": "PDF preview, sample audio, or demo video." }
+      ]
+    }
+  ],
+  "presets": [
+    {
+      "name": "TM Digital Products",
+      "settings": {
+        "dark_bg": false,
+        "columns": 3,
+        "show_filters": true,
+        "eyebrow": "Digital Products",
+        "title": "Creator",
+        "title_ghost": "Tools",
+        "description": "Templates, ebooks, and tools built for artists, producers, and creators in the game.",
+        "cta1_text": "Custom Orders"
+      },
+      "blocks": [
+        {
+          "type": "product",
+          "settings": {
+            "title": "Recording Session Template",
+            "product_type": "Template",
+            "blurb": "A professional DAW session template built for independent artists. Plug in, record, and go.",
+            "features": "Pro Tools / Logic compatible|Color-coded track layout|Vocal chain pre-routed|Mix-ready bus structure",
+            "price": "$49",
+            "badge": "New",
+            "file_label": "ZIP Archive",
+            "buy_link": ""
+          }
+        },
+        {
+          "type": "product",
+          "settings": {
+            "title": "Independent Artist Playbook",
+            "product_type": "Ebook",
+            "blurb": "The strategies T Mafianie used to build CME independently — from brand to distribution.",
+            "features": "Branding & identity chapter|Distribution & streaming strategy|Social media playbook|Beat & music licensing basics",
+            "price": "$29",
+            "file_label": "PDF Guide",
+            "buy_link": ""
+          }
+        },
+        {
+          "type": "product",
+          "settings": {
+            "title": "CME Trap Kit Vol. 1",
+            "product_type": "Sample Pack",
+            "blurb": "808s, hi-hats, snares, and melodic loops pulled straight from the CME production vault.",
+            "features": "100+ one-shots & loops|Royalty-free license|24-bit WAV files|BPM & key labeled",
+            "price": "$19",
+            "compare_price": "$39",
+            "badge": "Sale",
+            "file_label": "WAV Pack",
+            "buy_link": ""
+          }
+        }
+      ]
+    }
+  ]
+}
+{% endschema %}

@@ -1,0 +1,191 @@
+{% comment %}
+  SECTION: tm-shorts.liquid
+  YouTube Shorts grid — vertical 9:16 format.
+  Add each short as a block — paste the YouTube video ID.
+{% endcomment %}
+
+<style>
+.tm-shorts { padding: 112px 64px; background: #f7f5f2; }
+.tm-shorts-header { margin-bottom: 56px; display: flex; align-items: flex-end; justify-content: space-between; }
+.tm-shorts-eye { display: flex; align-items: center; gap: 12px; font-family: 'DM Sans', sans-serif; font-size: 9px; font-weight: 500; letter-spacing: 4px; text-transform: uppercase; color: #ff2a2a; margin-bottom: 14px; }
+.tm-shorts-eye::before { content: ''; display: block; width: 24px; height: 1px; background: #ff2a2a; }
+.tm-shorts-title { font-family: 'Bebas Neue', sans-serif; font-size: clamp(52px, 6.5vw, 88px); letter-spacing: 1px; line-height: 0.95; color: #0d0d0d; }
+.tm-shorts-title .gh { color: transparent; -webkit-text-stroke: 1.5px rgba(13,13,13,0.18); }
+.tm-shorts-va { font-family: 'DM Sans', sans-serif; font-size: 10px; font-weight: 500; letter-spacing: 2.5px; text-transform: uppercase; color: #0d0d0d; text-decoration: none; border-bottom: 1px solid rgba(13,13,13,0.2); padding-bottom: 2px; margin-bottom: 6px; display: inline-block; transition: color 0.2s, border-color 0.2s; }
+.tm-shorts-va:hover { color: #ff2a2a; border-color: #ff2a2a; }
+
+/* Shorts grid — vertical cards */
+.tm-shorts-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 12px; margin-bottom: 48px; }
+
+.tm-short-card { position: relative; background: #0d0d0d; overflow: hidden; cursor: pointer; border-radius: 2px; transition: transform 0.4s cubic-bezier(0.22,1,0.36,1), box-shadow 0.4s; }
+.tm-short-card:hover { transform: translateY(-8px); box-shadow: 0 24px 64px rgba(0,0,0,0.18); }
+
+.tm-short-thumb { position: relative; aspect-ratio: 9/16; overflow: hidden; }
+.tm-short-thumb img { width: 100%; height: 100%; object-fit: cover; display: block; transition: transform 0.6s cubic-bezier(0.22,1,0.36,1), opacity 0.3s; }
+.tm-short-card:hover .tm-short-thumb img { transform: scale(1.06); opacity: 0.75; }
+
+/* Play overlay */
+.tm-short-overlay { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; background: rgba(0,0,0,0.25); opacity: 0; transition: opacity 0.3s; }
+.tm-short-card:hover .tm-short-overlay { opacity: 1; }
+.tm-short-playbtn { width: 52px; height: 52px; background: #ff2a2a; border-radius: 50%; display: flex; align-items: center; justify-content: center; transition: transform 0.2s; }
+.tm-short-card:hover .tm-short-playbtn { transform: scale(1.1); }
+.tm-short-playbtn svg { margin-left: 3px; }
+
+/* Shorts badge */
+.tm-short-badge { position: absolute; top: 10px; left: 10px; background: #ff2a2a; color: white; font-family: 'DM Sans', sans-serif; font-size: 8px; font-weight: 700; letter-spacing: 2px; text-transform: uppercase; padding: 3px 8px; }
+
+/* Duration */
+.tm-short-dur { position: absolute; bottom: 10px; right: 10px; background: rgba(0,0,0,0.75); color: white; font-family: 'DM Sans', sans-serif; font-size: 10px; font-weight: 500; padding: 2px 6px; }
+
+/* Info */
+.tm-short-info { padding: 12px 14px 16px; background: #0d0d0d; }
+.tm-short-name { font-family: 'DM Sans', sans-serif; font-size: 12px; font-weight: 500; color: rgba(240,237,232,0.85); line-height: 1.4; margin-bottom: 3px; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.tm-short-meta { font-family: 'DM Sans', sans-serif; font-size: 10px; color: rgba(240,237,232,0.35); }
+
+/* Lightbox */
+.tm-short-lightbox { position: fixed; inset: 0; background: rgba(0,0,0,0.92); z-index: 9999; display: flex; align-items: center; justify-content: center; opacity: 0; pointer-events: none; transition: opacity 0.3s; }
+.tm-short-lightbox.open { opacity: 1; pointer-events: all; }
+.tm-short-lightbox-inner { position: relative; height: 85vh; aspect-ratio: 9/16; max-width: 420px; }
+.tm-short-lightbox iframe { width: 100%; height: 100%; border: none; border-radius: 2px; }
+.tm-short-lightbox-close { position: absolute; top: -44px; right: 0; background: none; border: none; color: rgba(240,237,232,0.6); font-size: 28px; cursor: pointer; transition: color 0.2s; font-family: sans-serif; line-height: 1; padding: 8px; }
+.tm-short-lightbox-close:hover { color: white; }
+
+/* Footer */
+.tm-shorts-footer { display: flex; gap: 14px; }
+.tm-btn-solid { font-family: 'DM Sans', sans-serif; font-size: 10px; font-weight: 500; letter-spacing: 2.5px; text-transform: uppercase; color: white; background: #0d0d0d; padding: 15px 34px; border: 1px solid #0d0d0d; text-decoration: none; display: inline-block; transition: background 0.25s, transform 0.25s; }
+.tm-btn-solid:hover { background: #ff2a2a; border-color: #ff2a2a; transform: translateY(-2px); }
+.tm-btn-outline { font-family: 'DM Sans', sans-serif; font-size: 10px; font-weight: 500; letter-spacing: 2.5px; text-transform: uppercase; color: #0d0d0d; border: 1px solid rgba(13,13,13,0.2); padding: 15px 34px; text-decoration: none; display: inline-flex; align-items: center; gap: 8px; transition: border-color 0.25s, transform 0.25s; }
+.tm-btn-outline:hover { border-color: #0d0d0d; transform: translateY(-2px); }
+
+.tm-shorts-empty { padding: 60px 24px; text-align: center; border: 1px dashed rgba(13,13,13,0.15); font-family: 'DM Sans', sans-serif; font-size: 13px; color: rgba(13,13,13,0.4); }
+</style>
+
+<section class="tm-shorts" id="shorts">
+  <div class="tm-shorts-header">
+    <div>
+      <div class="tm-shorts-eye">{{ section.settings.eyebrow }}</div>
+      <h2 class="tm-shorts-title">{{ section.settings.title }} <span class="gh">{{ section.settings.title_ghost }}</span></h2>
+    </div>
+    {% if section.settings.channel_url != blank %}
+      <a href="{{ section.settings.channel_url }}" target="_blank" rel="noopener" class="tm-shorts-va">View All Shorts →</a>
+    {% endif %}
+  </div>
+
+  {% if section.blocks.size > 0 %}
+    <div class="tm-shorts-grid">
+      {% for block in section.blocks %}
+        {% assign vid_id = block.settings.video_id %}
+        {% if vid_id != blank %}
+          <div class="tm-short-card" data-vid="{{ vid_id }}" {{ block.shopify_attributes }}>
+            <div class="tm-short-thumb">
+              <img src="https://img.youtube.com/vi/{{ vid_id }}/maxresdefault.jpg"
+                   onerror="this.src='https://img.youtube.com/vi/{{ vid_id }}/hqdefault.jpg'"
+                   alt="{{ block.settings.video_title }}" loading="lazy">
+              <div class="tm-short-overlay">
+                <div class="tm-short-playbtn">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="white"><path d="M8 5v14l11-7z"/></svg>
+                </div>
+              </div>
+              <div class="tm-short-badge">Short</div>
+              {% if block.settings.duration != blank %}
+                <div class="tm-short-dur">{{ block.settings.duration }}</div>
+              {% endif %}
+            </div>
+            <div class="tm-short-info">
+              <div class="tm-short-name">{{ block.settings.video_title | default: 'YouTube Short' }}</div>
+              {% if block.settings.meta != blank %}
+                <div class="tm-short-meta">{{ block.settings.meta }}</div>
+              {% endif %}
+            </div>
+          </div>
+        {% endif %}
+      {% endfor %}
+    </div>
+  {% else %}
+    <div class="tm-shorts-empty">No shorts added yet — click "Add block → Short" in the Theme Editor.</div>
+  {% endif %}
+
+  <div class="tm-shorts-footer">
+    {% if section.settings.cta1_text != blank %}
+      <a href="{{ section.settings.cta1_link }}" target="_blank" rel="noopener" class="tm-btn-solid">{{ section.settings.cta1_text }}</a>
+    {% endif %}
+    {% if section.settings.cta2_text != blank %}
+      <a href="{{ section.settings.cta2_link }}" target="_blank" rel="noopener" class="tm-btn-outline">{{ section.settings.cta2_text }} →</a>
+    {% endif %}
+  </div>
+</section>
+
+<!-- Lightbox -->
+<div class="tm-short-lightbox" id="tmShortLightbox">
+  <div class="tm-short-lightbox-inner">
+    <button class="tm-short-lightbox-close" id="tmShortClose">✕</button>
+    <iframe id="tmShortFrame" src="" allow="autoplay; encrypted-media" allowfullscreen></iframe>
+  </div>
+</div>
+
+<script>
+(function(){
+  const lb    = document.getElementById('tmShortLightbox');
+  const frame = document.getElementById('tmShortFrame');
+  const close = document.getElementById('tmShortClose');
+
+  document.querySelectorAll('.tm-short-card').forEach(card => {
+    card.addEventListener('click', () => {
+      const id = card.dataset.vid;
+      if (!id) return;
+      frame.src = 'https://www.youtube.com/embed/' + id + '?autoplay=1&rel=0';
+      lb.classList.add('open');
+      document.body.style.overflow = 'hidden';
+    });
+  });
+
+  function closeLb() {
+    lb.classList.remove('open');
+    frame.src = '';
+    document.body.style.overflow = '';
+  }
+
+  close.addEventListener('click', closeLb);
+  lb.addEventListener('click', e => { if (e.target === lb) closeLb(); });
+  document.addEventListener('keydown', e => { if (e.key === 'Escape') closeLb(); });
+})();
+</script>
+
+{% schema %}
+{
+  "name": "TM YouTube Shorts",
+  "settings": [
+    { "type": "paragraph", "content": "Paste the YouTube Video ID for each short. e.g. youtube.com/shorts/ABC123 → ID is ABC123" },
+    { "type": "text",   "id": "eyebrow",     "label": "Eyebrow",        "default": "T Mafianie TV"      },
+    { "type": "text",   "id": "title",       "label": "Title",          "default": "Shorts"             },
+    { "type": "text",   "id": "title_ghost", "label": "Ghost Word",     "default": "& Clips"            },
+    { "type": "url",    "id": "channel_url", "label": "YouTube Shorts URL"                              },
+    { "type": "text",   "id": "cta1_text",   "label": "Button 1 Text",  "default": "Watch All Shorts"  },
+    { "type": "url",    "id": "cta1_link",   "label": "Button 1 Link"                                   },
+    { "type": "text",   "id": "cta2_text",   "label": "Button 2 Text",  "default": "Subscribe"         },
+    { "type": "url",    "id": "cta2_link",   "label": "Button 2 Link"                                   }
+  ],
+  "blocks": [
+    {
+      "type": "short",
+      "name": "Short",
+      "settings": [
+        { "type": "text", "id": "video_id",    "label": "YouTube Video ID",  "info": "The ID from youtube.com/shorts/THIS_PART" },
+        { "type": "text", "id": "video_title", "label": "Title",             "default": "YouTube Short"  },
+        { "type": "text", "id": "meta",        "label": "Meta",              "default": "2024",           "info": "e.g. year or views" },
+        { "type": "text", "id": "duration",    "label": "Duration",          "default": "0:58",           "info": "e.g. '0:45'" }
+      ]
+    }
+  ],
+  "presets": [{
+    "name": "TM YouTube Shorts",
+    "blocks": [
+      { "type": "short", "settings": { "video_title": "Short Clip 1", "meta": "2024", "duration": "0:45" } },
+      { "type": "short", "settings": { "video_title": "Short Clip 2", "meta": "2024", "duration": "0:58" } },
+      { "type": "short", "settings": { "video_title": "Short Clip 3", "meta": "2024", "duration": "0:32" } },
+      { "type": "short", "settings": { "video_title": "Short Clip 4", "meta": "2024", "duration": "0:51" } },
+      { "type": "short", "settings": { "video_title": "Short Clip 5", "meta": "2024", "duration": "0:44" } }
+    ]
+  }]
+}
+{% endschema %}

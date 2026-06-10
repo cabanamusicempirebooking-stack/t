@@ -1,0 +1,148 @@
+{% comment %}
+  SECTION: tm-pixels.liquid
+  ─────────────────────────────────────────────────────────────────
+  Marketing pixel manager for TMafianie.com
+  Supports: Meta (Facebook) Pixel, TikTok Pixel, Google Analytics 4,
+            Google Ads, Snapchat, Twitter/X, Pinterest
+  All pixels fire on every page via the theme layout.
+  Add this section to your theme.liquid OR use as a standalone
+  section placed in the header group.
+
+  To install:
+  1. Add tm-pixels.liquid to sections/
+  2. In theme.liquid, add:  {%- render 'tm-pixels' -%}  inside <head>
+     OR add this section to your Header Group in the Theme Editor.
+  ─────────────────────────────────────────────────────────────────
+{% endcomment %}
+
+{%- comment -%} ── META / FACEBOOK PIXEL ── {%- endcomment -%}
+{% if section.settings.meta_pixel_id != blank %}
+<!-- Meta Pixel: {{ section.settings.meta_pixel_id }} -->
+<script>
+!function(f,b,e,v,n,t,s){if(f.fbq)return;n=f.fbq=function(){n.callMethod?n.callMethod.apply(n,arguments):n.queue.push(arguments)};if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';n.queue=[];t=b.createElement(e);t.async=!0;t.src=v;s=b.getElementsByTagName(e)[0];s.parentNode.insertBefore(t,s)}(window,document,'script','https://connect.facebook.net/en_US/fbevents.js');
+fbq('init','{{ section.settings.meta_pixel_id }}');
+fbq('track','PageView');
+{% if section.settings.meta_track_purchase %}
+{% if request.page_type == 'order' %}fbq('track','Purchase',{value:{{ checkout.total_price | money_without_currency }},currency:'{{ shop.currency }}'});{% endif %}
+{% endif %}
+{% if section.settings.meta_track_addtocart %}
+document.addEventListener('click',function(e){if(e.target&&e.target.matches('[name="add"],[data-add-to-cart]')){fbq('track','AddToCart');}});
+{% endif %}
+{% if section.settings.meta_track_viewcontent %}
+{% if request.page_type == 'product' %}fbq('track','ViewContent',{content_name:'{{ product.title | escape }}',content_ids:['{{ product.id }}'],content_type:'product',value:{{ product.price | money_without_currency }},currency:'{{ shop.currency }}'});{% endif %}
+{% endif %}
+</script>
+<noscript><img height="1" width="1" style="display:none" src="https://www.facebook.com/tr?id={{ section.settings.meta_pixel_id }}&ev=PageView&noscript=1" /></noscript>
+{% endif %}
+
+{%- comment -%} ── TIKTOK PIXEL ── {%- endcomment -%}
+{% if section.settings.tiktok_pixel_id != blank %}
+<!-- TikTok Pixel: {{ section.settings.tiktok_pixel_id }} -->
+<script>
+!function(w,d,t){w.TiktokAnalyticsObject=t;var ttq=w[t]=w[t]||[];ttq.methods=["page","track","identify","instances","debug","on","off","once","ready","alias","group","enableCookie","disableCookie"];ttq.setAndDefer=function(t,e){t[e]=function(){t.push([e].concat(Array.prototype.slice.call(arguments,0)))}};for(var i=0;i<ttq.methods.length;i++)ttq.setAndDefer(ttq,ttq.methods[i]);ttq.instance=function(t){for(var e=ttq._i[t]||[],n=0;n<ttq.methods.length;n++)ttq.setAndDefer(e,ttq.methods[n]);return e};ttq.load=function(e,n){var i="https://analytics.tiktok.com/i18n/pixel/events.js";ttq._i=ttq._i||{};ttq._i[e]=[];ttq._i[e]._u=i;ttq._t=ttq._t||{};ttq._t[e]=+new Date;ttq._o=ttq._o||{};ttq._o[e]=n||{};var o=document.createElement("script");o.type="text/javascript";o.async=!0;o.src=i+"?sdkid="+e+"&lib="+t;var a=document.getElementsByTagName("script")[0];a.parentNode.insertBefore(o,a)};ttq.load('{{ section.settings.tiktok_pixel_id }}');ttq.page();}(window,document,'ttq');
+{% if section.settings.tiktok_track_purchase %}
+{% if request.page_type == 'order' %}ttq.track('CompletePayment',{value:{{ checkout.total_price | money_without_currency }},currency:'{{ shop.currency }}'});{% endif %}
+{% endif %}
+</script>
+{% endif %}
+
+{%- comment -%} ── GOOGLE ANALYTICS 4 ── {%- endcomment -%}
+{% if section.settings.ga4_id != blank %}
+<!-- Google Analytics 4: {{ section.settings.ga4_id }} -->
+<script async src="https://www.googletagmanager.com/gtag/js?id={{ section.settings.ga4_id }}"></script>
+<script>
+window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());
+gtag('config','{{ section.settings.ga4_id }}',{send_page_view:true});
+{% if section.settings.ga4_track_purchase %}
+{% if request.page_type == 'order' %}gtag('event','purchase',{transaction_id:'{{ order.name }}',value:{{ checkout.total_price | money_without_currency }},currency:'{{ shop.currency }}'});{% endif %}
+{% endif %}
+</script>
+{% endif %}
+
+{%- comment -%} ── GOOGLE ADS CONVERSION ── {%- endcomment -%}
+{% if section.settings.google_ads_id != blank and section.settings.google_ads_label != blank %}
+<!-- Google Ads: {{ section.settings.google_ads_id }} -->
+<script async src="https://www.googletagmanager.com/gtag/js?id={{ section.settings.google_ads_id }}"></script>
+<script>
+window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());
+gtag('config','{{ section.settings.google_ads_id }}');
+{% if request.page_type == 'order' %}
+gtag('event','conversion',{'send_to':'{{ section.settings.google_ads_id }}/{{ section.settings.google_ads_label }}','value':{{ checkout.total_price | money_without_currency }},'currency':'{{ shop.currency }}','transaction_id':'{{ order.name }}'});
+{% endif %}
+</script>
+{% endif %}
+
+{%- comment -%} ── SNAPCHAT PIXEL ── {%- endcomment -%}
+{% if section.settings.snapchat_pixel_id != blank %}
+<!-- Snapchat Pixel: {{ section.settings.snapchat_pixel_id }} -->
+<script>
+(function(e,t,n){if(e.snaptr)return;var a=e.snaptr=function(){a.handleRequest?a.handleRequest.apply(a,arguments):a.queue.push(arguments)};a.queue=[];var s='script';r=t.createElement(s);r.async=!0;r.src=n;var u=t.getElementsByTagName(s)[0];u.parentNode.insertBefore(r,u);})(window,document,'https://sc-static.net/scevent.min.js');
+snaptr('init','{{ section.settings.snapchat_pixel_id }}',{'user_email':'{{ customer.email | default: "" }}'});
+snaptr('track','PAGE_VIEW');
+</script>
+{% endif %}
+
+{%- comment -%} ── TWITTER / X PIXEL ── {%- endcomment -%}
+{% if section.settings.twitter_pixel_id != blank %}
+<!-- Twitter/X Pixel: {{ section.settings.twitter_pixel_id }} -->
+<script>
+!function(e,t,n,s,u,a){e.twq||(s=e.twq=function(){s.exe?s.exe.apply(s,arguments):s.queue.push(arguments)},s.version='1.1',s.queue=[],u=t.createElement(n),u.async=!0,u.src='https://static.ads-twitter.com/uwt.js',a=t.getElementsByTagName(n)[0],a.parentNode.insertBefore(u,a))}(window,document,'script');
+twq('config','{{ section.settings.twitter_pixel_id }}');
+</script>
+{% endif %}
+
+{%- comment -%} ── PINTEREST TAG ── {%- endcomment -%}
+{% if section.settings.pinterest_tag_id != blank %}
+<!-- Pinterest Tag: {{ section.settings.pinterest_tag_id }} -->
+<script>
+!function(e){if(!window.pintrk){window.pintrk=function(){window.pintrk.queue.push(Array.prototype.slice.call(arguments))};var n=window.pintrk;n.queue=[],n.version="3.0";var t=document.createElement("script");t.async=!0,t.src=e;var r=document.getElementsByTagName("script")[0];r.parentNode.insertBefore(t,r)}}("https://s.pinimg.com/ct/core.js");
+pintrk('load','{{ section.settings.pinterest_tag_id }}',{em:'{{ customer.email | default: "" }}'});
+pintrk('page');
+{% if request.page_type == 'order' %}pintrk('track','checkout',{value:{{ checkout.total_price | money_without_currency }},currency:'{{ shop.currency }}',order_quantity:{{ checkout.line_items | map: 'quantity' | sum }}});{% endif %}
+</script>
+<noscript><img height="1" width="1" style="display:none;" alt="" src="https://ct.pinterest.com/v3/?tid={{ section.settings.pinterest_tag_id }}&noscript=1" /></noscript>
+{% endif %}
+
+{%- comment -%} ── CUSTOM HEAD CODE ── {%- endcomment -%}
+{% if section.settings.custom_head_code != blank %}
+<!-- Custom Head Code -->
+{{ section.settings.custom_head_code }}
+{% endif %}
+
+{% schema %}
+{
+  "name": "TM Marketing Pixels",
+  "settings": [
+    { "type": "header", "content": "Meta / Facebook Pixel" },
+    { "type": "text", "id": "meta_pixel_id", "label": "Meta Pixel ID", "info": "Numbers only. Found in Meta Events Manager." },
+    { "type": "checkbox", "id": "meta_track_purchase", "label": "Track Purchase events", "default": true },
+    { "type": "checkbox", "id": "meta_track_addtocart", "label": "Track Add to Cart events", "default": true },
+    { "type": "checkbox", "id": "meta_track_viewcontent", "label": "Track View Content (product pages)", "default": true },
+
+    { "type": "header", "content": "TikTok Pixel" },
+    { "type": "text", "id": "tiktok_pixel_id", "label": "TikTok Pixel ID", "info": "Found in TikTok Ads Manager → Assets → Events." },
+    { "type": "checkbox", "id": "tiktok_track_purchase", "label": "Track Purchase events", "default": true },
+
+    { "type": "header", "content": "Google Analytics 4" },
+    { "type": "text", "id": "ga4_id", "label": "GA4 Measurement ID", "info": "Format: G-XXXXXXXXXX. Found in GA4 Admin → Data Streams." },
+    { "type": "checkbox", "id": "ga4_track_purchase", "label": "Track Purchase events", "default": true },
+
+    { "type": "header", "content": "Google Ads" },
+    { "type": "text", "id": "google_ads_id", "label": "Google Ads Conversion ID", "info": "Format: AW-XXXXXXXXX" },
+    { "type": "text", "id": "google_ads_label", "label": "Google Ads Conversion Label", "info": "Found in Google Ads → Goals → Conversion Actions → Tag details." },
+
+    { "type": "header", "content": "Snapchat Pixel" },
+    { "type": "text", "id": "snapchat_pixel_id", "label": "Snapchat Pixel ID", "info": "Found in Snapchat Ads Manager → Events Manager." },
+
+    { "type": "header", "content": "Twitter / X Pixel" },
+    { "type": "text", "id": "twitter_pixel_id", "label": "Twitter/X Pixel ID", "info": "Found in X Ads → Tools → Event Manager." },
+
+    { "type": "header", "content": "Pinterest Tag" },
+    { "type": "text", "id": "pinterest_tag_id", "label": "Pinterest Tag ID", "info": "Found in Pinterest Ads → Conversions." },
+
+    { "type": "header", "content": "Custom Code" },
+    { "type": "textarea", "id": "custom_head_code", "label": "Custom Head Code", "info": "Any additional tracking scripts or tags. Paste full <script> tags." }
+  ],
+  "presets": [{ "name": "TM Marketing Pixels" }]
+}
+{% endschema %}

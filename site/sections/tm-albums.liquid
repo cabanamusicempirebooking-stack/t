@@ -1,0 +1,203 @@
+{% comment %}
+  SECTION: tm-albums.liquid
+  Fully dynamic — loops your Shopify "Digital Albums" collection.
+  First product renders as the large featured tile; rest as smaller tiles.
+  White theme.
+  TIP: Tag products with "featured" to pin one to the large tile slot.
+{% endcomment %}
+
+<style>
+.tm-albums { padding: 112px 64px; background: #f7f5f2; }
+.tm-albums-header { margin-bottom: 56px; display: flex; align-items: flex-end; justify-content: space-between; }
+
+.tm-eyebrow { display: flex; align-items: center; gap: 12px; font-size: 9px; font-weight: 500; letter-spacing: 4px; text-transform: uppercase; color: #ff2a2a; margin-bottom: 14px; font-family: 'DM Sans', sans-serif; }
+.tm-eyebrow::before { content: ''; display: block; width: 24px; height: 1px; background: #ff2a2a; }
+.tm-section-title { font-family: 'Bebas Neue', sans-serif; font-size: clamp(52px, 6.5vw, 88px); letter-spacing: 1px; line-height: 0.95; color: #0d0d0d; }
+.tm-section-title .ghost { color: transparent; -webkit-text-stroke: 1.5px rgba(13,13,13,0.18); }
+
+.tm-view-all { font-family: 'DM Sans', sans-serif; font-size: 10px; font-weight: 500; letter-spacing: 2.5px; text-transform: uppercase; color: #0d0d0d; text-decoration: none; border-bottom: 1px solid rgba(13,13,13,0.2); padding-bottom: 2px; margin-bottom: 6px; display: inline-block; transition: color 0.2s, border-color 0.2s; }
+.tm-view-all:hover { color: #ff2a2a; border-color: #ff2a2a; }
+
+/* Grid: first album large, rest equal */
+.tm-albums-grid {
+  display: grid;
+  grid-template-columns: 1.5fr repeat({{ section.settings.extra_columns }}, 1fr);
+  gap: 3px;
+  margin-bottom: 40px;
+}
+
+.tm-album-tile { position: relative; overflow: hidden; cursor: pointer; background: #1a1a1a; }
+.tm-album-tile--featured { aspect-ratio: 4/5; }
+.tm-album-tile--regular  { aspect-ratio: 3/4; }
+
+.tm-album-img-wrap { position: absolute; inset: 0; transition: transform 0.7s cubic-bezier(0.22,1,0.36,1); }
+.tm-album-tile:hover .tm-album-img-wrap { transform: scale(1.04); }
+.tm-album-img-wrap img { width: 100%; height: 100%; object-fit: cover; }
+.tm-album-img-wrap .tm-album-fallback {
+  position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
+  font-family: 'Bebas Neue', sans-serif; font-size: 120px; letter-spacing: -6px;
+  color: rgba(255,255,255,0.05);
+}
+
+.tm-album-gradient {
+  position: absolute; inset: 0;
+  background: linear-gradient(to top, rgba(0,0,0,0.92) 0%, rgba(0,0,0,0.3) 50%, rgba(0,0,0,0.05) 100%);
+  transition: background 0.4s;
+}
+.tm-album-tile:hover .tm-album-gradient {
+  background: linear-gradient(to top, rgba(180,10,25,0.75) 0%, rgba(0,0,0,0.35) 55%, rgba(0,0,0,0.05) 100%);
+}
+
+.tm-album-price-badge {
+  position: absolute; top: 18px; right: 18px;
+  font-family: 'Bebas Neue', sans-serif; font-size: 22px; letter-spacing: 1px;
+  color: #c9a84c; background: rgba(0,0,0,0.55); padding: 5px 12px;
+  backdrop-filter: blur(8px); z-index: 2;
+}
+
+.tm-album-play {
+  position: absolute; top: 50%; left: 50%;
+  transform: translate(-50%,-50%) scale(0.75);
+  width: 68px; height: 68px;
+  border: 1px solid rgba(255,255,255,0.5);
+  border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  opacity: 0;
+  transition: opacity 0.3s, transform 0.35s cubic-bezier(0.22,1,0.36,1);
+  backdrop-filter: blur(8px); background: rgba(0,0,0,0.25);
+  z-index: 3; pointer-events: none;
+}
+.tm-album-tile:hover .tm-album-play { opacity: 1; transform: translate(-50%,-50%) scale(1); }
+.tm-play-tri { width:0; height:0; border-style:solid; border-width:10px 0 10px 18px; border-color:transparent transparent transparent white; margin-left:4px; }
+
+.tm-album-info { position: absolute; bottom: 0; left: 0; right: 0; padding: 26px 24px; z-index: 2; }
+.tm-album-tag { font-family: 'DM Sans', sans-serif; font-size: 8px; font-weight: 500; letter-spacing: 3px; text-transform: uppercase; color: #ff2a2a; margin-bottom: 8px; }
+.tm-album-name { font-family: 'Bebas Neue', sans-serif; font-size: 38px; letter-spacing: 2px; line-height: 1; color: #f0ede8; margin-bottom: 5px; }
+.tm-album-tile--featured .tm-album-name { font-size: 52px; }
+.tm-album-sub { font-family: 'DM Sans', sans-serif; font-size: 11px; color: rgba(240,237,232,0.45); letter-spacing: 0.5px; }
+
+.tm-album-tile a.tm-album-link { position: absolute; inset: 0; z-index: 4; }
+
+.tm-empty { padding: 80px; text-align: center; border: 1px dashed rgba(13,13,13,0.15); grid-column: 1/-1; font-family: 'DM Sans', sans-serif; font-size: 13px; color: rgba(13,13,13,0.4); }
+
+.tm-albums-footer { display: flex; gap: 14px; }
+.tm-btn-dark { font-family: 'DM Sans', sans-serif; font-size: 10px; font-weight: 500; letter-spacing: 2.5px; text-transform: uppercase; color: white; background: #0d0d0d; padding: 15px 34px; border: 1px solid #0d0d0d; text-decoration: none; display: inline-block; transition: background 0.25s, border-color 0.25s, transform 0.25s; }
+.tm-btn-dark:hover { background: #ff2a2a; border-color: #ff2a2a; transform: translateY(-2px); }
+.tm-btn-outline { font-family: 'DM Sans', sans-serif; font-size: 10px; font-weight: 500; letter-spacing: 2.5px; text-transform: uppercase; color: #0d0d0d; border: 1px solid rgba(13,13,13,0.25); padding: 15px 34px; text-decoration: none; display: inline-flex; align-items: center; gap: 10px; transition: border-color 0.25s, transform 0.25s; }
+.tm-btn-outline:hover { border-color: #0d0d0d; transform: translateY(-2px); }
+</style>
+
+<section class="tm-albums" id="music">
+  <div class="tm-albums-header">
+    <div>
+      <div class="tm-eyebrow">{{ section.settings.eyebrow }}</div>
+      <h2 class="tm-section-title">{{ section.settings.title }} <span class="ghost">{{ section.settings.title_ghost }}</span></h2>
+    </div>
+    {%- if section.settings.collection != blank -%}
+      <a href="{{ collections[section.settings.collection].url }}" class="tm-view-all">
+        All Albums →
+      </a>
+    {%- endif -%}
+  </div>
+
+  <div class="tm-albums-grid">
+    {%- assign col = collections[section.settings.collection] -%}
+    {%- if col != blank and col.products_count > 0 -%}
+
+      {%- comment -%}
+        Sort: if any product is tagged "featured", put it first.
+        Otherwise use the first product in the collection.
+      {%- endcomment -%}
+      {%- assign featured_product = nil -%}
+      {%- assign other_products = col.products -%}
+      {%- for p in col.products -%}
+        {%- if p.tags contains 'featured' and featured_product == nil -%}
+          {%- assign featured_product = p -%}
+        {%- endif -%}
+      {%- endfor -%}
+      {%- if featured_product == nil -%}{%- assign featured_product = col.products.first -%}{%- endif -%}
+
+      {%- comment -%}Featured tile{%- endcomment -%}
+      <div class="tm-album-tile tm-album-tile--featured">
+        <a href="{{ featured_product.url }}" class="tm-album-link" aria-label="{{ featured_product.title }}"></a>
+        <div class="tm-album-img-wrap">
+          {%- if featured_product.featured_image -%}
+            <img src="{{ featured_product.featured_image | img_url: '800x1000', crop: 'center' }}" alt="{{ featured_product.featured_image.alt | escape }}" loading="eager" width="800" height="1000">
+          {%- else -%}
+            <div class="tm-album-fallback" style="background:#141414;">{{ featured_product.title | slice: 0, 2 | upcase }}</div>
+          {%- endif -%}
+        </div>
+        <div class="tm-album-gradient"></div>
+        <div class="tm-album-price-badge">{{ featured_product.price | money }}</div>
+        <div class="tm-album-play"><div class="tm-play-tri"></div></div>
+        <div class="tm-album-info">
+          <div class="tm-album-tag">
+            {%- if featured_product.tags contains 'featured' -%}Latest Release · {%- endif -%}
+            {{ featured_product.metafields.custom.release_year | default: '' }}
+          </div>
+          <div class="tm-album-name">{{ featured_product.title }}</div>
+          <div class="tm-album-sub">{{ featured_product.vendor }} · Digital Album</div>
+        </div>
+      </div>
+
+      {%- comment -%}Remaining tiles{%- endcomment -%}
+      {%- assign shown = 1 -%}
+      {%- for p in col.products limit: section.settings.product_limit -%}
+        {%- if p.id == featured_product.id -%}{%- continue -%}{%- endif -%}
+        {%- if shown >= section.settings.product_limit -%}{%- break -%}{%- endif -%}
+        {%- assign shown = shown | plus: 1 -%}
+        <div class="tm-album-tile tm-album-tile--regular">
+          <a href="{{ p.url }}" class="tm-album-link" aria-label="{{ p.title }}"></a>
+          <div class="tm-album-img-wrap">
+            {%- if p.featured_image -%}
+              <img src="{{ p.featured_image | img_url: '600x800', crop: 'center' }}" alt="{{ p.featured_image.alt | escape }}" loading="lazy" width="600" height="800">
+            {%- else -%}
+              <div class="tm-album-fallback" style="background:#1a1a1a;">{{ p.title | slice: 0, 2 | upcase }}</div>
+            {%- endif -%}
+          </div>
+          <div class="tm-album-gradient"></div>
+          <div class="tm-album-price-badge">{{ p.price | money }}</div>
+          <div class="tm-album-play"><div class="tm-play-tri"></div></div>
+          <div class="tm-album-info">
+            <div class="tm-album-tag">{{ p.metafields.custom.release_year | default: '' }}</div>
+            <div class="tm-album-name">{{ p.title }}</div>
+            <div class="tm-album-sub">{{ p.vendor }} · Digital Album</div>
+          </div>
+        </div>
+      {%- endfor -%}
+
+    {%- else -%}
+      <div class="tm-empty">
+        No collection selected or collection is empty.<br>Set your album collection in Theme Editor → TM Albums.
+      </div>
+    {%- endif -%}
+  </div>
+
+  <div class="tm-albums-footer">
+    {%- if section.settings.collection != blank -%}
+      <a href="{{ collections[section.settings.collection].url }}" class="tm-btn-dark">{{ section.settings.cta1_text }}</a>
+    {%- endif -%}
+    {%- if section.settings.cta2_link != blank -%}
+      <a href="{{ section.settings.cta2_link }}" class="tm-btn-outline">{{ section.settings.cta2_text }} →</a>
+    {%- endif -%}
+  </div>
+</section>
+
+{% schema %}
+{
+  "name": "TM Albums",
+  "settings": [
+    { "type": "paragraph",  "content": "Select your Digital Albums collection. Tag one product 'featured' to pin it as the large tile. Add a 'release_year' metafield (namespace: custom, key: release_year) on each product to show the year." },
+    { "type": "text",       "id": "eyebrow",        "label": "Eyebrow Label",           "default": "Discography" },
+    { "type": "text",       "id": "title",           "label": "Title",                   "default": "Latest" },
+    { "type": "text",       "id": "title_ghost",     "label": "Ghost Word",              "default": "Drops" },
+    { "type": "collection", "id": "collection",      "label": "Albums Collection",       "info": "e.g. 'digital-albums'" },
+    { "type": "range",      "id": "product_limit",   "label": "Max Albums to Show",      "min": 2, "max": 6, "step": 1, "default": 3 },
+    { "type": "select",     "id": "extra_columns",   "label": "Side Columns (non-featured tiles)", "options": [{"value":"1","label":"1"},{"value":"2","label":"2"},{"value":"3","label":"3"}], "default": "2", "info": "Usually product_limit minus 1" },
+    { "type": "text",       "id": "cta1_text",       "label": "Button 1 Text",           "default": "Shop Albums" },
+    { "type": "text",       "id": "cta2_text",       "label": "Button 2 Text",           "default": "Music Videos" },
+    { "type": "url",        "id": "cta2_link",       "label": "Button 2 Link" }
+  ],
+  "presets": [{ "name": "TM Albums" }]
+}
+{% endschema %}

@@ -1,0 +1,461 @@
+{% comment %}
+  SECTION: tm-promo-popup.liquid
+  ─────────────────────────────────────────────────────────────────
+  10% off popup with email OR SMS capture.
+  Same contact form pattern as tm-fanlist — one {% form 'contact' %}
+  with contact[name] + contact[email] + contact[body] all filled
+  by JS before submit so Shopify never returns "something went wrong".
+
+  Data delivery:
+    Every submission → Shopify Admin › Settings › Notifications
+    email address receives a formatted contact form message with:
+    - Tab used (Email / SMS / Both)
+    - Name, email, phone
+    - Promo code they were given
+    - Consent recorded
+
+  Promo code:
+    Set a static code in section settings (e.g. FANLIST10).
+    Create the matching discount in Shopify Admin › Discounts.
+    The code is revealed in the success state after submit.
+
+  Trigger behavior (all configurable in Theme Editor):
+    - Time delay (seconds)
+    - Exit intent (mouse leaves window)
+    - Scroll depth (% of page)
+    - Page session count (show only on Nth+ visit)
+    - Cookie duration (days before showing again)
+    - Only show on specific pages OR all pages
+  ─────────────────────────────────────────────────────────────────
+{% endcomment %}
+
+<style>
+.tm-pp{--red:#ff2a2a;--gold:#c9a84c;--k:#0d0d0d;--off:#f7f5f2;--soft:#eeebe6;--mu:rgba(13,13,13,.38);--b:rgba(13,13,13,.1);--ease:cubic-bezier(.22,1,.36,1);font-family:'DM Sans',sans-serif}
+.tm-pp *,.tm-pp *::before,.tm-pp *::after{box-sizing:border-box}
+
+/* OVERLAY */
+.tm-pp-overlay{position:fixed;inset:0;background:rgba(0,0,0,.72);z-index:9998;opacity:0;pointer-events:none;transition:opacity .4s var(--ease);backdrop-filter:blur(3px)}
+.tm-pp-overlay.open{opacity:1;pointer-events:all}
+
+/* MODAL */
+.tm-pp-modal{position:fixed;z-index:9999;top:50%;left:50%;transform:translate(-50%,-46%);width:min(580px,94vw);background:#fff;opacity:0;pointer-events:none;transition:opacity .45s var(--ease),transform .45s var(--ease);overflow:hidden}
+.tm-pp-modal.open{opacity:1;pointer-events:all;transform:translate(-50%,-50%)}
+
+/* ACCENT STRIP */
+.tm-pp-strip{height:4px;background:linear-gradient(90deg,var(--red) 0%,var(--gold) 60%,var(--red) 100%)}
+
+/* CLOSE */
+.tm-pp-close{position:absolute;top:14px;right:16px;width:32px;height:32px;background:none;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;color:var(--mu);transition:color .2s;z-index:2;font-size:22px;line-height:1;font-family:sans-serif}
+.tm-pp-close:hover{color:var(--k)}
+
+/* LAYOUT */
+.tm-pp-inner{display:grid;grid-template-columns:1fr 1.1fr}
+.tm-pp-left{background:var(--k);padding:40px 32px;display:flex;flex-direction:column;align-items:flex-start;justify-content:center;position:relative;overflow:hidden;min-height:380px}
+.tm-pp-left-grid{position:absolute;inset:0;background-image:linear-gradient(rgba(255,42,42,.08) 1px,transparent 1px),linear-gradient(90deg,rgba(255,42,42,.08) 1px,transparent 1px);background-size:40px 40px;pointer-events:none}
+.tm-pp-left-glow{position:absolute;bottom:-40%;left:-20%;width:280px;height:280px;background:radial-gradient(ellipse,rgba(255,42,42,.18) 0%,transparent 68%);border-radius:50%;pointer-events:none}
+.tm-pp-offer-label{font-size:8px;font-weight:500;letter-spacing:4px;text-transform:uppercase;color:rgba(255,42,42,.7);margin-bottom:14px;position:relative}
+.tm-pp-pct{font-family:'Bebas Neue',sans-serif;font-size:clamp(72px,14vw,108px);line-height:.85;color:#f0ede8;letter-spacing:-2px;position:relative}
+.tm-pp-pct-off{font-family:'Bebas Neue',sans-serif;font-size:clamp(28px,5vw,40px);color:var(--red);letter-spacing:2px;display:block;position:relative}
+.tm-pp-tagline{font-family:'Cormorant Garamond',serif;font-style:italic;font-size:15px;font-weight:300;color:rgba(240,237,232,.4);line-height:1.55;margin-top:20px;position:relative}
+.tm-pp-trust{display:flex;align-items:center;gap:8px;margin-top:24px;position:relative}
+.tm-pp-trust-dot{width:6px;height:6px;background:var(--gold);border-radius:50%;flex-shrink:0}
+.tm-pp-trust-text{font-size:10px;letter-spacing:1.5px;text-transform:uppercase;color:rgba(240,237,232,.3)}
+
+/* RIGHT PANEL */
+.tm-pp-right{padding:36px 32px;display:flex;flex-direction:column}
+.tm-pp-right-title{font-family:'Bebas Neue',sans-serif;font-size:26px;letter-spacing:2px;color:var(--k);line-height:1;margin-bottom:6px}
+.tm-pp-right-sub{font-size:12px;color:var(--mu);line-height:1.6;margin-bottom:22px}
+
+/* TABS */
+.tm-pp-tabs{display:flex;border:1px solid var(--b);overflow:hidden;margin-bottom:20px}
+.tm-pp-tab-btn{flex:1;padding:12px 8px;font-size:9px;font-weight:500;letter-spacing:2px;text-transform:uppercase;background:transparent;border:none;color:var(--mu);cursor:pointer;transition:background .2s,color .2s;font-family:'DM Sans',sans-serif}
+.tm-pp-tab-btn:not(:last-child){border-right:1px solid var(--b)}
+.tm-pp-tab-btn.active{background:var(--k);color:#fff}
+.tm-pp-tab-btn:not(.active):hover{background:var(--soft)}
+
+/* PANELS */
+.tm-pp-panel{display:none}
+.tm-pp-panel.active{display:block}
+
+/* FIELDS */
+.tm-pp-field{margin-bottom:12px}
+.tm-pp-label{display:block;font-size:8px;font-weight:500;letter-spacing:2.5px;text-transform:uppercase;color:var(--mu);margin-bottom:7px}
+.tm-pp-input{width:100%;background:var(--off);border:1px solid var(--b);padding:13px 16px;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:300;color:var(--k);outline:none;transition:border-color .2s;-webkit-appearance:none;border-radius:0}
+.tm-pp-input::placeholder{color:var(--mu)}
+.tm-pp-input:focus{border-color:rgba(255,42,42,.45)}
+.tm-pp-phone-wrap{display:flex}
+.tm-pp-phone-pre{background:#fff;border:1px solid var(--b);border-right:none;padding:13px 12px;font-size:12px;color:var(--mu);flex-shrink:0;white-space:nowrap}
+.tm-pp-phone-wrap .tm-pp-input{border-left:none}
+
+/* CONSENT */
+.tm-pp-consent{display:flex;align-items:flex-start;gap:10px;margin-bottom:14px}
+.tm-pp-consent-chk{width:16px;height:16px;margin-top:2px;flex-shrink:0;accent-color:var(--red);cursor:pointer}
+.tm-pp-consent-txt{font-size:10px;color:var(--mu);line-height:1.55}
+.tm-pp-consent-txt a{color:var(--red);text-decoration:none}
+
+/* SUBMIT */
+.tm-pp-submit{width:100%;padding:16px;background:var(--red);border:1px solid var(--red);color:#fff;font-family:'DM Sans',sans-serif;font-size:9px;font-weight:500;letter-spacing:3px;text-transform:uppercase;cursor:pointer;transition:background .2s,transform .2s;display:block}
+.tm-pp-submit:hover{background:#a50d24;transform:translateY(-1px)}
+
+/* ERROR */
+.tm-pp-err{background:rgba(255,42,42,.07);border:1px solid rgba(255,42,42,.2);padding:10px 14px;font-size:11px;color:var(--red);margin-bottom:12px;display:none}
+.tm-pp-err.show{display:block}
+
+/* NO THANKS */
+.tm-pp-nothanks{text-align:center;margin-top:12px}
+.tm-pp-nothanks button{background:none;border:none;font-size:10px;color:var(--mu);cursor:pointer;font-family:'DM Sans',sans-serif;letter-spacing:1px;text-decoration:underline;padding:0}
+.tm-pp-nothanks button:hover{color:var(--k)}
+
+/* SUCCESS STATE */
+.tm-pp-success{display:none;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:56px 32px;min-height:380px}
+.tm-pp-success.show{display:flex}
+.tm-pp-success-icon{font-size:40px;margin-bottom:16px}
+.tm-pp-success-title{font-family:'Bebas Neue',sans-serif;font-size:44px;letter-spacing:2px;color:var(--k);margin-bottom:8px}
+.tm-pp-success-sub{font-size:13px;color:var(--mu);line-height:1.65;margin-bottom:28px;max-width:360px}
+.tm-pp-code-box{background:var(--k);padding:18px 32px;display:flex;align-items:center;gap:16px;margin-bottom:16px}
+.tm-pp-code{font-family:'Bebas Neue',sans-serif;font-size:32px;letter-spacing:6px;color:var(--gold)}
+.tm-pp-copy-btn{background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.2);color:rgba(255,255,255,.6);font-size:8px;font-weight:500;letter-spacing:2px;text-transform:uppercase;padding:8px 14px;cursor:pointer;font-family:'DM Sans',sans-serif;transition:background .2s,color .2s;white-space:nowrap}
+.tm-pp-copy-btn:hover{background:rgba(255,255,255,.2);color:#fff}
+.tm-pp-success-note{font-size:11px;color:var(--mu);margin-bottom:20px}
+.tm-pp-success-close{font-family:'DM Sans',sans-serif;font-size:9px;font-weight:500;letter-spacing:2.5px;text-transform:uppercase;color:var(--mu);background:none;border:1px solid var(--b);padding:10px 24px;cursor:pointer;transition:border-color .2s,color .2s}
+.tm-pp-success-close:hover{border-color:var(--k);color:var(--k)}
+
+/* MOBILE */
+@media(max-width:560px){
+  .tm-pp-inner{grid-template-columns:1fr}
+  .tm-pp-left{min-height:auto;padding:28px 24px;flex-direction:row;align-items:center;gap:16px}
+  .tm-pp-tagline,.tm-pp-trust{display:none}
+  .tm-pp-pct{font-size:64px}
+  .tm-pp-right{padding:24px 20px}
+  .tm-pp-success{padding:36px 20px;min-height:auto}
+}
+</style>
+
+<div class="tm-pp" id="tm-pp-root">
+  <div class="tm-pp-overlay" id="tm-pp-overlay" onclick="tmPPClose()"></div>
+  <div class="tm-pp-modal" id="tm-pp-modal" role="dialog" aria-modal="true" aria-label="Exclusive offer">
+    <div class="tm-pp-strip"></div>
+    <button class="tm-pp-close" onclick="tmPPClose()" aria-label="Close">×</button>
+
+    <div class="tm-pp-inner" id="tm-pp-form-side">
+
+      {%- comment -%} LEFT — Offer display {%- endcomment -%}
+      <div class="tm-pp-left">
+        <div class="tm-pp-left-grid"></div>
+        <div class="tm-pp-left-glow"></div>
+        <div class="tm-pp-offer-label">{{ section.settings.offer_label | default: 'Exclusive Fan Offer' }}</div>
+        <div class="tm-pp-pct">{{ section.settings.pct | default: '10' }}<span style="font-size:0.55em">%</span><span class="tm-pp-pct-off">OFF</span></div>
+        <p class="tm-pp-tagline">{{ section.settings.tagline | default: 'Your first order. Drop your info and the code is yours — for life.' }}</p>
+        <div class="tm-pp-trust"><div class="tm-pp-trust-dot"></div><span class="tm-pp-trust-text">{{ section.settings.trust_text | default: 'No spam. Unsubscribe anytime.' }}</span></div>
+      </div>
+
+      {%- comment -%} RIGHT — Contact form {%- endcomment -%}
+      <div class="tm-pp-right">
+        <div class="tm-pp-right-title">{{ section.settings.form_title | default: 'Claim Your Code' }}</div>
+        <div class="tm-pp-right-sub">{{ section.settings.form_sub | default: "Enter your email or phone. We'll send you the code instantly + keep you first for new drops." }}</div>
+
+        {%- comment -%}
+          ONE {% form 'contact' %} — same pattern as tm-fanlist.
+          contact[name] + contact[email] + contact[body] always filled by JS.
+          No required HTML attributes anywhere.
+        {%- endcomment -%}
+        {% form 'contact', id: 'tm-pp-form' %}
+          {% if form.posted_successfully? %}
+            {%- comment -%} Shopify posted — trigger success via JS on load {%- endcomment -%}
+            <script>window._tmPPPosted=true;</script>
+          {% endif %}
+
+          {%- comment -%} Required Shopify fields — JS fills before submit {%- endcomment -%}
+          <input type="hidden" name="contact[name]"    id="tm-pp-f-name"    value="Fan">
+          <input type="hidden" name="contact[email]"   id="tm-pp-f-email"   value="noemail@popup.com">
+          <input type="hidden" name="contact[body]"    id="tm-pp-f-body"    value="Promo Popup Signup">
+          <input type="hidden" name="contact[subject]" id="tm-pp-f-subject" value="10% Off Promo Signup — T Mafianie">
+
+          <div class="tm-pp-err" id="tm-pp-err"></div>
+
+          {%- comment -%} TABS {%- endcomment -%}
+          <div class="tm-pp-tabs">
+            <button type="button" class="tm-pp-tab-btn active" onclick="tmPPTab('email',this)">✉ Email</button>
+            <button type="button" class="tm-pp-tab-btn" onclick="tmPPTab('sms',this)">📲 SMS</button>
+            <button type="button" class="tm-pp-tab-btn" onclick="tmPPTab('both',this)">⚡ Both</button>
+          </div>
+
+          {%- comment -%} EMAIL TAB {%- endcomment -%}
+          <div class="tm-pp-panel active" id="tm-pp-panel-email">
+            <div class="tm-pp-field">
+              <label class="tm-pp-label" for="tm-pp-fn-e">First Name</label>
+              <input type="text" id="tm-pp-fn-e" class="tm-pp-input" placeholder="Your name" autocomplete="given-name">
+            </div>
+            <div class="tm-pp-field">
+              <label class="tm-pp-label" for="tm-pp-em-e">Email Address *</label>
+              <input type="email" id="tm-pp-em-e" class="tm-pp-input" placeholder="yourname@email.com" autocomplete="email">
+            </div>
+            <label class="tm-pp-consent">
+              <input type="checkbox" id="tm-pp-con-e" class="tm-pp-consent-chk">
+              <span class="tm-pp-consent-txt">I agree to receive email updates from T Mafianie / CME. <a href="/policies/privacy-policy" target="_blank">Privacy Policy</a>.</span>
+            </label>
+          </div>
+
+          {%- comment -%} SMS TAB {%- endcomment -%}
+          <div class="tm-pp-panel" id="tm-pp-panel-sms">
+            <div class="tm-pp-field">
+              <label class="tm-pp-label" for="tm-pp-fn-s">First Name</label>
+              <input type="text" id="tm-pp-fn-s" class="tm-pp-input" placeholder="Your name">
+            </div>
+            <div class="tm-pp-field">
+              <label class="tm-pp-label" for="tm-pp-ph-s">Phone Number *</label>
+              <div class="tm-pp-phone-wrap"><span class="tm-pp-phone-pre">🇺🇸 +1</span><input type="tel" id="tm-pp-ph-s" class="tm-pp-input" placeholder="(214) 000-0000"></div>
+            </div>
+            <label class="tm-pp-consent">
+              <input type="checkbox" id="tm-pp-con-s" class="tm-pp-consent-chk">
+              <span class="tm-pp-consent-txt">I agree to receive SMS updates from T Mafianie / CME. Msg &amp; data rates may apply. Reply STOP to opt out.</span>
+            </label>
+          </div>
+
+          {%- comment -%} BOTH TAB {%- endcomment -%}
+          <div class="tm-pp-panel" id="tm-pp-panel-both">
+            <div class="tm-pp-field">
+              <label class="tm-pp-label" for="tm-pp-fn-b">First Name</label>
+              <input type="text" id="tm-pp-fn-b" class="tm-pp-input" placeholder="Your name" autocomplete="given-name">
+            </div>
+            <div class="tm-pp-field">
+              <label class="tm-pp-label" for="tm-pp-em-b">Email Address *</label>
+              <input type="email" id="tm-pp-em-b" class="tm-pp-input" placeholder="yourname@email.com" autocomplete="email">
+            </div>
+            <div class="tm-pp-field">
+              <label class="tm-pp-label" for="tm-pp-ph-b">Phone Number *</label>
+              <div class="tm-pp-phone-wrap"><span class="tm-pp-phone-pre">🇺🇸 +1</span><input type="tel" id="tm-pp-ph-b" class="tm-pp-input" placeholder="(214) 000-0000"></div>
+            </div>
+            <label class="tm-pp-consent">
+              <input type="checkbox" id="tm-pp-con-b" class="tm-pp-consent-chk">
+              <span class="tm-pp-consent-txt">I agree to receive email &amp; SMS updates from T Mafianie / CME. Reply STOP anytime. <a href="/policies/privacy-policy" target="_blank">Privacy Policy</a>.</span>
+            </label>
+          </div>
+
+          <button type="submit" id="tm-pp-submit" class="tm-pp-submit" onclick="return tmPPBuild()">{{ section.settings.btn_text | default: 'Get My 10% Off →' }}</button>
+
+          <div class="tm-pp-nothanks">
+            <button type="button" onclick="tmPPDismiss()">{{ section.settings.nothanks_text | default: "No thanks, I'll pay full price" }}</button>
+          </div>
+
+        {% endform %}
+      </div>
+    </div>
+
+    {%- comment -%} SUCCESS STATE — shown after Shopify posts successfully {%- endcomment -%}
+    <div class="tm-pp-success" id="tm-pp-success">
+      <div class="tm-pp-success-icon">🎉</div>
+      <div class="tm-pp-success-title">{{ section.settings.success_title | default: "It's Yours." }}</div>
+      <p class="tm-pp-success-sub">{{ section.settings.success_sub | default: "Your 10% off code is ready. Use it on any order — it never expires." }}</p>
+      <div class="tm-pp-code-box">
+        <span class="tm-pp-code" id="tm-pp-code-display">{{ section.settings.promo_code | default: 'FANLIST10' }}</span>
+        <button type="button" class="tm-pp-copy-btn" onclick="tmPPCopy()">Copy</button>
+      </div>
+      <p class="tm-pp-success-note">{{ section.settings.success_note | default: "Code also sent to your email / phone. Good for life." }}</p>
+      <button type="button" class="tm-pp-success-close" onclick="tmPPClose()">Start Shopping →</button>
+    </div>
+
+  </div>
+</div>
+
+<script>
+(function(){
+  var COOKIE='tm_pp_dismissed';
+  var DAYS={{ section.settings.cookie_days | default: 30 }};
+  var DELAY={{ section.settings.trigger_delay | default: 4 }} * 1000;
+  var EXIT_INTENT={{ section.settings.exit_intent | default: true }};
+  var SCROLL_PCT={{ section.settings.scroll_trigger | default: 40 }};
+  var CODE='{{ section.settings.promo_code | default: "FANLIST10" }}';
+  var activeTab='email';
+  var opened=false;
+  var submitted=false;
+
+  /* ── COOKIE HELPERS ── */
+  function setCookie(n,v,d){var e=new Date();e.setTime(e.getTime()+d*864e5);document.cookie=n+'='+v+';expires='+e.toUTCString()+';path=/';}
+  function getCookie(n){var v='; '+document.cookie;var p=v.split('; '+n+'=');if(p.length===2)return p.pop().split(';').shift();}
+
+  /* ── OPEN / CLOSE ── */
+  function open(){
+    if(opened||getCookie(COOKIE)||submitted)return;
+    opened=true;
+    document.getElementById('tm-pp-overlay').classList.add('open');
+    document.getElementById('tm-pp-modal').classList.add('open');
+    document.body.style.overflow='hidden';
+  }
+  window.tmPPClose=function(){
+    document.getElementById('tm-pp-overlay').classList.remove('open');
+    document.getElementById('tm-pp-modal').classList.remove('open');
+    document.body.style.overflow='';
+  };
+  window.tmPPDismiss=function(){
+    setCookie(COOKIE,'1',DAYS);
+    tmPPClose();
+  };
+
+  /* ── TRIGGERS ── */
+  setTimeout(open, DELAY);
+
+  if(EXIT_INTENT){
+    document.addEventListener('mouseleave',function(e){if(e.clientY<=0)open();},{once:true});
+  }
+
+  if(SCROLL_PCT>0){
+    window.addEventListener('scroll',function(){
+      var scrolled=(window.scrollY/(document.body.scrollHeight-window.innerHeight))*100;
+      if(scrolled>=SCROLL_PCT)open();
+    },{passive:true,once:true});
+  }
+
+  /* ── TAB SWITCHING ── */
+  window.tmPPTab=function(t,btn){
+    activeTab=t;
+    document.querySelectorAll('.tm-pp-tab-btn').forEach(function(b){b.classList.remove('active');});
+    btn.classList.add('active');
+    document.querySelectorAll('.tm-pp-panel').forEach(function(p){p.classList.remove('active');});
+    var p=document.getElementById('tm-pp-panel-'+t);
+    if(p)p.classList.add('active');
+    var sb=document.getElementById('tm-pp-submit');
+    if(sb)sb.textContent=t==='sms'?'Get My Code by Text →':t==='both'?'⚡ Lock In My Code →':'{{ section.settings.btn_text | default: "Get My 10% Off →" }}';
+  };
+
+  /* ── BUILD + VALIDATE ── */
+  window.tmPPBuild=function(){
+    var tab=activeTab;
+    var err=[];
+    var errEl=document.getElementById('tm-pp-err');
+    function val(id){var el=document.getElementById(id);return el?el.value.trim():'';}
+    function chk(id){var el=document.getElementById(id);return el&&el.checked;}
+
+    var name='Fan', email='noemail@popup.com', body='';
+    var subject='10% Off Promo Signup ('+tab.toUpperCase()+') — T Mafianie';
+
+    if(tab==='email'){
+      email=val('tm-pp-em-e');
+      name=val('tm-pp-fn-e')||'Fan';
+      if(!email)err.push('Email address is required.');
+      if(!chk('tm-pp-con-e'))err.push('Please check the consent box.');
+      body='=== PROMO POPUP — EMAIL SIGNUP ===\n'+
+           'Name: '+name+'\n'+
+           'Email: '+email+'\n'+
+           'Promo Code Given: '+CODE+'\n'+
+           'Consent: YES\n'+
+           'Time: '+(new Date().toLocaleString());
+    } else if(tab==='sms'){
+      name=val('tm-pp-fn-s')||'Fan';
+      var ph=val('tm-pp-ph-s');
+      email='sms-only@popup.com';
+      if(!ph)err.push('Phone number is required.');
+      if(!chk('tm-pp-con-s'))err.push('Please check the consent box.');
+      body='=== PROMO POPUP — SMS SIGNUP ===\n'+
+           'Name: '+name+'\n'+
+           'Phone: +1 '+ph.replace(/\D/g,'')+'\n'+
+           'Promo Code Given: '+CODE+'\n'+
+           'SMS Consent: YES\n'+
+           'Time: '+(new Date().toLocaleString());
+    } else if(tab==='both'){
+      name=val('tm-pp-fn-b')||'Fan';
+      email=val('tm-pp-em-b');
+      var ph2=val('tm-pp-ph-b');
+      if(!email)err.push('Email address is required.');
+      if(!ph2)err.push('Phone number is required.');
+      if(!chk('tm-pp-con-b'))err.push('Please check the consent box.');
+      body='=== PROMO POPUP — EMAIL + SMS SIGNUP ===\n'+
+           'Name: '+name+'\n'+
+           'Email: '+email+'\n'+
+           'Phone: +1 '+ph2.replace(/\D/g,'')+'\n'+
+           'Promo Code Given: '+CODE+'\n'+
+           'Email Consent: YES\n'+
+           'SMS Consent: YES\n'+
+           'Time: '+(new Date().toLocaleString());
+    }
+
+    if(err.length){
+      errEl.textContent='⚠ '+err.join(' ');
+      errEl.classList.add('show');
+      return false;
+    }
+    errEl.classList.remove('show');
+
+    /* Fill Shopify required fields */
+    document.getElementById('tm-pp-f-name').value=name.trim();
+    document.getElementById('tm-pp-f-email').value=email;
+    document.getElementById('tm-pp-f-body').value=body;
+    document.getElementById('tm-pp-f-subject').value=subject;
+
+    /* Submit via fetch — no page redirect, inline success */
+    var ppf=document.getElementById('tm-pp-form');
+    if(ppf){
+      var ppBtn=document.getElementById('tm-pp-submit');
+      if(ppBtn){ppBtn.textContent='Sending…';ppBtn.disabled=true;}
+      fetch(ppf.action,{method:'POST',body:new FormData(ppf)}).then(function(r){
+        if(r.url.indexOf('posted_successfully')>-1){
+          setCookie(COOKIE,'1',365);submitted=true;
+          var formSide=document.getElementById('tm-pp-form-side');
+          var success=document.getElementById('tm-pp-success');
+          if(formSide)formSide.style.display='none';
+          if(success)success.classList.add('show');
+        }else{
+          if(ppBtn){ppBtn.disabled=false;ppBtn.textContent='{{ section.settings.btn_text | default: "Get My 10% Off →" }}';}
+          ppf.submit();
+        }
+      }).catch(function(){if(ppBtn)ppBtn.disabled=false;ppf.submit();});
+    }
+    return false;
+  };
+
+  /* ── COPY CODE ── */
+  window.tmPPCopy=function(){
+    if(navigator.clipboard){navigator.clipboard.writeText(CODE);}else{var t=document.createElement('textarea');t.value=CODE;document.body.appendChild(t);t.select();document.execCommand('copy');document.body.removeChild(t);}
+    var btn=document.querySelector('.tm-pp-copy-btn');
+    if(btn){btn.textContent='Copied!';setTimeout(function(){btn.textContent='Copy';},2000);}
+  };
+
+  /* ── SHOW SUCCESS if Shopify posted ── */
+  if(window._tmPPPosted){
+    document.addEventListener('DOMContentLoaded',function(){
+      var formSide=document.getElementById('tm-pp-form-side');
+      var success=document.getElementById('tm-pp-success');
+      if(formSide)formSide.style.display='none';
+      if(success)success.classList.add('show');
+      open();
+      setCookie(COOKIE,'1',365);
+    });
+  }
+
+  /* ── ESC KEY ── */
+  document.addEventListener('keydown',function(e){if(e.key==='Escape')tmPPClose();});
+
+})();
+</script>
+
+{% schema %}
+{
+  "name": "TM Promo Popup",
+  "settings": [
+    { "type": "header", "content": "Offer" },
+    { "type": "text",     "id": "offer_label",    "label": "Offer Label",         "default": "Exclusive Fan Offer" },
+    { "type": "text",     "id": "pct",             "label": "Discount Percentage", "default": "10", "info": "Number only (no % sign)" },
+    { "type": "textarea", "id": "tagline",         "label": "Tagline",             "default": "Your first order. Drop your info and the code is yours — for life." },
+    { "type": "text",     "id": "trust_text",      "label": "Trust Line",          "default": "No spam. Unsubscribe anytime." },
+    { "type": "text",     "id": "promo_code",      "label": "Promo Code",          "default": "FANLIST10", "info": "Must match a discount code in Shopify Admin → Discounts. This is shown to the fan after they submit." },
+
+    { "type": "header", "content": "Form Copy" },
+    { "type": "text",     "id": "form_title",      "label": "Form Title",          "default": "Claim Your Code" },
+    { "type": "textarea", "id": "form_sub",        "label": "Form Subtitle",       "default": "Enter your email or phone. We'll send you the code instantly + keep you first for new drops." },
+    { "type": "text",     "id": "btn_text",        "label": "Submit Button Text",  "default": "Get My 10% Off →" },
+    { "type": "text",     "id": "nothanks_text",   "label": "No Thanks Text",      "default": "No thanks, I'll pay full price" },
+
+    { "type": "header", "content": "Success State" },
+    { "type": "text",     "id": "success_title",   "label": "Success Title",       "default": "It's Yours." },
+    { "type": "textarea", "id": "success_sub",     "label": "Success Subtext",     "default": "Your 10% off code is ready. Use it on any order — it never expires." },
+    { "type": "textarea", "id": "success_note",    "label": "Success Note",        "default": "Code also sent to your email / phone. Good for life." },
+
+    { "type": "header", "content": "Trigger Settings" },
+    { "type": "range",    "id": "trigger_delay",   "label": "Delay before popup (seconds)", "min": 0, "max": 30, "step": 1, "default": 4 },
+    { "type": "checkbox", "id": "exit_intent",     "label": "Exit intent trigger (mouse leaves window)", "default": true },
+    { "type": "range",    "id": "scroll_trigger",  "label": "Scroll depth trigger (% of page, 0 = off)", "min": 0, "max": 90, "step": 5, "default": 40 },
+    { "type": "range",    "id": "cookie_days",     "label": "Days before showing again after dismiss", "min": 5, "max": 365, "step": 5, "default": 30, "info": "After submission, popup never shows again (365 day cookie)." }
+  ],
+  "presets": [{ "name": "TM Promo Popup" }]
+}
+{% endschema %}

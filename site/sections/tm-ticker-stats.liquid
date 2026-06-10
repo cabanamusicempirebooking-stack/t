@@ -1,0 +1,72 @@
+{% comment %}
+  SECTION: tm-ticker-stats.liquid
+  Scrolling ticker marquee + stats bar. White theme.
+{% endcomment %}
+
+<style>
+.tm-ticker { overflow: hidden; background: #0d0d0d; }
+.tm-ticker-track { display: flex; animation: tmTicker 22s linear infinite; white-space: nowrap; }
+.tm-ticker-item { display: flex; align-items: center; gap: 32px; padding: 15px 32px; border-right: 1px solid rgba(255,255,255,0.08); flex-shrink: 0; font-family: 'DM Sans', sans-serif; font-size: 10px; font-weight: 500; letter-spacing: 3.5px; text-transform: uppercase; color: rgba(240,237,232,0.5); }
+.tm-ticker-dot { width: 4px; height: 4px; background: #ff2a2a; border-radius: 50%; flex-shrink: 0; }
+
+.tm-stats { display: grid; grid-template-columns: repeat(3, 1fr); border-top: 1px solid rgba(13,13,13,0.08); border-bottom: 1px solid rgba(13,13,13,0.08); background: #ffffff; }
+.tm-stat { padding: 44px 52px; border-right: 1px solid rgba(13,13,13,0.08); position: relative; overflow: hidden; transition: background 0.3s; }
+.tm-stat:last-child { border-right: none; }
+.tm-stat:hover { background: #fafaf9; }
+.tm-stat::before { content: ''; position: absolute; bottom: 0; left: 24px; right: 24px; height: 2px; background: #ff2a2a; transform: scaleX(0); transform-origin: left; transition: transform 0.4s cubic-bezier(0.22,1,0.36,1); }
+.tm-stat:hover::before { transform: scaleX(1); }
+.tm-stat-num { font-family: 'Bebas Neue', sans-serif; font-size: 58px; letter-spacing: -1px; line-height: 1; color: #0d0d0d; margin-bottom: 8px; }
+.tm-stat-num .sup { color: #ff2a2a; }
+.tm-stat-label { font-family: 'DM Sans', sans-serif; font-size: 9px; letter-spacing: 3px; text-transform: uppercase; color: rgba(13,13,13,0.38); }
+
+@keyframes tmTicker { from { transform: translateX(0); } to { transform: translateX(-50%); } }
+</style>
+
+<div class="tm-ticker">
+  <div class="tm-ticker-track">
+    {% for block in section.blocks %}{% if block.type == 'ticker_item' %}
+      <div class="tm-ticker-item"><span class="tm-ticker-dot"></span>{{ block.settings.text }}</div>
+    {% endif %}{% endfor %}
+    {% for block in section.blocks %}{% if block.type == 'ticker_item' %}
+      <div class="tm-ticker-item"><span class="tm-ticker-dot"></span>{{ block.settings.text }}</div>
+    {% endif %}{% endfor %}
+  </div>
+</div>
+
+<div class="tm-stats">
+  {% for block in section.blocks %}{% if block.type == 'stat' %}
+    <div class="tm-stat" {{ block.shopify_attributes }}>
+      <div class="tm-stat-num">{{ block.settings.number }}<span class="sup">{{ block.settings.suffix }}</span></div>
+      <div class="tm-stat-label">{{ block.settings.label }}</div>
+    </div>
+  {% endif %}{% endfor %}
+</div>
+
+{% schema %}
+{
+  "name": "TM Ticker & Stats",
+  "blocks": [
+    { "type": "ticker_item", "name": "Ticker Item", "settings": [{ "type": "text", "id": "text", "label": "Text", "default": "New Release" }] },
+    { "type": "stat", "name": "Stat", "settings": [
+      { "type": "text", "id": "number", "label": "Number", "default": "3" },
+      { "type": "text", "id": "suffix", "label": "Suffix", "default": "+" },
+      { "type": "text", "id": "label",  "label": "Label",  "default": "Studio Albums" }
+    ]}
+  ],
+  "presets": [{
+    "name": "TM Ticker & Stats",
+    "blocks": [
+      { "type": "ticker_item", "settings": { "text": "Japan — Out Now" } },
+      { "type": "ticker_item", "settings": { "text": "Awake 3 — Digital Album" } },
+      { "type": "ticker_item", "settings": { "text": "Awake 2 — Available" } },
+      { "type": "ticker_item", "settings": { "text": "CME Beat Store — Live" } },
+      { "type": "ticker_item", "settings": { "text": "Booking Open" } },
+      { "type": "ticker_item", "settings": { "text": "New Gear Dropped" } },
+      { "type": "stat", "settings": { "number": "3",   "suffix": "+", "label": "Studio Albums" } },
+      { "type": "stat", "settings": { "number": "100", "suffix": "+", "label": "Original Beats" } },
+      { "type": "stat", "settings": { "number": "CME", "suffix": "",  "label": "Cabana Music Empire" } },
+      { "type": "stat", "settings": { "number": "∞",   "suffix": "",  "label": "The Elevation" } }
+    ]
+  }]
+}
+{% endschema %}

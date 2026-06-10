@@ -1,0 +1,137 @@
+{% comment %} SECTION: tm-beats-page.liquid — Light theme beats landing page {% endcomment %}
+<style>
+.tm-beats-page { background: #f7f5f2; padding: 80px 64px 96px; }
+.tm-bp-eyebrow { display: flex; align-items: center; gap: 12px; font-family: 'DM Sans', sans-serif; font-size: 9px; font-weight: 500; letter-spacing: 4px; text-transform: uppercase; color: #ff2a2a; margin-bottom: 14px; }
+.tm-bp-eyebrow::before { content: ''; display: block; width: 24px; height: 1px; background: #ff2a2a; }
+.tm-bp-title { font-family: 'Bebas Neue', sans-serif; font-size: clamp(64px, 10vw, 128px); line-height: 0.9; letter-spacing: 1px; color: #0d0d0d; }
+.tm-bp-title .ghost { color: transparent; -webkit-text-stroke: 1.5px rgba(13,13,13,0.18); }
+.tm-bp-subtitle { font-family: 'Cormorant Garamond', serif; font-style: italic; font-size: 20px; font-weight: 300; color: rgba(13,13,13,0.5); margin-top: 20px; max-width: 480px; line-height: 1.7; }
+
+.tm-bp-divider { height: 1px; background: rgba(13,13,13,0.08); margin: 56px 0; }
+
+.tm-bp-section-label { font-family: 'DM Sans', sans-serif; font-size: 9px; font-weight: 600; letter-spacing: 4px; text-transform: uppercase; color: rgba(13,13,13,0.35); margin-bottom: 28px; display: flex; align-items: center; gap: 14px; }
+.tm-bp-section-label::after { content: ''; flex: 1; height: 1px; background: rgba(13,13,13,0.08); }
+
+/* ── Licensing tiers ── */
+.tm-bp-tiers { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-bottom: 48px; }
+.tm-bp-tier { background: #fff; border: 1px solid rgba(13,13,13,0.08); padding: 28px 24px; }
+.tm-bp-tier--featured { border-color: #ff2a2a; position: relative; }
+.tm-bp-tier-badge { position: absolute; top: 0; right: 0; background: #ff2a2a; color: #fff; font-family: 'DM Sans', sans-serif; font-size: 9px; font-weight: 700; letter-spacing: 2px; text-transform: uppercase; padding: 5px 12px; }
+.tm-bp-tier-name { font-family: 'Bebas Neue', sans-serif; font-size: 13px; letter-spacing: 3px; color: rgba(13,13,13,0.4); text-transform: uppercase; margin-bottom: 6px; }
+.tm-bp-tier-price { font-family: 'Bebas Neue', sans-serif; font-size: 48px; color: #0d0d0d; line-height: 1; margin-bottom: 4px; }
+.tm-bp-tier--featured .tm-bp-tier-price { color: #ff2a2a; }
+.tm-bp-tier-format { font-family: 'DM Sans', sans-serif; font-size: 11px; font-weight: 600; color: rgba(13,13,13,0.4); letter-spacing: 1px; text-transform: uppercase; margin-bottom: 20px; border-bottom: 1px solid rgba(13,13,13,0.08); padding-bottom: 16px; }
+.tm-bp-tier-feature { font-family: 'DM Sans', sans-serif; font-size: 13px; color: rgba(13,13,13,0.6); padding: 7px 0; border-bottom: 1px solid rgba(13,13,13,0.05); display: flex; align-items: center; gap: 8px; }
+.tm-bp-tier-feature::before { content: ''; width: 5px; height: 5px; background: #ff2a2a; border-radius: 50%; flex-shrink: 0; }
+.tm-bp-tier-feature:last-child { border-bottom: none; }
+
+/* ── Playlist CTA ── */
+.tm-bp-cta { background: #fff; border: 1px solid rgba(13,13,13,0.08); padding: 48px; display: flex; align-items: center; gap: 48px; box-shadow: 0 4px 32px rgba(0,0,0,0.05); }
+.tm-bp-cta-art { width: 100px; height: 100px; flex-shrink: 0; background: #0d0d0d; display: flex; align-items: center; justify-content: center; }
+.tm-bp-cta-art svg { width: 36px; height: 36px; color: #ff2a2a; }
+.tm-bp-cta-info { flex: 1; }
+.tm-bp-cta-title { font-family: 'Bebas Neue', sans-serif; font-size: 32px; letter-spacing: 1px; color: #0d0d0d; margin-bottom: 6px; }
+.tm-bp-cta-meta { font-family: 'DM Sans', sans-serif; font-size: 13px; color: rgba(13,13,13,0.45); margin-bottom: 20px; }
+.tm-bp-cta-btn { display: inline-flex; align-items: center; gap: 10px; font-family: 'DM Sans', sans-serif; font-size: 10px; font-weight: 600; letter-spacing: 2.5px; text-transform: uppercase; color: #fff; background: #ff2a2a; padding: 14px 28px; text-decoration: none; transition: background 0.2s, transform 0.2s; }
+.tm-bp-cta-btn:hover { background: #0d0d0d; transform: translateY(-2px); }
+
+/* ── Contact note ── */
+.tm-bp-note { margin-top: 32px; display: flex; align-items: center; gap: 12px; font-family: 'DM Sans', sans-serif; font-size: 13px; color: rgba(13,13,13,0.45); }
+.tm-bp-note a { color: #ff2a2a; text-decoration: none; }
+.tm-bp-note a:hover { text-decoration: underline; }
+
+@media (max-width: 767px) {
+  .tm-beats-page { padding: 60px 20px 72px; }
+  .tm-bp-tiers { grid-template-columns: 1fr; gap: 12px; }
+  .tm-bp-cta { flex-direction: column; align-items: flex-start; gap: 20px; padding: 24px 20px; }
+  .tm-bp-cta-btn { width: 100%; justify-content: center; }
+}
+</style>
+
+<section class="tm-beats-page">
+  <div class="tm-bp-eyebrow">{{ section.settings.eyebrow | default: 'Cabana Music Empire' }}</div>
+  <div class="tm-bp-title">
+    {{ section.settings.title_line1 | default: 'Beats' }}<br>
+    <span class="ghost">{{ section.settings.title_line2 | default: 'Store' }}</span>
+  </div>
+  <p class="tm-bp-subtitle">{{ section.settings.subtitle | default: 'Exclusive and non-exclusive beat licenses. Professional quality production for artists at every level.' }}</p>
+
+  <div class="tm-bp-divider"></div>
+
+  <div class="tm-bp-section-label">License Tiers</div>
+
+  <div class="tm-bp-tiers">
+    <div class="tm-bp-tier">
+      <div class="tm-bp-tier-name">Lease</div>
+      <div class="tm-bp-tier-price">$30</div>
+      <div class="tm-bp-tier-format">MP3 · Non-Exclusive</div>
+      <div class="tm-bp-tier-feature">MP3 File (320kbps)</div>
+      <div class="tm-bp-tier-feature">Up to 100K streams</div>
+      <div class="tm-bp-tier-feature">2 music videos</div>
+      <div class="tm-bp-tier-feature">Radio &amp; non-profit use</div>
+      <div class="tm-bp-tier-feature">Beat stays in store</div>
+    </div>
+    <div class="tm-bp-tier tm-bp-tier--featured">
+      <div class="tm-bp-tier-badge">Best Value</div>
+      <div class="tm-bp-tier-name">Premium License</div>
+      <div class="tm-bp-tier-price">$300</div>
+      <div class="tm-bp-tier-format">WAV + Stems · Non-Exclusive</div>
+      <div class="tm-bp-tier-feature">WAV + Tracked-Out Stems</div>
+      <div class="tm-bp-tier-feature">Unlimited streams</div>
+      <div class="tm-bp-tier-feature">Unlimited music videos</div>
+      <div class="tm-bp-tier-feature">Worldwide distribution</div>
+      <div class="tm-bp-tier-feature">Beat stays in store</div>
+    </div>
+    <div class="tm-bp-tier">
+      <div class="tm-bp-tier-name">50/50 Split</div>
+      <div class="tm-bp-tier-price" style="font-size:38px;line-height:1.05;">Collab</div>
+      <div class="tm-bp-tier-format">Feature / Co-Write Deal</div>
+      <div class="tm-bp-tier-feature">Custom beat creation</div>
+      <div class="tm-bp-tier-feature">Feature verse available</div>
+      <div class="tm-bp-tier-feature">50/50 revenue split</div>
+      <div class="tm-bp-tier-feature">All platforms included</div>
+      <div class="tm-bp-tier-feature">Contact to arrange</div>
+    </div>
+  </div>
+
+  <div class="tm-bp-section-label">Full Beats Playlist</div>
+
+  <div class="tm-bp-cta">
+    <div class="tm-bp-cta-art">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+        <rect x="3" y="4" width="4" height="16" rx="1"/>
+        <rect x="10" y="9" width="4" height="11" rx="1"/>
+        <rect x="17" y="2" width="4" height="18" rx="1"/>
+      </svg>
+    </div>
+    <div class="tm-bp-cta-info">
+      <div class="tm-bp-cta-title">{{ section.settings.playlist_title | default: 'T Mafianie — Beats Catalog' }}</div>
+      <div class="tm-bp-cta-meta">{{ section.settings.playlist_meta | default: 'Trap · Drill · R&B · Afrobeats · Custom Production' }}</div>
+      <a href="{{ section.settings.youtube_url | default: 'https://youtube.com/playlist?list=PLBrGsH048d4fbHcFSdORTrovDxsN3sI2K' }}" class="tm-bp-cta-btn" target="_blank" rel="noopener">
+        Listen on YouTube →
+      </a>
+    </div>
+  </div>
+
+  <div class="tm-bp-note">
+    Want a custom beat?
+    <a href="/pages/booking">Book a session →</a>
+  </div>
+</section>
+
+{% schema %}
+{
+  "name": "TM Beats Page",
+  "settings": [
+    { "type": "text",    "id": "eyebrow",        "label": "Eyebrow",           "default": "Cabana Music Empire" },
+    { "type": "text",    "id": "title_line1",    "label": "Title Line 1",      "default": "Beats" },
+    { "type": "text",    "id": "title_line2",    "label": "Title Line 2",      "default": "Store" },
+    { "type": "textarea","id": "subtitle",        "label": "Subtitle",          "default": "Exclusive and non-exclusive beat licenses." },
+    { "type": "header",  "content": "YouTube Playlist" },
+    { "type": "url",     "id": "youtube_url",    "label": "Beats Playlist URL" },
+    { "type": "text",    "id": "playlist_title", "label": "Playlist Title",    "default": "T Mafianie — Beats Catalog" },
+    { "type": "text",    "id": "playlist_meta",  "label": "Playlist Subtitle", "default": "Trap · Drill · R&B · Afrobeats · Custom Production" }
+  ],
+  "presets": [{ "name": "TM Beats Page" }]
+}
+{% endschema %}

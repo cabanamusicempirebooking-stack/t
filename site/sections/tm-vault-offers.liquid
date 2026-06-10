@@ -1,0 +1,107 @@
+{% comment %}SECTION: tm-vault-offers.liquid — Paid vault product cards{% endcomment %}
+
+<style>
+.tm-vo{--red:#ff2a2a;--k:#0d0d0d;--off:#f7f5f2;--b:rgba(13,13,13,.08);--ease:cubic-bezier(.22,1,.36,1);font-family:'DM Sans',sans-serif}
+.tm-vo *,.tm-vo *::before,.tm-vo *::after{box-sizing:border-box}
+.tm-vo-section{background:#fff;padding:100px 64px;border-top:1px solid var(--b)}
+.tm-vo-header{text-align:center;margin-bottom:64px}
+.tm-vo-eye{display:flex;align-items:center;justify-content:center;gap:12px;font-size:9px;font-weight:500;letter-spacing:4px;text-transform:uppercase;color:var(--red);margin-bottom:18px}
+.tm-vo-eye::before,.tm-vo-eye::after{content:'';display:block;width:24px;height:1px;background:var(--red)}
+.tm-vo-title{font-family:'Bebas Neue',sans-serif;font-size:clamp(44px,6vw,80px);line-height:.9;color:var(--k);letter-spacing:1px;margin-bottom:14px}
+.tm-vo-sub{font-family:'Cormorant Garamond',serif;font-style:italic;font-size:18px;font-weight:300;color:rgba(13,13,13,.45);max-width:440px;margin:0 auto;line-height:1.65}
+.tm-vo-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:24px}
+.tm-vo-card{background:var(--off);border:1px solid var(--b);overflow:hidden;position:relative;transition:border-color .3s,box-shadow .3s}
+.tm-vo-card:hover{border-color:rgba(255,42,42,.25);box-shadow:0 12px 48px rgba(0,0,0,.08)}
+.tm-vo-card-img{position:relative;aspect-ratio:1/1;overflow:hidden;background:var(--k);display:flex;align-items:center;justify-content:center}
+.tm-vo-card-img img{width:100%;height:100%;object-fit:cover;display:block;transition:transform .5s var(--ease)}
+.tm-vo-card:hover .tm-vo-card-img img{transform:scale(1.04)}
+.tm-vo-card-img-placeholder{font-family:'Bebas Neue',sans-serif;font-size:clamp(36px,5vw,64px);letter-spacing:4px;color:rgba(240,237,232,.15);text-align:center;padding:20px}
+.tm-vo-card-badge{position:absolute;top:16px;left:16px;background:var(--red);color:#fff;font-size:8px;font-weight:500;letter-spacing:2px;text-transform:uppercase;padding:6px 12px}
+.tm-vo-card-body{padding:28px 24px}
+.tm-vo-card-label{font-size:8px;font-weight:500;letter-spacing:3px;text-transform:uppercase;color:var(--red);margin-bottom:10px}
+.tm-vo-card-title{font-family:'Bebas Neue',sans-serif;font-size:28px;letter-spacing:1px;color:var(--k);line-height:1;margin-bottom:12px}
+.tm-vo-card-desc{font-size:12px;line-height:1.75;color:rgba(13,13,13,.5);margin-bottom:20px}
+.tm-vo-card-price{font-family:'Bebas Neue',sans-serif;font-size:36px;letter-spacing:1px;color:var(--k);margin-bottom:20px}
+.tm-vo-card-price .orig{font-size:18px;color:rgba(13,13,13,.3);text-decoration:line-through;margin-left:8px}
+.tm-vo-card-cta{display:block;width:100%;background:var(--k);color:#fff;font-family:'DM Sans',sans-serif;font-size:10px;font-weight:500;letter-spacing:2.5px;text-transform:uppercase;padding:15px 20px;text-align:center;text-decoration:none;transition:background .25s,border-color .25s}
+.tm-vo-card-cta:hover{background:var(--red)}
+.tm-vo-card.featured{border-color:rgba(255,42,42,.35)}
+.tm-vo-card.featured .tm-vo-card-cta{background:var(--red)}
+.tm-vo-card.featured .tm-vo-card-cta:hover{background:#d42020}
+
+@media(max-width:1023px){.tm-vo-grid{grid-template-columns:repeat(2,1fr)}}
+@media(max-width:767px){
+  .tm-vo-section{padding:72px 24px}
+  .tm-vo-grid{grid-template-columns:1fr}
+}
+</style>
+
+<section class="tm-vo tm-vo-section">
+  <div class="tm-vo-header">
+    <div class="tm-vo-eye">{{ section.settings.eyebrow }}</div>
+    <h2 class="tm-vo-title">{{ section.settings.heading }}</h2>
+    <p class="tm-vo-sub">{{ section.settings.subheading }}</p>
+  </div>
+
+  <div class="tm-vo-grid">
+    {% for block in section.blocks %}
+      <div class="tm-vo-card{% if block.settings.featured %} featured{% endif %}" {{ block.shopify_attributes }}>
+        <div class="tm-vo-card-img">
+          {% if block.settings.image %}
+            <img src="{{ block.settings.image | img_url: '600x600', crop: 'center' }}" alt="{{ block.settings.title }}" loading="lazy" width="600" height="600">
+          {% else %}
+            <div class="tm-vo-card-img-placeholder">CME</div>
+          {% endif %}
+          {% if block.settings.badge != blank %}
+            <div class="tm-vo-card-badge">{{ block.settings.badge }}</div>
+          {% endif %}
+        </div>
+        <div class="tm-vo-card-body">
+          <div class="tm-vo-card-label">{{ block.settings.label }}</div>
+          <div class="tm-vo-card-title">{{ block.settings.title }}</div>
+          <div class="tm-vo-card-desc">{{ block.settings.description }}</div>
+          <div class="tm-vo-card-price">
+            {{ block.settings.price }}
+            {% if block.settings.original_price != blank %}<span class="orig">{{ block.settings.original_price }}</span>{% endif %}
+          </div>
+          <a href="{{ block.settings.button_url }}" class="tm-vo-card-cta">{{ block.settings.button_text }}</a>
+        </div>
+      </div>
+    {% endfor %}
+  </div>
+</section>
+
+{% schema %}
+{
+  "name": "Vault Offers",
+  "settings": [
+    {"type":"text","id":"eyebrow","label":"Eyebrow","default":"VAULT DROPS"},
+    {"type":"text","id":"heading","label":"Heading","default":"Support The Movement"},
+    {"type":"textarea","id":"subheading","label":"Subheading","default":"Own the music. Fuel the movement."}
+  ],
+  "blocks":[{
+    "type":"offer",
+    "name":"Offer Card",
+    "settings":[
+      {"type":"checkbox","id":"featured","label":"Featured Card","default":false},
+      {"type":"image_picker","id":"image","label":"Product Image"},
+      {"type":"text","id":"badge","label":"Badge Text (e.g. MOST POPULAR)"},
+      {"type":"text","id":"label","label":"Card Label","default":"Digital Album"},
+      {"type":"text","id":"title","label":"Card Title","default":"Awake 4 Digital Album"},
+      {"type":"textarea","id":"description","label":"Description","default":"The full album. Download instantly. Stream forever."},
+      {"type":"text","id":"price","label":"Price","default":"$9.99"},
+      {"type":"text","id":"original_price","label":"Original Price (optional, shows strikethrough)"},
+      {"type":"text","id":"button_text","label":"Button Text","default":"Buy Now"},
+      {"type":"url","id":"button_url","label":"Button URL"}
+    ]
+  }],
+  "presets":[{
+    "name":"Vault Offers",
+    "blocks":[
+      {"type":"offer","settings":{"label":"Digital Album","title":"Awake 4 Digital Album","description":"The full album. Download instantly. Stream forever.","price":"$9.99","button_text":"Buy Now","button_url":"/products/awake-4-digital-album"}},
+      {"type":"offer","settings":{"featured":true,"badge":"MOST POPULAR","label":"Deluxe Vault Edition","title":"Awake 4 Deluxe Vault Edition","description":"Full album + 3 bonus tracks + exclusive BTS video access.","price":"$19.99","button_text":"Get Deluxe","button_url":"/products/awake-4-deluxe-vault-edition"}},
+      {"type":"offer","settings":{"label":"Superfan Bundle","title":"T Mafianie Superfan Bundle","description":"Digital album + merch + early access to every future drop.","price":"$49.99","button_text":"Go Superfan","button_url":"/products/t-mafianie-superfan-bundle"}}
+    ]
+  }]
+}
+{% endschema %}

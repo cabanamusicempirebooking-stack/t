@@ -1,0 +1,1001 @@
+{% comment %}
+  SECTION: tm-about.liquid  v2.0
+  About the Brand — T Mafianie / Cabana Music Empire / CME Audio
+
+  LAYOUT
+  ──────
+  Top half  : two-column — featured photo left, bio right (desktop)
+  Bottom half: full-width gallery grid from Blocks (unlimited images via customizer)
+  Mobile    : single column throughout
+
+  GALLERY
+  ───────
+  Add gallery images as Blocks ("Gallery Image") in the Theme Customizer.
+  Each block has its own image picker + alt text field.
+  Clicking any thumbnail opens a lightweight CSS/JS lightbox (no library needed).
+
+  SEO / GOOGLE KNOWLEDGE PANEL
+  ─────────────────────────────
+  Injects two JSON-LD schemas:
+    1. Person  — T Mafianie (name, url, sameAs social links, description, image)
+    2. Organization — Cabana Music Empire (name, url, logo, sameAs, description)
+  Each gallery image is also marked up as an ImageObject — Google indexes these
+  for image search and cross-references them with the Knowledge Panel entity.
+  All values are editable from the Theme Customizer — no code changes needed.
+
+  DESIGN SYSTEM
+  ─────────────
+  Fonts  : Bebas Neue (headings), DM Sans (body) — loaded in theme.liquid
+  Colors : #f7f5f2 bg | #0d0d0d dark | #ff2a2a red accent
+  Matches: tm-hero, tm-ticker-stats visual language exactly
+{% endcomment %}
+
+{%- liquid
+  assign show_gallery = false
+  for block in section.blocks
+    if block.type == 'gallery_image' and block.settings.image != blank
+      assign show_gallery = true
+    endif
+  endfor
+-%}
+
+<style>
+/* ════════════════════════════════════════════
+   WRAPPER
+════════════════════════════════════════════ */
+#tm-about-brand {
+  background: #f7f5f2;
+  padding: 100px 64px;
+  position: relative;
+  overflow: hidden;
+}
+
+/* Background grid texture */
+#tm-about-brand::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image:
+    linear-gradient(rgba(13,13,13,0.03) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(13,13,13,0.03) 1px, transparent 1px);
+  background-size: 72px 72px;
+  mask-image: radial-gradient(ellipse 100% 80% at 50% 50%, black 30%, transparent 100%);
+  -webkit-mask-image: radial-gradient(ellipse 100% 80% at 50% 50%, black 30%, transparent 100%);
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* Ghost CME watermark */
+#tm-about-brand::after {
+  content: 'CME';
+  position: absolute;
+  left: -30px;
+  bottom: -40px;
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 340px;
+  letter-spacing: -12px;
+  line-height: 1;
+  color: rgba(255,42,42,0.04);
+  user-select: none;
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* ════════════════════════════════════════════
+   BIO GRID (photo col + text col)
+════════════════════════════════════════════ */
+.tm-about-inner {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  grid-template-columns: 420px 1fr;
+  gap: 80px;
+  align-items: start;
+  max-width: 1280px;
+  margin: 0 auto;
+}
+
+/* ── PHOTO COLUMN ── */
+.tm-about-photos { display: flex; flex-direction: column; gap: 16px; }
+
+.tm-about-photo-primary {
+  width: 100%;
+  aspect-ratio: 4 / 5;
+  overflow: hidden;
+  position: relative;
+}
+.tm-about-photo-primary img {
+  width: 100%; height: 100%;
+  object-fit: cover; object-position: top center;
+  display: block;
+  transition: transform 0.6s cubic-bezier(0.22,1,0.36,1);
+}
+.tm-about-photo-primary:hover img { transform: scale(1.03); }
+.tm-about-photo-primary::after {
+  content: '';
+  position: absolute; left: 0; bottom: 0;
+  width: 3px; height: 40%;
+  background: #ff2a2a;
+}
+
+.tm-about-photos-secondary {
+  display: grid; grid-template-columns: 1fr 1fr; gap: 16px;
+}
+.tm-about-photo-secondary { overflow: hidden; aspect-ratio: 1 / 1; }
+.tm-about-photo-secondary img {
+  width: 100%; height: 100%; object-fit: cover; display: block;
+  transition: transform 0.6s cubic-bezier(0.22,1,0.36,1);
+}
+.tm-about-photo-secondary:hover img { transform: scale(1.05); }
+
+/* ── BIO COLUMN ── */
+.tm-about-content { padding-top: 8px; }
+
+.tm-about-overline {
+  font-family: 'DM Sans', sans-serif;
+  font-size: 9px; font-weight: 500;
+  letter-spacing: 4px; text-transform: uppercase;
+  color: #ff2a2a; margin-bottom: 20px; display: block;
+}
+
+.tm-about-heading {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: clamp(52px, 5.5vw, 80px);
+  letter-spacing: 1px; line-height: 0.93;
+  color: #0d0d0d; margin: 0 0 32px 0;
+}
+.tm-about-heading em { color: #ff2a2a; font-style: normal; }
+
+.tm-about-subheading {
+  font-family: 'DM Sans', sans-serif;
+  font-size: 13px; font-weight: 500;
+  letter-spacing: 2.5px; text-transform: uppercase;
+  color: rgba(13,13,13,0.45); margin-bottom: 24px; display: block;
+}
+
+.tm-about-divider {
+  width: 40px; height: 2px;
+  background: #ff2a2a; margin-bottom: 32px;
+}
+
+.tm-about-bio {
+  font-family: 'DM Sans', sans-serif;
+  font-size: 15px; line-height: 1.9;
+  color: rgba(13,13,13,0.72); margin-bottom: 20px;
+}
+.tm-about-bio strong { color: #0d0d0d; font-weight: 500; }
+
+/* Keyword chips */
+.tm-about-chips {
+  display: flex; flex-wrap: wrap; gap: 8px;
+  margin: 32px 0 40px;
+}
+.tm-about-chip {
+  font-family: 'DM Sans', sans-serif;
+  font-size: 9px; letter-spacing: 2.5px; text-transform: uppercase;
+  border: 1px solid rgba(13,13,13,0.18);
+  padding: 8px 18px; color: rgba(13,13,13,0.55);
+  transition: background 0.2s, color 0.2s, border-color 0.2s;
+}
+.tm-about-chip:hover { background: #0d0d0d; color: #f7f5f2; border-color: #0d0d0d; }
+
+/* CTA button */
+.tm-about-cta {
+  display: inline-block;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 10px; font-weight: 500;
+  letter-spacing: 3px; text-transform: uppercase;
+  background: #ff2a2a; color: #ffffff;
+  padding: 16px 36px; text-decoration: none;
+  transition: background 0.25s, transform 0.2s;
+  position: relative; overflow: hidden;
+}
+.tm-about-cta::after {
+  content: ''; position: absolute; inset: 0;
+  background: rgba(255,255,255,0.08); opacity: 0; transition: opacity 0.2s;
+}
+.tm-about-cta:hover { background: #a00d24; transform: translateY(-1px); }
+.tm-about-cta:hover::after { opacity: 1; }
+
+/* ════════════════════════════════════════════
+   GALLERY SECTION
+════════════════════════════════════════════ */
+.tm-about-gallery-wrap {
+  position: relative;
+  z-index: 1;
+  max-width: 1280px;
+  margin: 72px auto 0;
+}
+
+.tm-about-gallery-header {
+  display: flex;
+  align-items: baseline;
+  gap: 20px;
+  margin-bottom: 28px;
+  padding-bottom: 20px;
+  border-bottom: 1px solid rgba(13,13,13,0.08);
+}
+
+.tm-about-gallery-label {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 28px;
+  letter-spacing: 2px;
+  color: #0d0d0d;
+}
+
+.tm-about-gallery-count {
+  font-family: 'DM Sans', sans-serif;
+  font-size: 9px;
+  letter-spacing: 3px;
+  text-transform: uppercase;
+  color: rgba(13,13,13,0.35);
+}
+
+/* Auto-fill responsive grid */
+.tm-about-gallery-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 12px;
+}
+
+/* Every gallery tile */
+.tm-about-gallery-item {
+  position: relative;
+  overflow: hidden;
+  aspect-ratio: 1 / 1;
+  cursor: pointer;
+  background: #e8e5e0;
+}
+.tm-about-gallery-item img {
+  width: 100%; height: 100%;
+  object-fit: cover; display: block;
+  transition: transform 0.55s cubic-bezier(0.22,1,0.36,1);
+}
+.tm-about-gallery-item:hover img { transform: scale(1.06); }
+.tm-about-gallery-item:focus-visible {
+  outline: 2px solid #ff2a2a;
+  outline-offset: 2px;
+}
+
+/* Overlay caption on hover */
+.tm-about-gallery-overlay {
+  position: absolute; inset: 0;
+  background: linear-gradient(to top, rgba(13,13,13,0.75) 0%, transparent 55%);
+  opacity: 0;
+  transition: opacity 0.3s;
+  display: flex;
+  align-items: flex-end;
+  padding: 16px;
+}
+.tm-about-gallery-item:hover .tm-about-gallery-overlay { opacity: 1; }
+.tm-about-gallery-caption {
+  font-family: 'DM Sans', sans-serif;
+  font-size: 11px;
+  color: rgba(255,255,255,0.85);
+  letter-spacing: 0.5px;
+  line-height: 1.4;
+}
+
+/* Expand icon badge */
+.tm-about-gallery-icon {
+  position: absolute;
+  top: 12px; right: 12px;
+  width: 28px; height: 28px;
+  background: rgba(255,42,42,0.9);
+  display: flex; align-items: center; justify-content: center;
+  opacity: 0;
+  transition: opacity 0.25s;
+}
+.tm-about-gallery-icon svg { width: 12px; height: 12px; fill: white; }
+.tm-about-gallery-item:hover .tm-about-gallery-icon { opacity: 1; }
+
+/* ════════════════════════════════════════════
+   LIGHTBOX
+════════════════════════════════════════════ */
+.tm-lightbox {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  background: rgba(13,13,13,0.96);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.3s;
+  padding: 24px;
+}
+.tm-lightbox.is-open {
+  opacity: 1;
+  pointer-events: all;
+}
+
+.tm-lightbox-stage {
+  position: relative;
+  max-width: 90vw;
+  max-height: 88vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.tm-lightbox-stage img {
+  max-width: 88vw;
+  max-height: 80vh;
+  object-fit: contain;
+  display: block;
+}
+.tm-lightbox-stage-caption {
+  position: absolute;
+  bottom: -36px;
+  left: 0; right: 0;
+  text-align: center;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 11px;
+  letter-spacing: 1px;
+  color: rgba(255,255,255,0.45);
+}
+
+/* Arrows */
+.tm-lb-nav {
+  position: fixed;
+  top: 50%;
+  transform: translateY(-50%);
+  background: rgba(255,42,42,0.85);
+  border: none;
+  width: 44px; height: 44px;
+  cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  transition: background 0.2s;
+  z-index: 10000;
+}
+.tm-lb-nav:hover { background: #ff2a2a; }
+.tm-lb-nav svg { width: 18px; height: 18px; fill: white; }
+.tm-lb-prev { left: 20px; }
+.tm-lb-next { right: 20px; }
+
+/* Close */
+.tm-lb-close {
+  position: fixed;
+  top: 20px; right: 20px;
+  background: none; border: none;
+  cursor: pointer;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 9px; letter-spacing: 3px; text-transform: uppercase;
+  color: rgba(255,255,255,0.5);
+  display: flex; align-items: center; gap: 10px;
+  transition: color 0.2s;
+  z-index: 10000;
+}
+.tm-lb-close:hover { color: white; }
+.tm-lb-close-x {
+  width: 28px; height: 28px;
+  border: 1px solid rgba(255,255,255,0.2);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 16px; line-height: 1;
+}
+
+/* Counter */
+.tm-lb-counter {
+  position: fixed;
+  bottom: 24px; left: 50%;
+  transform: translateX(-50%);
+  font-family: 'DM Sans', sans-serif;
+  font-size: 9px; letter-spacing: 3px; text-transform: uppercase;
+  color: rgba(255,255,255,0.3);
+  z-index: 10000;
+}
+
+/* ════════════════════════════════════════════
+   MOBILE
+════════════════════════════════════════════ */
+@media (max-width: 900px) {
+  #tm-about-brand { padding: 72px 24px; }
+  .tm-about-inner { grid-template-columns: 1fr; gap: 48px; }
+  .tm-about-photo-primary { aspect-ratio: 3 / 2; }
+  .tm-about-heading { font-size: clamp(44px, 12vw, 64px); }
+  .tm-about-gallery-wrap { margin-top: 48px; }
+  .tm-about-gallery-grid { grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 8px; }
+  .tm-lb-nav { display: none; }
+}
+@media (max-width: 540px) {
+  #tm-about-brand { padding: 56px 20px; }
+  .tm-about-gallery-grid { grid-template-columns: repeat(2, 1fr); }
+}
+</style>
+
+{%- comment -%}
+════════════════════════════════════════════════════════════════
+  JSON-LD STRUCTURED DATA
+  Feeds Google Knowledge Panel for T Mafianie and Cabana Music Empire.
+  Person schema: Google uses name, description, image, sameAs, jobTitle.
+  Organization schema: Google uses name, logo, url, sameAs, description.
+  ImageObject entries: each gallery photo gets indexed by Google Images
+    and linked to the entity — this is how Google finds images for the panel.
+════════════════════════════════════════════════════════════════
+{%- endcomment -%}
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@graph": [
+    {
+      "@type": "Person",
+      "@id": "{{ shop.url }}/#person-tmafianie",
+      "name": {{ section.settings.schema_person_name | default: 'T Mafianie' | json }},
+      "alternateName": ["T Mafianie", "Cabana", "Cabana Music Empire"],
+      "description": {{ section.settings.schema_person_desc | default: 'T Mafianie is an independent music producer, artist, and creator — founder of Cabana Music Empire and CME Audio. Known for beat production, VST3 audio plugins, and creator-focused music tools including Vibe EQ, Vibe Compressor, and Mafianie Space.' | json }},
+      "url": "{{ shop.url }}/",
+      "jobTitle": {{ section.settings.schema_job_title | default: 'Music Producer, Artist & Creator' | json }},
+      "knowsAbout": [
+        "Music Production",
+        "Beat Making",
+        "VST3 Audio Plugins",
+        "Mixing and Mastering",
+        "Independent Music",
+        "Creator Branding",
+        "Hip-Hop Production",
+        "Audio Engineering"
+      ],
+      {%- if section.settings.photo_1 != blank -%}
+      "image": {
+        "@type": "ImageObject",
+        "url": "{{ section.settings.photo_1 | image_url: width: 800 }}",
+        "width": 800,
+        "description": {{ section.settings.photo_1_alt | default: 'T Mafianie, founder of Cabana Music Empire, music producer and creator' | json }}
+      },
+      {%- endif -%}
+      "sameAs": [
+        {%- assign social_urls = '' -%}
+        {%- if section.settings.social_youtube != blank -%}"{{ section.settings.social_youtube }}"{%- assign social_urls = 'y' -%}{%- endif -%}
+        {%- if section.settings.social_instagram != blank -%}{%- if social_urls != '' -%},{%- endif -%}"{{ section.settings.social_instagram }}"{%- assign social_urls = 'y' -%}{%- endif -%}
+        {%- if section.settings.social_instagram_2 != blank -%}{%- if social_urls != '' -%},{%- endif -%}"{{ section.settings.social_instagram_2 }}"{%- assign social_urls = 'y' -%}{%- endif -%}
+        {%- if section.settings.social_tiktok != blank -%}{%- if social_urls != '' -%},{%- endif -%}"{{ section.settings.social_tiktok }}"{%- assign social_urls = 'y' -%}{%- endif -%}
+        {%- if section.settings.social_twitter != blank -%}{%- if social_urls != '' -%},{%- endif -%}"{{ section.settings.social_twitter }}"{%- endif -%}
+      ],
+      "memberOf": {
+        "@type": "Organization",
+        "@id": "{{ shop.url }}/#org-cme"
+      }
+    },
+    {
+      "@type": "Organization",
+      "@id": "{{ shop.url }}/#org-cme",
+      "name": {{ section.settings.schema_org_name | default: 'Cabana Music Empire' | json }},
+      "alternateName": ["CME Audio", "CME", "Cabana Music Empire"],
+      "description": {{ section.settings.schema_org_desc | default: 'Cabana Music Empire (CME Audio) is an independent music and media brand developing VST3 audio plugins, beats, and production tools for modern producers, artists, and beatmakers. Products include Vibe EQ, Vibe Compressor, Mafianie Space, and the upcoming Cabana Audio Tool.' | json }},
+      "url": "{{ shop.url }}/",
+      {%- if section.settings.photo_logo != blank -%}
+      "logo": {
+        "@type": "ImageObject",
+        "url": "{{ section.settings.photo_logo | image_url: width: 400 }}",
+        "width": 400,
+        "description": "Cabana Music Empire CME Audio official logo"
+      },
+      {%- endif -%}
+      "founder": {
+        "@type": "Person",
+        "@id": "{{ shop.url }}/#person-tmafianie"
+      },
+      "foundingLocation": {
+        "@type": "Place",
+        "name": "Phoenix, AZ, United States"
+      },
+      "knowsAbout": [
+        "VST3 Audio Plugins",
+        "Music Production Tools",
+        "Beat Licensing",
+        "Mixing Software",
+        "Independent Music Distribution",
+        "Creator Tools"
+      ],
+      "sameAs": [
+        {%- assign org_social = '' -%}
+        {%- if section.settings.social_youtube != blank -%}"{{ section.settings.social_youtube }}"{%- assign org_social = 'y' -%}{%- endif -%}
+        {%- if section.settings.social_instagram != blank -%}{%- if org_social != '' -%},{%- endif -%}"{{ section.settings.social_instagram }}"{%- assign org_social = 'y' -%}{%- endif -%}
+        {%- if section.settings.social_tiktok != blank -%}{%- if org_social != '' -%},{%- endif -%}"{{ section.settings.social_tiktok }}"{%- endif -%}
+      ]
+    }
+    {%- if show_gallery -%}
+      {%- for block in section.blocks -%}
+        {%- if block.type == 'gallery_image' and block.settings.image != blank -%}
+    ,{
+      "@type": "ImageObject",
+      "url": "{{ block.settings.image | image_url: width: 1400 }}",
+      "name": {{ block.settings.alt | default: 'T Mafianie Cabana Music Empire CME Audio' | json }},
+      "description": {{ block.settings.alt | default: 'T Mafianie Cabana Music Empire CME Audio music production' | json }},
+      "author": {
+        "@type": "Person",
+        "@id": "{{ shop.url }}/#person-tmafianie"
+      }
+    }
+        {%- endif -%}
+      {%- endfor -%}
+    {%- endif -%}
+  ]
+}
+</script>
+
+{%- comment -%} ══ VISIBLE HTML ══ {%- endcomment -%}
+<section
+  id="about"
+  aria-label="About T Mafianie and Cabana Music Empire"
+  itemscope
+  itemtype="https://schema.org/Person"
+>
+  <meta itemprop="name" content="{{ section.settings.schema_person_name | default: 'T Mafianie' }}" />
+  <meta itemprop="url" content="{{ shop.url }}/" />
+
+  <div id="tm-about-brand">
+
+    {%- comment -%} ── TOP: BIO + FEATURE PHOTOS ── {%- endcomment -%}
+    <div class="tm-about-inner">
+
+      {%- comment -%} PHOTO COLUMN {%- endcomment -%}
+      <div class="tm-about-photos">
+        {%- if section.settings.photo_1 != blank -%}
+          <div class="tm-about-photo-primary">
+            {{
+              section.settings.photo_1
+              | image_url: width: 840
+              | image_tag:
+                alt: section.settings.photo_1_alt,
+                loading: 'lazy',
+                widths: '420, 630, 840',
+                sizes: '(max-width: 900px) 100vw, 420px',
+                itemprop: 'image'
+            }}
+          </div>
+        {%- else -%}
+          <div class="tm-about-photo-primary" style="background:#e8e5e0;display:flex;align-items:center;justify-content:center;">
+            <span style="font-family:'DM Sans',sans-serif;font-size:10px;letter-spacing:3px;text-transform:uppercase;color:rgba(13,13,13,0.3);">Add Photo in Customizer</span>
+          </div>
+        {%- endif -%}
+
+        {%- if section.settings.photo_2 != blank or section.settings.photo_3 != blank -%}
+          <div class="tm-about-photos-secondary">
+            {%- if section.settings.photo_2 != blank -%}
+              <div class="tm-about-photo-secondary">
+                {{
+                  section.settings.photo_2
+                  | image_url: width: 420
+                  | image_tag:
+                    alt: section.settings.photo_2_alt,
+                    loading: 'lazy',
+                    widths: '200, 420',
+                    sizes: '(max-width: 900px) 50vw, 200px'
+                }}
+              </div>
+            {%- endif -%}
+            {%- if section.settings.photo_3 != blank -%}
+              <div class="tm-about-photo-secondary">
+                {{
+                  section.settings.photo_3
+                  | image_url: width: 420
+                  | image_tag:
+                    alt: section.settings.photo_3_alt,
+                    loading: 'lazy',
+                    widths: '200, 420',
+                    sizes: '(max-width: 900px) 50vw, 200px'
+                }}
+              </div>
+            {%- endif -%}
+          </div>
+        {%- endif -%}
+      </div>
+
+      {%- comment -%} BIO COLUMN {%- endcomment -%}
+      <div class="tm-about-content">
+        {%- if section.settings.overline != blank -%}
+          <span class="tm-about-overline">{{ section.settings.overline }}</span>
+        {%- endif -%}
+
+        <h2 class="tm-about-heading">{{ section.settings.heading | newline_to_br }}</h2>
+
+        {%- if section.settings.subheading != blank -%}
+          <span class="tm-about-subheading">{{ section.settings.subheading }}</span>
+        {%- endif -%}
+
+        <div class="tm-about-divider" aria-hidden="true"></div>
+
+        {%- if section.settings.bio_p1 != blank -%}
+          <p class="tm-about-bio" itemprop="description">{{ section.settings.bio_p1 }}</p>
+        {%- endif -%}
+        {%- if section.settings.bio_p2 != blank -%}
+          <p class="tm-about-bio">{{ section.settings.bio_p2 }}</p>
+        {%- endif -%}
+        {%- if section.settings.bio_p3 != blank -%}
+          <p class="tm-about-bio">{{ section.settings.bio_p3 }}</p>
+        {%- endif -%}
+
+        {%- if section.settings.tags != blank -%}
+          <div class="tm-about-chips" aria-label="Topics">
+            {%- assign chips = section.settings.tags | split: ',' -%}
+            {%- for chip in chips -%}
+              <span class="tm-about-chip">{{ chip | strip }}</span>
+            {%- endfor -%}
+          </div>
+        {%- endif -%}
+
+        {%- if section.settings.cta_text != blank and section.settings.cta_link != blank -%}
+          <a
+            href="{{ section.settings.cta_link }}"
+            class="tm-about-cta"
+            aria-label="{{ section.settings.cta_text }} — Cabana Music Empire"
+          >
+            {{ section.settings.cta_text }}
+          </a>
+        {%- endif -%}
+      </div>
+    </div>
+
+    {%- comment -%} ── BOTTOM: PHOTO GALLERY ── {%- endcomment -%}
+    {%- if show_gallery -%}
+      {%- liquid
+        assign gallery_count = 0
+        for block in section.blocks
+          if block.type == 'gallery_image' and block.settings.image != blank
+            assign gallery_count = gallery_count | plus: 1
+          endif
+        endfor
+      -%}
+
+      <div class="tm-about-gallery-wrap">
+        <div class="tm-about-gallery-header">
+          <span class="tm-about-gallery-label">{{ section.settings.gallery_heading | default: 'Gallery' }}</span>
+          <span class="tm-about-gallery-count">{{ gallery_count }} Photo{% if gallery_count != 1 %}s{% endif %}</span>
+        </div>
+
+        <div
+          class="tm-about-gallery-grid"
+          id="tm-gallery-grid"
+          role="list"
+          aria-label="Photo gallery of T Mafianie and Cabana Music Empire"
+        >
+          {%- assign gindex = 0 -%}
+          {%- for block in section.blocks -%}
+            {%- if block.type == 'gallery_image' and block.settings.image != blank -%}
+              <div
+                class="tm-about-gallery-item"
+                role="listitem"
+                data-gindex="{{ gindex }}"
+                data-src="{{ block.settings.image | image_url: width: 1400 }}"
+                data-alt="{{ block.settings.alt | escape }}"
+                tabindex="0"
+                aria-label="Open photo: {{ block.settings.alt | default: 'Gallery photo' | escape }}"
+                {{ block.shopify_attributes }}
+              >
+                {{
+                  block.settings.image
+                  | image_url: width: 600
+                  | image_tag:
+                    alt: block.settings.alt,
+                    loading: 'lazy',
+                    widths: '300, 450, 600',
+                    sizes: '(max-width: 540px) 50vw, (max-width: 900px) 33vw, 220px'
+                }}
+                <div class="tm-about-gallery-overlay">
+                  {%- if block.settings.alt != blank -%}
+                    <span class="tm-about-gallery-caption">{{ block.settings.alt }}</span>
+                  {%- endif -%}
+                </div>
+                <div class="tm-about-gallery-icon" aria-hidden="true">
+                  <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M15 3h6v6h-2V5h-4V3zM3 9V3h6v2H5v4H3zm12 12v-2h4v-4h2v6h-6zM3 15h2v4h4v2H3v-6z"/></svg>
+                </div>
+              </div>
+              {%- assign gindex = gindex | plus: 1 -%}
+            {%- endif -%}
+          {%- endfor -%}
+        </div>
+      </div>
+
+      {%- comment -%} LIGHTBOX (pure CSS/JS, no library) {%- endcomment -%}
+      <div
+        id="tm-lightbox"
+        class="tm-lightbox"
+        role="dialog"
+        aria-modal="true"
+        aria-label="Photo lightbox"
+      >
+        <button class="tm-lb-close" id="tm-lb-close" aria-label="Close lightbox">
+          <span class="tm-lb-close-x" aria-hidden="true">&times;</span>
+          Close
+        </button>
+
+        <button class="tm-lb-nav tm-lb-prev" id="tm-lb-prev" aria-label="Previous photo">
+          <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M15.41 7.41L14 6l-6 6 6 6 1.41-1.41L10.83 12z"/></svg>
+        </button>
+
+        <div class="tm-lightbox-stage">
+          <img id="tm-lb-img" src="" alt="" />
+          <div class="tm-lightbox-stage-caption" id="tm-lb-caption"></div>
+        </div>
+
+        <button class="tm-lb-nav tm-lb-next" id="tm-lb-next" aria-label="Next photo">
+          <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M10 6L8.59 7.41 13.17 12l-4.58 4.59L10 18l6-6z"/></svg>
+        </button>
+
+        <div class="tm-lb-counter" id="tm-lb-counter" aria-live="polite"></div>
+      </div>
+
+      <script>
+      (function () {
+        var items  = Array.from(document.querySelectorAll('#tm-gallery-grid .tm-about-gallery-item'));
+        var lb     = document.getElementById('tm-lightbox');
+        var lbImg  = document.getElementById('tm-lb-img');
+        var lbCap  = document.getElementById('tm-lb-caption');
+        var lbCtr  = document.getElementById('tm-lb-counter');
+        var cur    = 0;
+        var total  = items.length;
+        var bodyEl = document.body;
+
+        function show(idx) {
+          cur = ((idx % total) + total) % total;
+          var tile   = items[cur];
+          lbImg.src  = tile.dataset.src;
+          lbImg.alt  = tile.dataset.alt || '';
+          lbCap.textContent = tile.dataset.alt || '';
+          lbCtr.textContent = (cur + 1) + ' \u2f ' + total;
+        }
+
+        function open(idx) {
+          show(idx);
+          lb.classList.add('is-open');
+          bodyEl.style.overflow = 'hidden';
+          document.getElementById('tm-lb-close').focus();
+        }
+
+        function close() {
+          lb.classList.remove('is-open');
+          bodyEl.style.overflow = '';
+          // Return focus to the item that opened the lightbox
+          if (items[cur]) items[cur].focus();
+        }
+
+        items.forEach(function (el) {
+          el.addEventListener('click', function () { open(parseInt(el.dataset.gindex, 10)); });
+          el.addEventListener('keydown', function (e) {
+            if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); open(parseInt(el.dataset.gindex, 10)); }
+          });
+        });
+
+        document.getElementById('tm-lb-close').addEventListener('click', close);
+        document.getElementById('tm-lb-prev').addEventListener('click', function () { show(cur - 1); });
+        document.getElementById('tm-lb-next').addEventListener('click', function () { show(cur + 1); });
+
+        // Click outside image to close
+        lb.addEventListener('click', function (e) { if (e.target === lb) close(); });
+
+        // Keyboard navigation
+        document.addEventListener('keydown', function (e) {
+          if (!lb.classList.contains('is-open')) return;
+          if (e.key === 'ArrowLeft')  { show(cur - 1); }
+          if (e.key === 'ArrowRight') { show(cur + 1); }
+          if (e.key === 'Escape')     { close(); }
+        });
+      })();
+      </script>
+    {%- endif -%}
+
+  </div>
+</section>
+
+{% schema %}
+{
+  "name": "TM About Brand",
+  "tag": "div",
+  "settings": [
+    {
+      "type": "header",
+      "content": "Bio Text"
+    },
+    {
+      "type": "text",
+      "id": "overline",
+      "label": "Overline",
+      "default": "The Brand Behind the Sound"
+    },
+    {
+      "type": "textarea",
+      "id": "heading",
+      "label": "Main Heading",
+      "default": "Built for\nCreators.\nMade to\nLast."
+    },
+    {
+      "type": "text",
+      "id": "subheading",
+      "label": "Subheading",
+      "default": "T Mafianie · Cabana Music Empire · CME Audio"
+    },
+    {
+      "type": "textarea",
+      "id": "bio_p1",
+      "label": "Bio Paragraph 1",
+      "default": "T Mafianie is the creator behind Cabana Music Empire — a music and media brand built for producers, artists, and creators who demand professional tools, original sound, and a strong creative identity. From independent releases to production software, CME is where craft meets culture."
+    },
+    {
+      "type": "textarea",
+      "id": "bio_p2",
+      "label": "Bio Paragraph 2",
+      "default": "Through CME Audio, Cabana Music Empire develops VST3 audio plugins and music production tools designed for modern makers. The current lineup includes Vibe EQ, Vibe Compressor, and Mafianie Space — with the Cabana Audio Tool coming soon. Every tool is engineered for the workflow of working producers, beatmakers, and mixing engineers."
+    },
+    {
+      "type": "textarea",
+      "id": "bio_p3",
+      "label": "Bio Paragraph 3 (optional)",
+      "default": "CME bridges music production, creator culture, media, and entrepreneurship with a premium independent identity. Whether you're building your first beat or mastering your fifth album, Cabana Music Empire has the tools, the sound, and the standard to match your ambition."
+    },
+    {
+      "type": "text",
+      "id": "tags",
+      "label": "Keyword Chips (comma separated)",
+      "default": "Music Production, VST3 Plugins, Beat Making, CME Audio, Mixing Tools, Creator Brand, Independent Music"
+    },
+    {
+      "type": "header",
+      "content": "Call to Action"
+    },
+    {
+      "type": "text",
+      "id": "cta_text",
+      "label": "Button Text",
+      "default": "Explore Plugins"
+    },
+    {
+      "type": "url",
+      "id": "cta_link",
+      "label": "Button Link"
+    },
+    {
+      "type": "header",
+      "content": "Featured Photos (Bio Section — 1 tall + 2 square)"
+    },
+    {
+      "type": "image_picker",
+      "id": "photo_1",
+      "label": "Primary Photo (tall portrait)"
+    },
+    {
+      "type": "text",
+      "id": "photo_1_alt",
+      "label": "Photo 1 Alt Text",
+      "default": "T Mafianie, founder of Cabana Music Empire, music producer and creator"
+    },
+    {
+      "type": "image_picker",
+      "id": "photo_2",
+      "label": "Secondary Photo (square bottom left)"
+    },
+    {
+      "type": "text",
+      "id": "photo_2_alt",
+      "label": "Photo 2 Alt Text",
+      "default": "Cabana Music Empire CME Audio brand identity and music production tools"
+    },
+    {
+      "type": "image_picker",
+      "id": "photo_3",
+      "label": "Tertiary Photo (square bottom right)"
+    },
+    {
+      "type": "text",
+      "id": "photo_3_alt",
+      "label": "Photo 3 Alt Text",
+      "default": "T Mafianie VST3 audio plugins and beat production software for producers"
+    },
+    {
+      "type": "header",
+      "content": "Gallery Section"
+    },
+    {
+      "type": "text",
+      "id": "gallery_heading",
+      "label": "Gallery Heading Label",
+      "default": "Gallery"
+    },
+    {
+      "type": "header",
+      "content": "Google Knowledge Panel — Structured Data"
+    },
+    {
+      "type": "paragraph",
+      "content": "These fields output JSON-LD schema that Google crawls to build and update your Knowledge Panel. Fill every field. Social URLs must be the exact full URL of your real profiles."
+    },
+    {
+      "type": "text",
+      "id": "schema_person_name",
+      "label": "Artist / Person Name",
+      "default": "T Mafianie"
+    },
+    {
+      "type": "textarea",
+      "id": "schema_person_desc",
+      "label": "Person Description (Knowledge Panel bio)",
+      "default": "T Mafianie is an independent music producer, artist, and creator — founder of Cabana Music Empire and CME Audio. Known for beat production, VST3 audio plugins, and creator-focused music tools including Vibe EQ, Vibe Compressor, and Mafianie Space."
+    },
+    {
+      "type": "text",
+      "id": "schema_job_title",
+      "label": "Job Title",
+      "default": "Music Producer, Artist & Creator"
+    },
+    {
+      "type": "text",
+      "id": "schema_org_name",
+      "label": "Organization / Brand Name",
+      "default": "Cabana Music Empire"
+    },
+    {
+      "type": "textarea",
+      "id": "schema_org_desc",
+      "label": "Organization Description",
+      "default": "Cabana Music Empire (CME Audio) is an independent music and media brand developing VST3 audio plugins, beats, and production tools for modern producers, artists, and beatmakers."
+    },
+    {
+      "type": "image_picker",
+      "id": "photo_logo",
+      "label": "Brand Logo (for schema — clean logo, white or transparent background)"
+    },
+    {
+      "type": "header",
+      "content": "Social Profiles — sameAs URLs"
+    },
+    {
+      "type": "paragraph",
+      "content": "Paste the full URL of each profile. These tell Google which accounts belong to T Mafianie and Cabana Music Empire — critical for Knowledge Panel accuracy."
+    },
+    {
+      "type": "url",
+      "id": "social_youtube",
+      "label": "YouTube URL",
+      "info": "e.g. https://www.youtube.com/@tmafianietv"
+    },
+    {
+      "type": "url",
+      "id": "social_instagram",
+      "label": "Instagram URL (Artist — T Mafianie)",
+      "info": "e.g. https://www.instagram.com/tmafianie"
+    },
+    {
+      "type": "url",
+      "id": "social_instagram_2",
+      "label": "Instagram URL (CME Business)",
+      "info": "e.g. https://www.instagram.com/cabanamusicempire"
+    },
+    {
+      "type": "url",
+      "id": "social_tiktok",
+      "label": "TikTok URL",
+      "info": "e.g. https://www.tiktok.com/@tmafianie"
+    },
+    {
+      "type": "url",
+      "id": "social_twitter",
+      "label": "Twitter / X URL",
+      "info": "e.g. https://x.com/tmafianie"
+    }
+  ],
+  "blocks": [
+    {
+      "type": "gallery_image",
+      "name": "Gallery Image",
+      "settings": [
+        {
+          "type": "image_picker",
+          "id": "image",
+          "label": "Photo"
+        },
+        {
+          "type": "text",
+          "id": "alt",
+          "label": "Alt Text (used as caption + Google image description)",
+          "info": "Be specific and descriptive. Example: 'T Mafianie in the studio working on beats, Cabana Music Empire 2024 — Phoenix AZ'"
+        }
+      ]
+    }
+  ],
+  "presets": [
+    {
+      "name": "TM About Brand"
+    }
+  ]
+}
+{% endschema %}

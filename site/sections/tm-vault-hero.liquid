@@ -1,0 +1,162 @@
+{% comment %}SECTION: tm-vault-hero.liquid — Music Vault hero{% endcomment %}
+
+<style>
+.tm-vh {
+  --red: #ff2a2a; --k: #0d0d0d; --chrome: #c0c8d4; --off: #f0ede8;
+  --ease: cubic-bezier(.22,1,.36,1);
+  font-family: 'DM Sans', sans-serif;
+}
+.tm-vh *, .tm-vh *::before, .tm-vh *::after { box-sizing: border-box; }
+
+.tm-vh-section {
+  background: var(--k); position: relative; overflow: hidden;
+  padding: 120px 64px 100px; display: flex; flex-direction: column;
+  align-items: center; text-align: center;
+}
+.tm-vh-grid {
+  position: absolute; inset: 0;
+  background-image: linear-gradient(rgba(255,42,42,.05) 1px,transparent 1px),
+    linear-gradient(90deg,rgba(255,42,42,.05) 1px,transparent 1px);
+  background-size: 64px 64px; pointer-events: none;
+}
+.tm-vh-glow {
+  position: absolute; top: -20%; left: 50%; transform: translateX(-50%);
+  width: 900px; height: 700px;
+  background: radial-gradient(ellipse, rgba(255,42,42,.12) 0%, transparent 65%);
+  border-radius: 50%; pointer-events: none;
+}
+.tm-vh-badge {
+  display: inline-flex; align-items: center; gap: 10px;
+  background: rgba(255,42,42,.1); border: 1px solid rgba(255,42,42,.3);
+  padding: 9px 20px; margin-bottom: 36px;
+  animation: tmVHup .9s var(--ease) both .1s;
+}
+.tm-vh-badge-dot {
+  width: 7px; height: 7px; background: var(--red); border-radius: 50%;
+  animation: tmVHpulse 2s ease infinite;
+}
+.tm-vh-badge span {
+  font-size: 9px; font-weight: 500; letter-spacing: 3px;
+  text-transform: uppercase; color: var(--red);
+}
+.tm-vh-eyebrow {
+  display: flex; align-items: center; justify-content: center; gap: 14px;
+  font-size: 9px; font-weight: 500; letter-spacing: 4px; text-transform: uppercase;
+  color: rgba(240,237,232,.35); margin-bottom: 22px;
+  animation: tmVHup .9s var(--ease) both .2s;
+}
+.tm-vh-eyebrow::before, .tm-vh-eyebrow::after {
+  content: ''; display: block; width: 28px; height: 1px;
+  background: rgba(255,42,42,.45);
+}
+.tm-vh-title {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: clamp(72px,12vw,160px); line-height: .88; letter-spacing: -1px;
+  color: #f0ede8; margin-bottom: 28px;
+  animation: tmVHup 1s var(--ease) both .3s;
+}
+.tm-vh-title .tm-vh-outline {
+  display: block; color: transparent;
+  -webkit-text-stroke: 2px rgba(240,237,232,.15);
+}
+.tm-vh-sub {
+  font-family: 'Cormorant Garamond', serif; font-style: italic;
+  font-size: clamp(17px,2vw,22px); font-weight: 300;
+  color: rgba(240,237,232,.45); max-width: 620px; line-height: 1.7;
+  margin-bottom: 52px; animation: tmVHup .9s var(--ease) both .45s;
+}
+.tm-vh-actions {
+  display: flex; flex-wrap: wrap; gap: 12px; justify-content: center;
+  animation: tmVHup .9s var(--ease) both .6s;
+}
+.tm-vh-btn-primary {
+  font-family: 'DM Sans', sans-serif; font-size: 10px; font-weight: 500;
+  letter-spacing: 2.5px; text-transform: uppercase;
+  color: #fff; background: var(--red); border: 1px solid var(--red);
+  padding: 16px 36px; text-decoration: none; display: inline-block;
+  transition: background .25s, transform .25s;
+}
+.tm-vh-btn-primary:hover { background: #d42020; transform: translateY(-2px); }
+.tm-vh-btn-outline {
+  font-family: 'DM Sans', sans-serif; font-size: 10px; font-weight: 500;
+  letter-spacing: 2.5px; text-transform: uppercase;
+  color: rgba(240,237,232,.7); border: 1px solid rgba(240,237,232,.2);
+  padding: 16px 36px; text-decoration: none; display: inline-block;
+  transition: border-color .25s, color .25s, transform .25s;
+}
+.tm-vh-btn-outline:hover {
+  border-color: rgba(240,237,232,.6); color: #f0ede8; transform: translateY(-2px);
+}
+.tm-vh-divider {
+  position: absolute; bottom: 0; left: 0; right: 0; height: 1px;
+  background: linear-gradient(to right, transparent, rgba(255,42,42,.3), transparent);
+}
+
+@keyframes tmVHup { from{opacity:0;transform:translateY(28px)}to{opacity:1;transform:translateY(0)} }
+@keyframes tmVHpulse { 0%,100%{opacity:1}50%{opacity:.3} }
+
+@media(max-width:767px){
+  .tm-vh-section{padding:100px 24px 80px}
+  .tm-vh-title{font-size:clamp(64px,18vw,96px)}
+  .tm-vh-actions{flex-direction:column;align-items:center}
+  .tm-vh-btn-primary,.tm-vh-btn-outline{width:100%;max-width:320px;text-align:center}
+}
+</style>
+
+<section class="tm-vh tm-vh-section">
+  <div class="tm-vh-grid"></div>
+  <div class="tm-vh-glow"></div>
+
+  <div class="tm-vh-badge">
+    <div class="tm-vh-badge-dot"></div>
+    <span>{{ section.settings.badge_text }}</span>
+  </div>
+
+  <div class="tm-vh-eyebrow">{{ section.settings.eyebrow }}</div>
+
+  <h1 class="tm-vh-title">
+    {{ section.settings.title_line1 }}<span class="tm-vh-outline">{{ section.settings.title_line2 }}</span>
+  </h1>
+
+  <p class="tm-vh-sub">{{ section.settings.subheading }}</p>
+
+  <div class="tm-vh-actions">
+    {% if section.settings.btn1_text != blank %}
+      <a href="{{ section.settings.btn1_url }}" class="tm-vh-btn-primary">{{ section.settings.btn1_text }}</a>
+    {% endif %}
+    {% if section.settings.btn2_text != blank %}
+      <a href="{{ section.settings.btn2_url }}" class="tm-vh-btn-outline">{{ section.settings.btn2_text }}</a>
+    {% endif %}
+    {% if section.settings.btn3_text != blank %}
+      <a href="{{ section.settings.btn3_url }}" class="tm-vh-btn-outline">{{ section.settings.btn3_text }}</a>
+    {% endif %}
+    {% if section.settings.btn4_text != blank %}
+      <a href="{{ section.settings.btn4_url }}" class="tm-vh-btn-outline">{{ section.settings.btn4_text }}</a>
+    {% endif %}
+  </div>
+
+  <div class="tm-vh-divider"></div>
+</section>
+
+{% schema %}
+{
+  "name": "Vault Hero",
+  "settings": [
+    {"type":"text","id":"badge_text","label":"Badge Text","default":"MUSIC VAULT — EXCLUSIVE ACCESS"},
+    {"type":"text","id":"eyebrow","label":"Eyebrow","default":"T Mafianie — Cabana Music Empire"},
+    {"type":"text","id":"title_line1","label":"Title Line 1","default":"UNLOCK"},
+    {"type":"text","id":"title_line2","label":"Title Line 2 (outline)","default":"THE VAULT"},
+    {"type":"textarea","id":"subheading","label":"Subheading","default":"Exclusive music. Unreleased drops. Early access. Behind-the-scenes. App-only content from T Mafianie."},
+    {"type":"header","content":"Buttons"},
+    {"type":"text","id":"btn1_text","label":"Button 1 Text","default":"Join The Vault"},
+    {"type":"url","id":"btn1_url","label":"Button 1 URL","info":"e.g. /pages/music-vault#vault-signup"},
+    {"type":"text","id":"btn2_text","label":"Button 2 Text","default":"Watch Latest Drop"},
+    {"type":"url","id":"btn2_url","label":"Button 2 URL"},
+    {"type":"text","id":"btn3_text","label":"Button 3 Text","default":"Buy Latest Album"},
+    {"type":"url","id":"btn3_url","label":"Button 3 URL"},
+    {"type":"text","id":"btn4_text","label":"Button 4 Text","default":"Download The App"},
+    {"type":"url","id":"btn4_url","label":"Button 4 URL"}
+  ],
+  "presets":[{"name":"Vault Hero"}]
+}
+{% endschema %}

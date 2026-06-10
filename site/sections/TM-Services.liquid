@@ -1,0 +1,466 @@
+{% comment %}
+  SECTION: tm-services.liquid
+  ─────────────────────────────────────────────────────────────────
+  Gumroad membership tiers — 4 levels displayed as a stacked
+  premium pricing section. Dark bg, crimson + gold accent.
+  Each tier links directly to its Gumroad page.
+  Fully customizable via Theme Editor block settings.
+  ─────────────────────────────────────────────────────────────────
+{% endcomment %}
+
+<style>
+.tm-sv {
+  --red:   #ff2a2a;
+  --gold:  #c9a84c;
+  --k:     #0d0d0d;
+  --k2:    #111111;
+  --k3:    #1a1a1a;
+  --off:   #f0ede8;
+  --mu:    rgba(240,237,232,.35);
+  --mu2:   rgba(240,237,232,.55);
+  --b:     rgba(255,255,255,.07);
+  --b2:    rgba(255,255,255,.12);
+  --ease:  cubic-bezier(.22,1,.36,1);
+  font-family: 'DM Sans', sans-serif;
+}
+
+/* ── WRAPPER ── */
+.tm-sv-section {
+  background: var(--k);
+  padding: 112px 64px;
+  position: relative;
+  overflow: hidden;
+}
+
+/* grid texture */
+.tm-sv-grid {
+  position: absolute; inset: 0; pointer-events: none;
+  background-image:
+    linear-gradient(rgba(255,42,42,.04) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255,42,42,.04) 1px, transparent 1px);
+  background-size: 72px 72px;
+}
+
+/* top glow */
+.tm-sv-glow {
+  position: absolute; top: -20%; left: 50%; transform: translateX(-50%);
+  width: 900px; height: 600px;
+  background: radial-gradient(ellipse, rgba(255,42,42,.07) 0%, transparent 65%);
+  pointer-events: none;
+}
+
+/* ── HEADER ── */
+.tm-sv-header {
+  position: relative; z-index: 1;
+  text-align: center;
+  margin-bottom: 72px;
+}
+.tm-sv-eye {
+  display: inline-flex; align-items: center; gap: 12px;
+  font-size: 9px; font-weight: 500; letter-spacing: 4px; text-transform: uppercase;
+  color: var(--red); margin-bottom: 20px;
+}
+.tm-sv-eye::before, .tm-sv-eye::after {
+  content: ''; display: block; width: 24px; height: 1px; background: var(--red);
+}
+.tm-sv-title {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: clamp(52px, 7vw, 96px);
+  letter-spacing: 1px; line-height: .9;
+  color: var(--off); margin-bottom: 20px;
+}
+.tm-sv-title .gh {
+  color: transparent;
+  -webkit-text-stroke: 1.5px rgba(240,237,232,.12);
+}
+.tm-sv-subtitle {
+  font-size: 14px; color: var(--mu2); line-height: 1.75;
+  max-width: 560px; margin: 0 auto 12px;
+}
+.tm-sv-warning {
+  display: inline-flex; align-items: center; gap: 10px;
+  background: rgba(255,42,42,.08); border: 1px solid rgba(255,42,42,.22);
+  padding: 10px 20px; margin-top: 8px;
+  font-size: 11px; font-weight: 500; letter-spacing: 1px;
+  color: rgba(255,42,42,.9);
+}
+
+/* ── TIERS GRID ── */
+.tm-sv-grid-wrap {
+  position: relative; z-index: 1;
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 2px;
+  max-width: 1100px;
+  margin: 0 auto 64px;
+  border: 1px solid var(--b);
+}
+
+/* ── TIER CARD ── */
+.tm-sv-card {
+  background: var(--k2);
+  padding: 40px 36px 36px;
+  position: relative; overflow: hidden;
+  display: flex; flex-direction: column;
+  transition: background .3s var(--ease);
+  border: 1px solid transparent;
+}
+.tm-sv-card:hover {
+  background: var(--k3);
+  border-color: rgba(255,42,42,.25);
+  z-index: 2;
+}
+
+/* featured card (Elite) */
+.tm-sv-card.featured {
+  background: #130304;
+  border-color: rgba(255,42,42,.4);
+  z-index: 2;
+}
+.tm-sv-card.featured:hover {
+  border-color: var(--gold);
+}
+
+/* card top accent line */
+.tm-sv-card::before {
+  content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px;
+  background: var(--red); transform: scaleX(0); transform-origin: left;
+  transition: transform .45s var(--ease);
+}
+.tm-sv-card.featured::before { background: var(--gold); }
+.tm-sv-card:hover::before,
+.tm-sv-card.featured::before { transform: scaleX(1); }
+
+/* watermark number */
+.tm-sv-card-num {
+  position: absolute; right: 24px; top: 16px;
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 72px; letter-spacing: -2px; line-height: 1;
+  color: rgba(255,255,255,.03);
+  pointer-events: none; user-select: none;
+}
+.tm-sv-card.featured .tm-sv-card-num { color: rgba(201,168,76,.04); }
+
+/* tier badge */
+.tm-sv-badge {
+  display: inline-flex; align-items: center; gap: 7px;
+  font-size: 8px; font-weight: 500; letter-spacing: 3px; text-transform: uppercase;
+  padding: 5px 12px; margin-bottom: 20px; width: fit-content;
+  border: 1px solid var(--b2); color: var(--mu2);
+}
+.tm-sv-card.featured .tm-sv-badge {
+  background: rgba(201,168,76,.1); border-color: rgba(201,168,76,.35);
+  color: var(--gold);
+}
+
+/* tier name */
+.tm-sv-name {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: clamp(28px, 3.5vw, 40px);
+  letter-spacing: 2px; line-height: 1;
+  color: var(--off); margin-bottom: 6px;
+}
+.tm-sv-card.featured .tm-sv-name { color: var(--gold); }
+
+/* price */
+.tm-sv-price-wrap { display: flex; align-items: baseline; gap: 6px; margin-bottom: 22px; }
+.tm-sv-price {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 48px; letter-spacing: 1px; line-height: 1;
+  color: var(--off);
+}
+.tm-sv-card.featured .tm-sv-price { color: var(--gold); }
+.tm-sv-price-period {
+  font-size: 11px; letter-spacing: 2px; text-transform: uppercase;
+  color: var(--mu); padding-bottom: 4px;
+}
+.tm-sv-price-note {
+  font-size: 10px; color: var(--mu); letter-spacing: 1px;
+  margin-bottom: 20px; margin-top: -16px;
+}
+
+/* desc */
+.tm-sv-desc {
+  font-size: 12px; color: var(--mu2); line-height: 1.75;
+  margin-bottom: 24px; flex: 1;
+}
+
+/* features list */
+.tm-sv-features {
+  list-style: none; padding: 0; margin: 0 0 28px;
+  display: flex; flex-direction: column; gap: 10px;
+}
+.tm-sv-feature {
+  display: flex; align-items: flex-start; gap: 10px;
+  font-size: 12px; color: var(--mu2); line-height: 1.5;
+}
+.tm-sv-feature-icon {
+  flex-shrink: 0; font-size: 13px; margin-top: 1px;
+}
+
+/* divider */
+.tm-sv-divider {
+  height: 1px; background: var(--b); margin-bottom: 24px;
+}
+
+/* CTA button */
+.tm-sv-cta {
+  display: block; text-align: center; text-decoration: none;
+  font-family: 'DM Sans', sans-serif; font-size: 10px; font-weight: 600;
+  letter-spacing: 3px; text-transform: uppercase;
+  padding: 16px 24px;
+  transition: background .25s, color .25s, border-color .25s, transform .2s;
+  border: 1px solid rgba(255,255,255,.15); color: var(--off);
+  background: transparent;
+}
+.tm-sv-cta:hover {
+  background: var(--red); border-color: var(--red); color: #fff;
+  transform: translateY(-2px);
+}
+.tm-sv-card.featured .tm-sv-cta {
+  background: var(--gold); border-color: var(--gold); color: #0d0d0d;
+  font-weight: 700;
+}
+.tm-sv-card.featured .tm-sv-cta:hover {
+  background: #b8963e; border-color: #b8963e;
+}
+
+/* ── BOTTOM DISCLAIMER ── */
+.tm-sv-disclaimer {
+  position: relative; z-index: 1;
+  max-width: 680px; margin: 0 auto;
+  text-align: center;
+  padding: 28px 32px;
+  border: 1px solid var(--b);
+  background: rgba(255,255,255,.02);
+}
+.tm-sv-disclaimer p {
+  font-size: 11px; color: var(--mu); line-height: 1.8; margin: 0;
+}
+.tm-sv-disclaimer strong { color: rgba(240,237,232,.5); font-weight: 500; }
+
+/* ── SCROLL REVEAL ── */
+.tm-sv-rv { opacity:0; transform:translateY(22px); transition:opacity .8s var(--ease),transform .8s var(--ease); }
+.tm-sv-rv.on { opacity:1; transform:translateY(0); }
+.tm-sv-rv-d1 { transition-delay: .1s; }
+.tm-sv-rv-d2 { transition-delay: .2s; }
+.tm-sv-rv-d3 { transition-delay: .3s; }
+.tm-sv-rv-d4 { transition-delay: .4s; }
+
+/* ── RESPONSIVE ── */
+@media(max-width: 860px) {
+  .tm-sv-section { padding: 72px 24px; }
+  .tm-sv-grid-wrap { grid-template-columns: 1fr; }
+  .tm-sv-card { padding: 32px 24px 28px; }
+}
+</style>
+
+{%- assign tier_blocks = section.blocks | where: 'type', 'tier' -%}
+
+<div class="tm-sv">
+<section class="tm-sv-section" id="{{ section.settings.section_id | default: 'services' }}">
+
+  <div class="tm-sv-grid"></div>
+  <div class="tm-sv-glow"></div>
+
+  {%- comment -%} HEADER {%- endcomment -%}
+  <div class="tm-sv-header tm-sv-rv">
+    <div class="tm-sv-eye">{{ section.settings.eyebrow | default: 'Memberships' }}</div>
+    <h2 class="tm-sv-title">
+      {{ section.settings.title | default: 'Choose Your' }}<br>
+      <span class="gh">{{ section.settings.title_ghost | default: 'Level' }}</span>
+    </h2>
+    {% if section.settings.subtitle != blank %}
+      <p class="tm-sv-subtitle">{{ section.settings.subtitle }}</p>
+    {% endif %}
+    {% if section.settings.warning != blank %}
+      <div class="tm-sv-warning">⚠️ {{ section.settings.warning }}</div>
+    {% endif %}
+  </div>
+
+  {%- comment -%} TIER CARDS {%- endcomment -%}
+  <div class="tm-sv-grid-wrap">
+    {%- for block in tier_blocks -%}
+      {%- assign delay_class = 'tm-sv-rv-d' | append: forloop.index -%}
+      {%- assign features = block.settings.features | split: '|' -%}
+
+      <div class="tm-sv-card{% if block.settings.featured %} featured{% endif %} tm-sv-rv {{ delay_class }}"
+        {{ block.shopify_attributes }}>
+
+        <div class="tm-sv-card-num">0{{ forloop.index }}</div>
+
+        <div class="tm-sv-badge">
+          {{ block.settings.emoji | default: '●' }} &nbsp;{{ block.settings.tier_label | default: 'Tier' }}
+        </div>
+
+        <div class="tm-sv-name">{{ block.settings.name | default: 'Membership Tier' }}</div>
+
+        <div class="tm-sv-price-wrap">
+          <div class="tm-sv-price">{{ block.settings.price | default: '$—' }}</div>
+          <div class="tm-sv-price-period">/ month</div>
+        </div>
+
+        {%- if block.settings.price_note != blank -%}
+          <div class="tm-sv-price-note">{{ block.settings.price_note }}</div>
+        {%- endif -%}
+
+        {%- if block.settings.description != blank -%}
+          <p class="tm-sv-desc">{{ block.settings.description }}</p>
+        {%- endif -%}
+
+        {%- if features.size > 0 and block.settings.features != blank -%}
+          <ul class="tm-sv-features">
+            {%- for feat in features -%}
+              {%- if feat != blank -%}
+                {%- assign feat_parts = feat | split: '::' -%}
+                <li class="tm-sv-feature">
+                  <span class="tm-sv-feature-icon">
+                    {%- if feat_parts.size > 1 -%}{{ feat_parts[0] | strip }}{%- else -%}→{%- endif -%}
+                  </span>
+                  <span>
+                    {%- if feat_parts.size > 1 -%}{{ feat_parts[1] | strip }}{%- else -%}{{ feat | strip }}{%- endif -%}
+                  </span>
+                </li>
+              {%- endif -%}
+            {%- endfor -%}
+          </ul>
+        {%- endif -%}
+
+        <div class="tm-sv-divider"></div>
+
+        {%- if block.settings.gumroad_link != blank -%}
+          <a href="{{ block.settings.gumroad_link }}" class="tm-sv-cta" target="_blank" rel="noopener">
+            {{ block.settings.cta_text | default: 'Join Now →' }}
+          </a>
+        {%- endif -%}
+
+      </div>
+    {%- endfor -%}
+  </div>
+
+  {% if section.settings.disclaimer != blank %}
+  <div class="tm-sv-disclaimer tm-sv-rv">
+    <p>{{ section.settings.disclaimer }}</p>
+  </div>
+  {% endif %}
+
+</section>
+</div>
+
+<script>
+(function(){
+  var io = new IntersectionObserver(function(e){
+    e.forEach(function(x){ if(x.isIntersecting){ x.target.classList.add('on'); io.unobserve(x.target); } });
+  }, { threshold: .07 });
+  document.querySelectorAll('.tm-sv-rv').forEach(function(el){ io.observe(el); });
+})();
+</script>
+
+{% schema %}
+{
+  "name": "TM Services",
+  "settings": [
+    { "type": "header",   "content": "Section" },
+    { "type": "text",     "id": "section_id",   "label": "Anchor ID",       "default": "services" },
+    { "type": "text",     "id": "eyebrow",       "label": "Eyebrow",         "default": "Memberships · Gumroad" },
+    { "type": "text",     "id": "title",         "label": "Title",           "default": "Choose Your" },
+    { "type": "text",     "id": "title_ghost",   "label": "Ghost Title",     "default": "Level" },
+    { "type": "textarea", "id": "subtitle",      "label": "Subtitle",        "default": "Choose your level and tap into exclusive music, song assets, and premium access." },
+    { "type": "text",     "id": "warning",       "label": "Warning Banner",  "default": "These are not beats — these are songs with hooks designed for artists to record and release." },
+    { "type": "textarea", "id": "disclaimer",    "label": "Bottom Disclaimer", "default": "All memberships are processed securely through Gumroad. Cancel anytime. Songs with hooks are structured compositions designed for artists to license and release — not instrumental beats." }
+  ],
+  "blocks": [
+    {
+      "type": "tier",
+      "name": "Membership Tier",
+      "settings": [
+        { "type": "header",   "content": "Tier Info" },
+        { "type": "checkbox", "id": "featured",     "label": "Featured / Highlighted",  "default": false },
+        { "type": "text",     "id": "emoji",         "label": "Icon / Emoji",             "default": "👑" },
+        { "type": "text",     "id": "tier_label",    "label": "Tier Label (badge)",       "default": "Elite Access" },
+        { "type": "text",     "id": "name",          "label": "Tier Name",                "default": "Elite Access" },
+        { "type": "text",     "id": "price",         "label": "Price",                    "default": "$60",  "info": "e.g. $60 or $5+" },
+        { "type": "text",     "id": "price_note",    "label": "Price Note (optional)",    "info": "e.g. 'or more / pay what you want'" },
+        { "type": "textarea", "id": "description",   "label": "Description",              "default": "The all-in-one premium membership." },
+        { "type": "textarea", "id": "features",      "label": "Features (separate with |)", "info": "Format: emoji::Feature text — e.g. 🎧::Full Song Vault access|💬::Private Discord|💸::10% off for life", "default": "🎧::Full access to the Song Vault|🎵::Full access to the Music Vault|💬::Private Discord community|💸::10% off all products for life|🔥::Early access to new drops|🚀::Priority access to new songs" },
+        { "type": "header",   "content": "Link" },
+        { "type": "text",     "id": "gumroad_link",  "label": "Gumroad URL",              "default": "https://tmafianie.gumroad.com/l/lbvvph" },
+        { "type": "text",     "id": "cta_text",      "label": "Button Text",              "default": "Join Now →" }
+      ]
+    }
+  ],
+  "presets": [
+    {
+      "name": "TM Services",
+      "settings": {
+        "eyebrow":      "Memberships · Gumroad",
+        "title":        "Choose Your",
+        "title_ghost":  "Level",
+        "subtitle":     "Choose your level and tap into exclusive music, song assets, and premium access.",
+        "warning":      "These are not beats — these are songs with hooks designed for artists to record and release.",
+        "disclaimer":   "All memberships are processed securely through Gumroad. Cancel anytime. Songs with hooks are structured compositions designed for artists to license and release — not instrumental beats."
+      },
+      "blocks": [
+        {
+          "type": "tier",
+          "settings": {
+            "featured":     true,
+            "emoji":        "👑",
+            "tier_label":   "Elite Access",
+            "name":         "Elite Access",
+            "price":        "$60",
+            "description":  "The all-in-one premium membership for artists and supporters who want full access to the Mafianie ecosystem. This tier unlocks everything.",
+            "features":     "🎧::Full access to the Song Vault (songs with hooks for leasing)|🎵::Full access to the Music Vault (unreleased exclusive music)|💬::Private Discord community access|💸::10% off all products for life|🔥::Early access to new drops and exclusive content|🚀::Priority access to newly released songs",
+            "gumroad_link": "https://tmafianie.gumroad.com/l/lbvvph",
+            "cta_text":     "Get Elite Access →"
+          }
+        },
+        {
+          "type": "tier",
+          "settings": {
+            "featured":     false,
+            "emoji":        "🎤",
+            "tier_label":   "Song Vault VIP",
+            "name":         "Song Vault VIP",
+            "price":        "$40",
+            "description":  "Access a growing library of songs with hooks already created and ready for you to use. Skip the hardest part — the idea is already done.",
+            "features":     "🎧::Hook + open verse formats|🎶::Industry-style song structures|🔁::New songs added consistently|💰::Lease-ready content",
+            "gumroad_link": "https://tmafianie.gumroad.com/l/xqdtpr",
+            "cta_text":     "Join Song Vault →"
+          }
+        },
+        {
+          "type": "tier",
+          "settings": {
+            "featured":     false,
+            "emoji":        "🎵",
+            "tier_label":   "Music Vault",
+            "name":         "Music Vault",
+            "price":        "$25",
+            "price_note":   "or more / pay what you want",
+            "description":  "Direct access to unreleased T Mafianie music, exclusive drops, and full projects not available on streaming platforms.",
+            "features":     "🔥::Unreleased songs and vault-only content|🎧::Early access to new music|💎::Exclusive projects not available anywhere else",
+            "gumroad_link": "https://tmafianie.gumroad.com/l/ytoan",
+            "cta_text":     "Access Music Vault →"
+          }
+        },
+        {
+          "type": "tier",
+          "settings": {
+            "featured":     false,
+            "emoji":        "💰",
+            "tier_label":   "Supporter Tier",
+            "name":         "Supporter",
+            "price":        "$5",
+            "price_note":   "or more / pay what you want",
+            "description":  "Support the Mafianie movement and unlock 10% off everything — for life. Simple, powerful, and built for long-term supporters.",
+            "features":     "💸::Lifetime discount on all products|❤️::Direct support of the brand|🔓::Access to supporter updates and perks",
+            "gumroad_link": "https://tmafianie.gumroad.com/l/fpfviu",
+            "cta_text":     "Become a Supporter →"
+          }
+        }
+      ]
+    }
+  ]
+}
+{% endschema %}
