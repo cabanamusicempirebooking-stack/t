@@ -99,11 +99,12 @@
     {{ 'content.checkout' | t }}
   </button>
 
-  {% if additional_checkout_buttons and settings.show_accelerated_checkout_buttons %}
-    <div class="additional-checkout-buttons additional-checkout-buttons--vertical">
-      {{ content_for_additional_checkout_buttons }}
-    </div>
-  {% endif %}
+  {%- comment -%}
+    CME iOS App: accelerated checkout buttons (PayPal Express, Shop Pay, Apple Pay)
+    are suppressed in the cart. These web components call canPerformAuthorizationWithURL
+    on render, which triggers PayPal before any user tap inside iOS WKWebView.
+    The standard Checkout button above is the only payment entry point.
+  {%- endcomment -%}
 </div>
 
 {% stylesheet %}

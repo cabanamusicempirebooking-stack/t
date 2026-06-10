@@ -29,9 +29,14 @@
     hidden
   {% endunless %}
 >
-  {% if product != blank and form_obj != blank %}
-    {{ form_obj | payment_button }}
-  {% endif %}
+  {%- comment -%}
+    CME iOS App: payment_button (PayPal Express / Shop Pay / Apple Pay) is
+    suppressed here. Shopify's payment button web component calls
+    canPerformAuthorizationWithURL on initialization — even before any user
+    tap — which causes PayPal to open the moment the product page or cart
+    loads inside iOS WKWebView (Capacitor). Users pay via the standard
+    Checkout button instead, which is safe and intentional.
+  {%- endcomment -%}
 </div>
 
 {% stylesheet %}

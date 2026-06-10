@@ -85,5 +85,8 @@
 
     {%- comment -%} CME mobile bottom navigation — mobile only, no JS, no checkout interaction {%- endcomment -%}
     {% render 'cme-bottom-nav' %}
+
+    {%- comment -%} CME iOS back button — shows when history exists, hidden on home + desktop {%- endcomment -%}
+    {% render 'cme-back-button' %}
   </body>
 </html>
