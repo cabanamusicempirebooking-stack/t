@@ -1,9 +1,7 @@
 {% comment %}
   CME iOS Back Button
-  ───────────────────
   Shows a floating back button on product, cart, collection, and page screens
-  when there is browser history to go back to. Hidden on the home page and
-  when history length is 1 (direct entry). Pure JS + CSS — no Liquid logic needed.
+  when there is browser history to go back to. Hidden on home page and desktop.
 {% endcomment %}
 
 <button
@@ -50,7 +48,7 @@
     height: 18px;
     display: block;
   }
-  /* Hide on desktop — nav handles back there */
+  /* Hide on desktop - nav handles back there */
   @media (min-width: 768px) {
     .cme-back-btn { display: none !important; }
   }
@@ -63,17 +61,13 @@
 
   function update() {
     var isHome = (window.location.pathname === '/' || window.location.pathname === '');
-    // Show when there is history and we're not on the home page
     var show = !isHome && window.history.length > 1;
     btn.style.display = show ? 'flex' : 'none';
   }
 
-  // Run on load and after Shopify view transitions (if enabled)
   update();
   document.addEventListener('shopify:section:load', update);
   window.addEventListener('popstate', update);
-
-  // Also support Capacitor's navigation events
   document.addEventListener('ionRouteDidChange', update);
 })();
 </script>
