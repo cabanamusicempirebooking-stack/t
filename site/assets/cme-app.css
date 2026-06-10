@@ -1,0 +1,307 @@
+/* ============================================================
+   T Mafianie · Cabana Music Empire
+   CME App Layer — Mobile Enhancement
+   File: assets/cme-app.css
+
+   Safe: New file only. Does not override base.css.
+   Load order: after base.css via snippets/stylesheets.liquid.
+   DO NOT add service worker, offline logic, or checkout changes here.
+   ============================================================ */
+
+/* ── CME Design Tokens ────────────────────────────────────── */
+:root {
+  --cme-black:      #0b0b0b;
+  --cme-panel:      #1a1a1a;
+  --cme-panel-2:    #111111;
+  --cme-line:       #2a2a2a;
+  --cme-line-2:     #3a3a3a;
+  --cme-red:        #ff2a2a;
+  --cme-red-deep:   #b8001a;
+  --cme-gold:       #d4a24c;
+  --cme-fg:         #ffffff;
+  --cme-fg-2:       #b8b8b8;
+  --cme-fg-3:       #7a7a7a;
+
+  /* Bottom nav dimensions */
+  --cme-nav-height: 64px;
+  /* z-index: above page content, below Shopify cart drawer & search modal */
+  --cme-nav-z:      150;
+}
+
+/* ── Mobile Bottom Nav — hidden on desktop ────────────────── */
+.cme-bottom-nav {
+  display: none;
+}
+
+@media (max-width: 767px) {
+  /* ── Show nav on mobile only ── */
+  .cme-bottom-nav {
+    display: flex;
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    /* Height + safe area for iPhone home indicator */
+    height: calc(var(--cme-nav-height) + env(safe-area-inset-bottom, 0px));
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+    z-index: var(--cme-nav-z);
+
+    /* CME dark glass panel */
+    background: rgba(11, 11, 11, 0.94);
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
+    border-top: 1px solid var(--cme-line);
+
+    justify-content: space-around;
+    align-items: stretch;
+  }
+
+  /* ── Push page content above the nav ── */
+  body {
+    padding-bottom: calc(var(--cme-nav-height) + env(safe-area-inset-bottom, 0px));
+  }
+
+  /* ── Tab item ── */
+  .cme-nav-tab {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    flex: 1;
+    padding-top: 10px;
+    color: var(--cme-fg-3);
+    text-decoration: none;
+    position: relative;
+    -webkit-tap-highlight-color: transparent;
+    /* Eliminates the 300ms iOS tap delay on links */
+    touch-action: manipulation;
+    cursor: pointer;
+    transition: color 0.15s ease, opacity 0.1s ease;
+    /* Hardware-accelerate the tab for smoother repaints */
+    -webkit-transform: translateZ(0);
+    transform: translateZ(0);
+    will-change: color;
+  }
+
+  /* Instant visual feedback on press — no delay */
+  .cme-nav-tab:active {
+    opacity: 0.6;
+  }
+
+  /* ── Active tab: red top bar + red color ── */
+  .cme-nav-tab--active {
+    color: var(--cme-red);
+  }
+
+  .cme-nav-tab--active::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 24px;
+    height: 2px;
+    background: var(--cme-red);
+    border-radius: 0 0 2px 2px;
+    box-shadow: 0 0 8px var(--cme-red), 0 0 16px rgba(255, 42, 42, 0.35);
+  }
+
+  /* ── Tab icon ── */
+  .cme-nav-tab__icon {
+    display: block;
+    width: 22px;
+    height: 22px;
+    flex-shrink: 0;
+  }
+
+  .cme-nav-tab--active .cme-nav-tab__icon {
+    filter: drop-shadow(0 0 3px rgba(255, 42, 42, 0.5));
+  }
+
+  /* ── Tab label ── */
+  .cme-nav-tab__label {
+    font-family: 'Inter', 'DM Sans', system-ui, sans-serif;
+    font-size: 9px;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    line-height: 1;
+  }
+}
+
+/* ── Hide nav in Shopify theme editor (avoids layout confusion) ── */
+.shopify-design-mode .cme-bottom-nav {
+  display: none !important;
+}
+
+/* ============================================================
+   CME — Header Branding
+   A: CME cream background + red accent
+   B: Transparent on homepage hero (enabled via header-group.json)
+   C: Logo font override until image logo is uploaded
+   ============================================================ */
+
+/* ── A + C: Solid header — cream background, CME feel ── */
+#header-group .color-scheme-1,
+#header-group [class*="color-scheme-1"] {
+  background-color: #f7f5f2 !important;
+  border-bottom-color: rgba(13,13,13,0.07) !important;
+}
+
+/* Logo text — Bebas Neue until image logo is added */
+#header-group .header__heading-link,
+#header-group .header__heading {
+  font-family: 'Bebas Neue', sans-serif !important;
+  letter-spacing: 2px !important;
+  color: #0d0d0d !important;
+  font-size: 1.4rem !important;
+}
+
+/* Nav links — DM Sans, uppercase, tight tracking */
+#header-group .header__menu-item,
+#header-group .header__active-menu-item {
+  font-family: 'DM Sans', sans-serif !important;
+  font-size: 0.7rem !important;
+  letter-spacing: 2px !important;
+  text-transform: uppercase !important;
+}
+
+/* Icons (search, account, cart) — match dark text */
+#header-group .header__icon {
+  color: #0d0d0d !important;
+}
+
+/* Red underline on active/hovered nav link */
+#header-group .header__menu-item:hover,
+#header-group .header__active-menu-item {
+  color: #ff2a2a !important;
+}
+
+/* Cart bubble — CME red */
+#header-group .cart-count-bubble,
+#header-group .cart-bubble {
+  background: #ff2a2a !important;
+  color: #fff !important;
+}
+
+/* ── B: Transparent state on homepage ── */
+/* When header is transparent (over the hero), use dark text
+   since the hero background is light (#f7f5f2) */
+#header-group .color-scheme-6,
+#header-group [class*="color-scheme-6"] {
+  background-color: transparent !important;
+  border-bottom-color: transparent !important;
+}
+
+#header-group .color-scheme-6 .header__heading-link,
+#header-group .color-scheme-6 .header__heading,
+#header-group .color-scheme-6 .header__menu-item,
+#header-group .color-scheme-6 .header__icon {
+  color: #0d0d0d !important;
+}
+
+/* Smooth transition between transparent ↔ solid */
+#header-group header,
+#header-group .header {
+  transition: background-color 0.3s ease, border-color 0.3s ease !important;
+}
+
+/* ============================================================
+   CME — Collections Page (light)
+   Targets the /collections list page (SHOP tab)
+   ============================================================ */
+
+.section-resource-list {
+  background: #f7f5f2;
+}
+
+/* Page header area */
+.collection-list-header,
+.main-collection-list__title {
+  font-family: 'Bebas Neue', sans-serif !important;
+  color: #0d0d0d !important;
+}
+
+/* Collection cards — light CME treatment */
+.collection-card {
+  background: #ffffff;
+  border: 1px solid rgba(13,13,13,0.08);
+  transition: border-color 0.2s, box-shadow 0.2s, transform 0.2s;
+}
+
+.collection-card:hover {
+  border-color: #ff2a2a;
+  box-shadow: 0 4px 24px rgba(0,0,0,0.08);
+  transform: translateY(-2px);
+}
+
+.collection-card__title {
+  font-family: 'Bebas Neue', sans-serif !important;
+  letter-spacing: 1px !important;
+  color: #0d0d0d !important;
+}
+
+/* ============================================================
+   CME — Product Cards (light)
+   Overrides default Horizon white cards with subtle CME style
+   ============================================================ */
+
+.product-card {
+  background: #ffffff;
+  border: 1px solid rgba(13,13,13,0.06);
+  transition: border-color 0.2s, box-shadow 0.2s, transform 0.2s;
+}
+
+.product-card:hover {
+  border-color: rgba(255, 42, 42, 0.3);
+  box-shadow: 0 4px 20px rgba(0,0,0,0.07);
+  transform: translateY(-2px);
+}
+
+/* Category/vendor label */
+.product-card__vendor,
+.product-card__badge {
+  font-family: 'DM Sans', sans-serif !important;
+  letter-spacing: 2px !important;
+  text-transform: uppercase !important;
+  font-size: 9px !important;
+  color: rgba(13,13,13,0.4) !important;
+}
+
+/* Product title */
+.product-card__title {
+  font-family: 'DM Sans', sans-serif !important;
+  font-weight: 500 !important;
+  color: #0d0d0d !important;
+}
+
+/* Price */
+.product-card__price,
+.price__regular {
+  font-family: 'Bebas Neue', sans-serif !important;
+  letter-spacing: 0.5px !important;
+}
+
+/* Red accent bar on bottom of hovered card */
+.product-card::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: #ff2a2a;
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform 0.25s ease;
+}
+
+.product-card {
+  position: relative;
+  overflow: hidden;
+}
+
+.product-card:hover::after {
+  transform: scaleX(1);
+}
