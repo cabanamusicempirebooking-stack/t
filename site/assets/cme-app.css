@@ -305,3 +305,16 @@
 .product-card:hover::after {
   transform: scaleX(1);
 }
+
+/* ── Suppress accelerated checkout buttons (PayPal Express, Shop Pay, Apple Pay)
+   These buttons auto-initialize in iOS WKWebView and trigger PayPal's
+   canPerformAuthorizationWithURL before any user tap, opening PayPal
+   unexpectedly when the cart is opened. Users must use the standard
+   Checkout button instead. ─────────────────────────────────────────────── */
+.additional-checkout-buttons,
+.shopify-payment-button__button--unbranded,
+shopify-accelerated-checkout-cart,
+.accelerated-checkout-block,
+more-payment-options-link {
+  display: none !important;
+}
