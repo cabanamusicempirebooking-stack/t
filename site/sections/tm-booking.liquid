@@ -129,32 +129,11 @@
 
 <script>
 (function(){
-  var form = document.getElementById('tm-bk-form');
+  var form = document.getElementById(‘tm-bk-form’);
   if (!form) return;
-  var active = true;
-  form.addEventListener('submit', function(e) {
-    if (!active) return;
-    e.preventDefault();
-    var btn = document.getElementById('tm-bk-btn');
-    var err = document.getElementById('tm-bk-err');
-    var orig = btn ? btn.textContent : '';
-    if (btn) { btn.textContent = 'Sending…'; btn.disabled = true; btn.style.opacity = '0.6'; }
-    if (err) err.style.display = 'none';
-    fetch(form.action, { method: ‘POST’, body: new FormData(form) })
-      .then(function(r) {
-        if (r.url.indexOf(‘posted_successfully’) > -1) {
-          form.innerHTML = ‘<div class="tm-form-success" style="display:block;">✓ Message received. We\’ll respond within 48 hours.</div>’;
-        } else {
-          if (btn) { btn.textContent = orig; btn.disabled = false; btn.style.opacity = ''; }
-          active = false;
-          form.submit();
-        }
-      })
-      .catch(function() {
-        if (btn) { btn.textContent = orig; btn.disabled = false; btn.style.opacity = ‘’; }
-        active = false;
-        form.submit();
-      });
+  form.addEventListener(‘submit’, function() {
+    var btn = document.getElementById(‘tm-bk-btn’);
+    if (btn) { btn.textContent = ‘Sending…’; btn.disabled = true; btn.style.opacity = ‘0.6’; }
   });
 })();
 </script>

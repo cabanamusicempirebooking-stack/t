@@ -959,11 +959,13 @@
 
   /* Fill hidden contact form and submit natively — identical to fan list order modal */
   function tmDpNotify(name, email, subject, body) {
+    var form = document.getElementById('tm-dp-notify-form');
     document.getElementById('tm-dp-nf-name').value    = name    || 'Customer';
     document.getElementById('tm-dp-nf-email').value   = email   || 'noemail@tmdigital.com';
     document.getElementById('tm-dp-nf-subject').value = subject;
     document.getElementById('tm-dp-nf-body').value    = body;
-    document.getElementById('tm-dp-notify-form').submit();
+    /* Use fetch so the page doesn't navigate away in iOS WKWebView */
+    fetch(form.action, { method: 'POST', body: new FormData(form) }).catch(function(){});
   }
 
   window.tmDpSubmitCheckout = function(){
