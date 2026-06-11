@@ -320,7 +320,9 @@
         /* Open PayPal ONLY after successful form submission and only if paypal method */
         if(method==='paypal'){
           var amt=_price.replace(/[^0-9.]/g,'');
+          window._tmBsPaypalAllowed = true;
           window.open('https://www.paypal.com/cgi-bin/webscr?cmd=_xclick&business='+encodeURIComponent(_pp)+'&item_name='+encodeURIComponent('Song License: '+_song)+'&amount='+encodeURIComponent(amt)+'&currency_code=USD&no_shipping=1&custom='+encodeURIComponent('Buyer: '+n+' | '+e)+'&return='+encodeURIComponent(window.location.href+'?order=success')+'&cancel_return='+encodeURIComponent(window.location.href),'_blank');
+          window._tmBsPaypalAllowed = false;
         }
       })
       .catch(function(){

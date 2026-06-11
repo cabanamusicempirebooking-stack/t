@@ -34,6 +34,55 @@
 
     {{ content_for_header }}
 
+    {%- comment -%} CME iOS: Block PayPal/accelerated-checkout web components from auto-initializing {%- endcomment -%}
+    <script>
+    (function() {
+      // Block Shopify's accelerated checkout web components before they register.
+      // In iOS WKWebView (Capacitor) these call canPerformAuthorizationWithURL
+      // on init, opening PayPal/Safari before any user tap.
+      var _define = customElements.define.bind(customElements);
+      customElements.define = function(name, constructor, options) {
+        if (
+          name === 'shopify-accelerated-checkout-cart' ||
+          name === 'shopify-payment-button' ||
+          name === 'shopify-buy-button' ||
+          name === 'more-payment-options-link' ||
+          name === 'paypal-button'
+        ) {
+          // Register a no-op stub so nothing breaks but PayPal never initializes
+          _define(name, class extends HTMLElement {}, options);
+          return;
+        }
+        _define(name, constructor, options);
+      };
+
+      // Also block any window.open to PayPal/payment URLs
+      // that aren't triggered by the checkout button
+      var _windowOpen = window.open.bind(window);
+      var _checkoutAllowed = false;
+      document.addEventListener('click', function(e) {
+        var btn = e.target && e.target.closest('#checkout, [name="checkout"], .cart__checkout-button');
+        if (btn) _checkoutAllowed = true;
+        setTimeout(function() { _checkoutAllowed = false; }, 3000);
+      }, true);
+      window.open = function(url, target, features) {
+        if (url && typeof url === 'string') {
+          var lower = url.toLowerCase();
+          var isPayment = lower.indexOf('paypal.com') > -1 ||
+                          lower.indexOf('pay.google') > -1 ||
+                          lower.indexOf('applepay') > -1 ||
+                          lower.indexOf('checkout.shopify') > -1;
+          // Allow PayPal only from tmBsSubmit (songs/bangers section) or checkout button
+          if (isPayment && !_checkoutAllowed && !window._tmBsPaypalAllowed) {
+            console.warn('[CME] Blocked unauthorized payment URL:', url);
+            return null;
+          }
+        }
+        return _windowOpen(url, target, features);
+      };
+    })();
+    </script>
+
     {%- comment -%} CME App — Safe Apple mobile/home-screen meta tags.
       These do not conflict with meta-tags.liquid (which handles SEO/OG/canonical).
       No service worker. No manifest. No offline logic.
