@@ -45,7 +45,7 @@ const config: CapacitorConfig = {
     limitsNavigationsToAppBoundDomains: false,
     // Use a real Safari user agent so Cloudflare/Shopify don't flag
     // form submissions as bot traffic and trigger CAPTCHA
-    userAgent: 'Mozilla/5.0 (iPhone; CPU iPhone OS 17_4 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.4 Mobile/15E148 Safari/604.1'
+    userAgent: 'Mozilla/5.0 (iPhone; CPU iPhone OS 17_4 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.4 Mobile/15E148 Safari/604.1 T-Mafianie-iOS'
   },
 
   android: {

@@ -305,7 +305,7 @@
 
     var form=document.getElementById('tmBsForm');
     var fd=new FormData(form);
-    fetch(form.action,{method:'POST',body:fd})
+    fetch(form.action,{method:'POST',body:fd,credentials:'same-origin'})
       .then(function(){
         /* Show inline success — no page navigation needed */
         var modal=document.getElementById('tmBsModal');
