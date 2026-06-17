@@ -38,8 +38,6 @@
     <script>
     (function() {
       // Block Shopify's accelerated checkout web components before they register.
-      // In iOS WKWebView (Capacitor) these call canPerformAuthorizationWithURL
-      // on init, opening PayPal/Safari before any user tap.
       var _define = customElements.define.bind(customElements);
       customElements.define = function(name, constructor, options) {
         if (
@@ -49,15 +47,13 @@
           name === 'more-payment-options-link' ||
           name === 'paypal-button'
         ) {
-          // Register a no-op stub so nothing breaks but PayPal never initializes
           _define(name, class extends HTMLElement {}, options);
           return;
         }
         _define(name, constructor, options);
       };
 
-      // Also block any window.open to PayPal/payment URLs
-      // that aren't triggered by the checkout button
+      // Block unauthorized payment window.open calls
       var _windowOpen = window.open.bind(window);
       var _checkoutAllowed = false;
       document.addEventListener('click', function(e) {
@@ -72,7 +68,6 @@
                           lower.indexOf('pay.google') > -1 ||
                           lower.indexOf('applepay') > -1 ||
                           lower.indexOf('checkout.shopify') > -1;
-          // Allow PayPal only from tmBsSubmit (songs/bangers section) or checkout button
           if (isPayment && !_checkoutAllowed && !window._tmBsPaypalAllowed) {
             console.warn('[CME] Blocked unauthorized payment URL:', url);
             return null;
@@ -80,6 +75,74 @@
         }
         return _windowOpen(url, target, features);
       };
+
+      // ── iOS Login/Account Routing Fix ─────────────────────────────────────
+      // Shopify's New Customer Accounts use shopify.com as auth provider.
+      // Capacitor sees that external domain and opens Safari. The session
+      // created in Safari is separate from the WebView — user appears logged
+      // out in the app. Fix: intercept ALL link clicks, and for any account/
+      // login/vault route force navigation inside the WebView via
+      // window.location.href instead of letting it open externally.
+
+      var INTERNAL_PATTERNS = [
+        /\/account/,
+        /\/challenge/,
+        /\/password/,
+        /\/pages\/vault/,
+        /tmafianie\.com/
+      ];
+
+      var EXTERNAL_PATTERNS = [
+        /checkout\.shopify\.com/,
+        /\.myshopify\.com\/checkouts/,
+        /paypal\.com/,
+        /stripe\.com/,
+        /youtube\.com/,
+        /youtu\.be/,
+        /spotify\.com/,
+        /music\.apple\.com/,
+        /instagram\.com/,
+        /tiktok\.com/,
+        /x\.com/,
+        /twitter\.com/
+      ];
+
+      function isInternalURL(url) {
+        if (!url || url.charAt(0) === '#') return true;
+        if (url.charAt(0) === '/') return true;
+        for (var i = 0; i < INTERNAL_PATTERNS.length; i++) {
+          if (INTERNAL_PATTERNS[i].test(url)) return true;
+        }
+        for (var j = 0; j < EXTERNAL_PATTERNS.length; j++) {
+          if (EXTERNAL_PATTERNS[j].test(url)) return false;
+        }
+        // Default: same host = internal
+        try {
+          var parsed = new URL(url, window.location.href);
+          return parsed.host === window.location.host;
+        } catch(e) { return true; }
+      }
+
+      document.addEventListener('click', function(e) {
+        var link = e.target && e.target.closest('a[href]');
+        if (!link) return;
+        var href = link.getAttribute('href');
+        if (!href || href.charAt(0) === '#') return;
+
+        if (isInternalURL(href)) {
+          // Force internal navigation — override any target="_blank"
+          if (link.target === '_blank' || link.target === '_self') {
+            e.preventDefault();
+            console.log('[CME] Internal navigation allowed: ' + href);
+            window.location.href = href;
+          }
+          // No target or target="_self" without _blank: let browser handle normally (stays in WebView)
+        } else {
+          console.log('[CME] External navigation opened: ' + href);
+          // Let target="_blank" open externally as normal
+        }
+      }, true);
+
     })();
     </script>
 

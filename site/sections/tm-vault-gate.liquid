@@ -281,8 +281,23 @@
       {% endform %}
 
       <div class="tm-vg-login-link">
-        Already a Vault member? <a href="/account/login?return_url={{ request.path | url_encode }}">Log in here</a>
+        Already a Vault member? <a href="/account/login?return_url={{ request.path | url_encode }}" id="tm-vault-login-link">Log in here</a>
       </div>
+      <script>
+      (function(){
+        var link = document.getElementById('tm-vault-login-link');
+        if (link) {
+          link.addEventListener('click', function(e) {
+            e.preventDefault();
+            console.log('[CME] Customer login route kept in WebView: ' + link.href);
+            window.location.href = link.href;
+          });
+        }
+        {% if customer %}
+          console.log('[CME] Vault customer state detected: {{ customer.email }}');
+        {% endif %}
+      })();
+      </script>
       <p class="tm-vg-terms">{{ section.settings.terms | default: 'Free to join. No spam. Unsubscribe anytime.' }}</p>
     </div>
 

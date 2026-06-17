@@ -8,7 +8,17 @@ const config: CapacitorConfig = {
   server: {
     url: 'https://www.tmafianie.com',
     cleartext: false,
-    androidScheme: 'https'
+    androidScheme: 'https',
+    // Allow Shopify's auth/account domains to navigate inside the WebView
+    // so login sessions are created in-app, not in Safari
+    allowNavigation: [
+      'tmafianie.com',
+      '*.tmafianie.com',
+      'shopify.com',
+      '*.shopify.com',
+      'accounts.shopify.com',
+      'shop.app'
+    ]
   },
 
   plugins: {
