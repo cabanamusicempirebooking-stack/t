@@ -26,9 +26,11 @@
           type="module"
           fetchpriority="low"
         ></script>
-        <account-login-actions class="account-actions__shop-login">
-          {{ shop | login_button }}
-        </account-login-actions>
+        {% comment %}
+          CME iOS: shop|login_button uses Shop Pay SDK which calls native iOS APIs
+          and opens Safari regardless of WebView config. Suppressed — login goes
+          through the plain link below which stays in the WebView.
+        {% endcomment %}
 
         <a
           href="{{ routes.account_login_url | default: routes.storefront_login_url | default: '/account/login' }}"
