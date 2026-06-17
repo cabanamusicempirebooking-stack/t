@@ -14,9 +14,9 @@ const config: CapacitorConfig = {
     allowNavigation: [
       'tmafianie.com',
       '*.tmafianie.com',
+      'account.tmafianie.com',
       'shopify.com',
       '*.shopify.com',
-      'accounts.shopify.com',
       'shop.app',
       '*.shop.app'
     ]
