@@ -17,7 +17,8 @@ const config: CapacitorConfig = {
       'shopify.com',
       '*.shopify.com',
       'accounts.shopify.com',
-      'shop.app'
+      'shop.app',
+      '*.shop.app'
     ]
   },
 

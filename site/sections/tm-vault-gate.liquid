@@ -281,7 +281,7 @@
       {% endform %}
 
       <div class="tm-vg-login-link">
-        Already a Vault member? <a href="/account/login?return_url={{ request.path | url_encode }}" id="tm-vault-login-link">Log in here</a>
+        Already a Vault member? <a href="{{ routes.account_login_url | default: routes.storefront_login_url | default: '/account/login' }}" id="tm-vault-login-link">Log in here</a>
       </div>
       <script>
       (function(){

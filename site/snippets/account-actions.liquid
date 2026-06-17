@@ -31,7 +31,7 @@
         </account-login-actions>
 
         <a
-          href="{{ routes.account_login_url | default: '/account/login' }}"
+          href="{{ routes.account_login_url | default: routes.storefront_login_url | default: '/account/login' }}"
           class="account-actions__link button"
           {% if autofocus_enabled %}
             autofocus
